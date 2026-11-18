@@ -9,6 +9,7 @@ import base64
 import hashlib
 import html.parser
 import json
+import math
 import re
 import struct
 from dataclasses import dataclass
@@ -33,8 +34,13 @@ def _json_no_duplicates(text):
         return result
     def refuse_constant(value):
         raise ValueError("Invalid JSON numerical constant " + value)
+    def finite_float(value):
+        parsed = float(value)
+        if not math.isfinite(parsed):
+            raise ValueError("Nonfinite JSON number")
+        return parsed
     return json.loads(text, object_pairs_hook=unique,
-                      parse_constant=refuse_constant)
+                      parse_constant=refuse_constant, parse_float=finite_float)
 
 
 class _HTMLLinks(html.parser.HTMLParser):
@@ -323,7 +329,11 @@ class QualifiedByteExecutor:
                 json.JSONDecodeError, RecursionError) as exc:
             return {"status": "UNRESOLVED", "reason": "OPERATOR_INPUT_UNSATISFIED",
                     "detail": str(exc)[:160]}
-        if len(json.dumps(result, allow_nan=False).encode()) > 16384:
+        try:
+            size = len(json.dumps(result, allow_nan=False).encode())
+        except (ValueError, TypeError, OverflowError):
+            return {"status": "UNRESOLVED", "reason": "INVALID_OPERATOR_RESULT"}
+        if size > 16384:
             return {"status": "UNRESOLVED", "reason": "RESULT_OUTPUT_LIMIT"}
         receipt = {
             "status": "EXECUTED_LOCAL",
