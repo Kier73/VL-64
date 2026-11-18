@@ -114,12 +114,12 @@ class TraceLedger:
                     not isinstance(saved.get("outputs_hex"),list)):
                 raise ValueError("Malformed trace evidence object")
             try:
+                if not all(isinstance(v,str) for v in saved["outputs_hex"]):
+                    raise ValueError("Non-string hexadecimal output")
                 values=tuple(bytes.fromhex(v) for v in saved["outputs_hex"])
-                              if all(isinstance(v,str) for v in saved["outputs_hex"])
-                              else None
             except ValueError as exc:
                 raise ValueError("Malformed byte output representation") from exc
-            if values is None or any(v.hex()!=encoded for v,encoded in zip(
+            if any(v.hex()!=encoded for v,encoded in zip(
                     values,saved["outputs_hex"])):
                 raise ValueError("Noncanonical byte output representation")
             generated=ledger.observe(saved.get("word"),values,
