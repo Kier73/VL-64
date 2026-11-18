@@ -33,6 +33,9 @@ jobs:
           python -m experiments.observer_intent.arbitrate \
             --intent artifacts/nonaffine-observer-intention.json \
             --out artifacts/navigated-state.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent artifacts/observable-quotient-intention.json \
+            --out artifacts/navigated-observable.json
       - name: Independent output and core-size controls
         run: |
           python - <<'PY'
@@ -52,6 +55,18 @@ jobs:
           assert measured["core_crosscheck"] is True
           assert result["status"]=="OBSERVED_GROUND_NAVIGATION",result
           assert result["navigation"]["result"]["value"]==measured["trillion_result_digest"]
+          quotient=json.loads((p/"learned-observable-quotient-ground.json").read_text())
+          qreport=json.loads((p/"observable-quotient-measurements.json").read_text())
+          qresult=json.loads((p/"navigated-observable.json").read_text())
+          assert qreport["source_states"]==12
+          assert qreport["quotient_states"]==3
+          assert qreport["fresh_observable_continuations_checked"]==26
+          assert qreport["exact_source_bytes_reconstructible"] is False
+          assert qreport["matched_challenge"]=="CONSISTENT_ON_NEW_OBSERVATIONS"
+          assert qreport["contradictory_challenge"]=="CONTRADICTED"
+          assert qresult["status"]=="OBSERVED_GROUND_NAVIGATION"
+          assert qresult["navigation"]["result"]["value"]==qreport["horizon_observed_value"]
+          assert GroundFamilies().open(quotient).realize(10**12,"state.observable")["result"]["value"]==qreport["horizon_observed_value"]
           assert GroundFamilies().open(descriptor).realize(10**12,"digest.sha256")["result"]["value"] == measured["trillion_result_digest"]
           core=sum(x.stat().st_size for x in Path("src/vld").glob("*.py"))
           assert core<=65536, core
@@ -63,6 +78,8 @@ jobs:
               "cycle_length":measured["cycle_length"],
               "horizon":measured["trillion_horizon"],
               "core_bytes":core,
+              "quotient_states":qreport["quotient_states"],
+              "quotient_bytes":qreport["quotient_description_bytes"],
           },sort_keys=True))
           PY
       - name: Preserve portable Ground, evidence and observer result
