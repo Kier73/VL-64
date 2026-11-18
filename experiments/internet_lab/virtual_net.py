@@ -525,9 +525,10 @@ def github_readme_to_goals(graph: InternetGround):
     graph.link(c, d, "navigate_markdown_link", goals["body_sha256"])
     for cached in records:
         if cached.get("cache_result") == "NOT_MODIFIED_ACCEPTED_BY_ORIGIN":
-            v = graph.node("http-validator:" + cached["body_sha256"], "http_validator_receipt")
+            validation_digest = domain_digest("vl64.http-cache-receipt.v1", cached)
+            v = graph.node("http-validator:" + validation_digest, "http_validator_receipt")
             graph.link(c, v, "conditional_read_not_modified",
-                       domain_digest("vl64.http-cache-receipt.v1", cached))
+                       validation_digest)
     result = graph.navigate(a, d)
     result.update({
         "commit": rev, "readme_sha256": digest(raw),
