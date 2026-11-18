@@ -2,7 +2,7 @@
 
 A **64 KiB Virtual Layer Utility**.
 
-VL-64 is a compact Python package for working with state representations, algebraic navigation, structured numerical operators, and verifiable transitions. Its source package is maintained within a 65,536-byte budget. It runs on Python 3.11+ using the standard library.
+VL-64 translates captured bytes into candidate virtual state representations, measures which descriptions predict observed transitions, and navigates qualified states through composition and cycle detection. It also provides mathematical, structural, and verification utilities for performing work on those representations. Its source package is maintained within a 65,536-byte budget. It runs on Python 3.11+ using the standard library.
 
 Use the `vld` command for built-in checks and modular affine navigation, or import `vld` to compose the available operations in your own code.
 
@@ -29,6 +29,33 @@ vld navigate --a 5 --b 1 --x0 3 --steps 1000 --modulus 256
 You can also call the CLI as `python -m vld` after installing the package.
 
 ## Use from Python
+
+### Translate observed bytes into a Ground
+
+`ObservedGround` lifts captured snapshots into named byte views, measures their observed transition patterns, and navigates known deterministic cycles.
+
+```python
+from vld import ObservedGround
+
+ground = ObservedGround({"whole": None, "counter": (0,)})
+ground.fit(
+    (bytes((i, 10)), bytes(((i + 1) % 4, 20)))
+    for i in range(4)
+)
+
+observation = ground.lift(bytes((2, 99)))
+prediction = ground.predict(bytes((2, 99)), "counter")
+result = ground.navigate(bytes((2, 99)), steps=1_000_000, view="counter")
+
+assert observation["states"]["counter"] == "02"
+assert prediction["status"] == "SINGLE_OBSERVED_SUCCESSOR"
+assert result["terminal_state"] == "02"
+print(ground.profile("counter"))
+```
+
+To discover candidate byte fields automatically, call `model, ranking = ObservedGround.discover(training_pairs, heldout_pairs)`. The search tests bounded single-byte and multi-byte views, then ranks them using held-out predictions.
+
+A view may describe the entire snapshot or select byte offsets corresponding to a variable, register, field, or observable. `evaluate` compares candidate views against held-out transitions and ranks them by observed predictive score. Information profiles report state diversity, branching uncertainty, and changes in empirical state entropy. Navigation returns the projected virtual state and the digest of its observed Ground.
 
 ### Navigate a modular state
 
@@ -88,6 +115,7 @@ print(child.commit_manifest()["digest"])
 
 | Area | Python interfaces | Function |
 | --- | --- | --- |
+| Translation | `ObservedGround` | Lift byte snapshots, compare predictive views, profile uncertainty, and navigate observed transitions |
 | Representation | `ByteLens`, `LENS_RAW`, `LENS_UTF8`, `LENS_U32LE` | Lift and lower byte representations; check round trips |
 | State and time | `PageSpace`, `HashChainedJournal`, `ScopedVectorClock` | Copy-on-write pages, event digests, and scoped event ordering |
 | Navigation | `monoid_power`, `affine_navigate`, `certify_modular_progression`, `myhill_nerode_quotient` | Compose transitions and analyze finite-state behavior |

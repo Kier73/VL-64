@@ -22,6 +22,76 @@ python -m pip install -e ".[dev]"
 python -m pytest tests/ -v
 ```
 
+## Translate byte observations into a virtual Ground
+
+`ObservedGround` treats each snapshot as bytes and allows multiple named views over them. A view with `None` preserves every byte. A tuple of offsets selects an explicit subset, so the source of each virtual variable remains inspectable.
+
+The observer or adapter supplies snapshots from a machine, binary record, process, file, or another source. The core accepts bytes; collecting screenshots or network content is an adapter task.
+
+```python
+from vld import ObservedGround, GroundRegistry
+
+ground = ObservedGround({
+    "full_snapshot": None,
+    "counter_register": (0,),
+    "second_field": (1,),
+})
+
+# Observed training transitions: the first byte advances mod 4.
+training = [
+    (bytes((i, 16 * t + i)), bytes(((i + 1) % 4, 80 + 16 * t + i)))
+    for t in range(4) for i in range(4)
+]
+ground.fit(training)
+
+print(ground.lift(bytes((3, 250))))
+print(ground.predict(bytes((3, 250)), "counter_register"))
+print(ground.profile("counter_register"))
+GroundRegistry.default().register_ground("observed-counter", ground)
+```
+
+The `lift` result includes a digest of the original bytes and each view's projected state. `predict` reports successor counts and one of `UNOBSERVED`, `SINGLE_OBSERVED_SUCCESSOR`, or `MULTIPLE_OBSERVED_SUCCESSORS`. `profile` reports empirical source and target entropy, conditional entropy, and target/source state diversity. These quantities characterize observations, not unobserved machine behavior.
+
+### Compare alternate descriptions
+
+Use different observations for training and validation. The score is the held-out target state entropy multiplied by the fraction of correct most-frequent-successor predictions. This rewards a view with distinct predictable outcomes rather than simply selecting a constant projection.
+
+```python
+heldout = [
+    (bytes((i, 160 + i)), bytes(((i + 1) % 4, 192 + i)))
+    for i in range(4)
+]
+ranking = ground.evaluate(heldout)
+assert ranking[0]["view"] == "counter_register"
+assert ranking[0]["accuracy"] == 1.0
+print(ranking)
+```
+
+Alternatively, generate candidate views automatically from the observed byte positions:
+
+```python
+model, discovered = ObservedGround.discover(
+    training, heldout, max_positions=2, max_fields=2
+)
+assert discovered[0]["view"] == "byte_0"
+```
+
+The bounded search considers whole snapshots and byte-offset combinations. The result is a measured candidate model, not an inference of the source machine's complete instruction set.
+
+### Navigate a learned state transition
+
+```python
+result = ground.navigate(bytes((3, 250)), 10**12 + 5, "counter_register")
+assert result["terminal_state"] == f"{(3 + 10**12 + 5) % 4:02x}"
+assert result["evaluated_steps"] <= 4
+assert result["evaluated_steps"] + result["skipped_steps"] == 10**12 + 5
+print(result)
+```
+
+A deterministic observed cycle can be jumped with cycle indexing. The output is the projected state (hex), not a synthetic reconstruction of omitted bytes. If any required transition was not observed or has multiple observed successors, navigation raises `ValueError`. To examine a new file or captured machine snapshot, pass its bytes to `ground.lift(snapshot)`, then fit actual observed before/after pairs before predicting transitions.
+
+---
+ 
 ## 1. Navigate an affine state
 
 The CLI evaluates the state after `steps` applications of `x -> (a*x + b) % modulus`:
