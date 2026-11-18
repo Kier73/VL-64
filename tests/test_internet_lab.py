@@ -1,5 +1,6 @@
 """Offline contract tests for the public Internet observation laboratory."""
 import hashlib
+import base64
 import json
 import socket
 import struct
@@ -204,3 +205,43 @@ def test_non_ls_refs_post_is_refused_before_network():
     with pytest.raises(ValueError):
         lab.fetch("git_v2_ls_refs", "https://api.github.com/repos/Kier73/VL-64",
                   method="POST", payload=b"hello")
+
+
+def test_offline_dataset_packet_verification_and_adversarial_edits():
+    raw = (struct.pack("!HHHHHH", 0, 0x8180, 1, 1, 0, 0)
+           + b"\x07example\x03com\x00"
+           + struct.pack("!HH", 1, 1)
+           + b"\xc0\x0c"
+           + struct.pack("!HHIH", 1, 1, 30, 4)
+           + b"\x5d\xb8\xd7\x0e")
+    decoded = lab.decode_dns_a(raw)
+    ground = lab.InternetGround()
+    ground.node("query", "dns_wire_query")
+    ground.node("answer", "dns_snapshot")
+    ground.link("query", "answer", "doh", lab.digest(raw))
+    report = {
+        "schema": lab.SCHEMA,
+        "observations": [{
+            "operation": "cloudflare_doh_wire_A_example.com",
+            "raw_packet_b64": base64.b64encode(raw).decode("ascii"),
+            "body_sha256": lab.digest(raw),
+            "answer_set_sha256": decoded["answer_set_sha256"],
+        }],
+        "graph": {"nodes": ground.nodes, "edges": ground.edges,
+                  "fingerprint": ground.fingerprint()},
+        "navigation": {"status": "UNRESOLVED"},
+    }
+    def resign():
+        report["dataset_digest"] = lab.domain_digest(
+            "vl64.internet-dataset.v1",
+            {k: v for k, v in report.items() if k != "dataset_digest"})
+    resign()
+    assert lab.verify_dataset(report)["packet_replays"] == 1
+    report["observations"][0]["raw_packet_b64"] = base64.b64encode(
+        raw[:-1] + b"\x11").decode()
+    assert lab.verify_dataset(report)["status"] == "REJECTED"
+    resign()  # Even with a newly computed report digest, raw witness is wrong.
+    assert lab.verify_dataset(report)["status"] == "REJECTED"
+    report["observations"][0]["raw_packet_b64"] = "not:::base64"
+    resign()
+    assert lab.verify_dataset(report)["status"] == "REJECTED"
