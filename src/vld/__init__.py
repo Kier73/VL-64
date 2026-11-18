@@ -23,7 +23,7 @@ from .micro_substrates import (
     topk_moe_routing, StreamPathMachine
 )
 
-from .micro_translation import ObservedGround
+from .micro_translation import ObservedGround, ObserverIntention
 
 from .micro_control import (
     NavigationCostVector, IntentExpr, IntentionSpec,
@@ -45,7 +45,7 @@ __all__ = [
     "compile_polyhedral_hinge_1d", "eval_polyhedral_hinge_1d", "LoRAMorphism",
     "ByteLens", "PageSpace", "GitWireV2Parser", "HeadlessOS", "SafetensorsGlance",
     "topk_moe_routing", "StreamPathMachine",
-    "ObservedGround", "NavigationCostVector", "IntentExpr", "IntentionSpec", "EffectLedger",
+    "ObservedGround", "ObserverIntention", "NavigationCostVector", "IntentExpr", "IntentionSpec", "EffectLedger",
     "IntentionCompiler", "QuorumAuthority", "meta_arbitrator_utility",
     "AutopoieticDiscoveryLoop", "verify_bundle_standalone", "run_self_verification", "GroundRegistry"
 ]
