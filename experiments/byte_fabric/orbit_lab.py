@@ -49,6 +49,20 @@ def experiment():
         if base64.b64decode(result["result"]["data_b64"])!=observed[i]:
             raise RuntimeError("Unseen snapshot reconstruct failed")
         tested.append(i)
+    # Compare the original iterative state-machine behavior at a horizon
+    # short enough to compute directly, before navigating a distant horizon.
+    short_horizon=200000
+    initial=ground["initial_state"]
+    start=time.perf_counter_ns()
+    direct=initial
+    for _ in range(short_horizon):
+        direct=(1664525*direct+1013904223)%(2**32)
+    direct_ms=(time.perf_counter_ns()-start)/1000000
+    start=time.perf_counter_ns()
+    shortcut=machine.realize(short_horizon,"state.scalar")
+    shortcut_ms=(time.perf_counter_ns()-start)/1000000
+    if direct!=shortcut["result"]["value"]:
+        raise RuntimeError("Navigation did not reproduce the iterative machine")
     horizon=10**12
     start=time.perf_counter_ns()
     distant=machine.realize(horizon,"digest.sha256")
@@ -80,6 +94,10 @@ def experiment():
             "route":[s["name"] for s in distant["route"]["stages"]],
             "training_ms":round(learned_ms,4),
             "trillion_step_navigation_ms":round(navigate_ms,4),
+            "direct_reference_horizon":short_horizon,
+            "direct_reference_ms":round(direct_ms,4),
+            "compressed_jump_ms":round(shortcut_ms,4),
+            "short_horizon_speedup":round(direct_ms/max(shortcut_ms,0.000001),2),
             "basis_entries_cached":len(machine._powers),
             "core_source_modified":False,
         },
@@ -110,6 +128,8 @@ def main():
         json.dumps(req.to_dict(),indent=2,sort_keys=True)+"\n")
     print("VL64_COMPRESSIVE_GROUND_REPORT "+
           json.dumps(results["report"],sort_keys=True))
+    print("VL64_LEARNED_GROUND_JSON "+
+          json.dumps(results["ground"],sort_keys=True,separators=(",",":")))
 
 
 if __name__=="__main__":
