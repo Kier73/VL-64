@@ -234,7 +234,7 @@ class ObserverIntention:
         if not isinstance(operation, str) or not 0 < len(operation) <= 64 or any(
                 c not in "abcdefghijklmnopqrstuvwxyz0123456789._-" for c in operation):
             raise ValueError("Invalid operation")
-        if not isinstance(target, str) or not 0 < len(target) <= 256:
+        if not isinstance(target, str) or not 0 < len(target) <= 4096:
             raise ValueError("Invalid target")
         if output not in ("json", "jsonl", "text"):
             raise ValueError("Invalid output format")
