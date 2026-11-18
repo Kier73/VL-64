@@ -171,14 +171,21 @@ def git_advertisement():
         return rec
     try:
         frames = GitWireV2Parser.parse_pkt_lines(raw)
-        if not frames or not frames[0].startswith(b"version 2"):
+        version_at = next((i for i, frame in enumerate(frames)
+                           if frame.strip() == b"version 2"), None)
+        if version_at is None:
             raise ValueError("No Git protocol v2 advertisement")
-        capabilities = sorted({frame.decode("ascii").strip().split("=")[0]
-                               for frame in frames[1:] if frame and
-                               len(frame) < 256})
+        # Smart HTTP may include "# service=git-upload-pack" and flush
+        # before the version line; these are protocol framing, not errors.
+        caps = [frame.decode("ascii").strip() for frame in frames[version_at + 1:]
+                if frame and len(frame) < 256]
+        capabilities = sorted({item.split("=")[0] for item in caps})
         rec.update({
             "interpretation": "git-protocol-v2-capability-advertisement",
-            "frames": len(frames), "capabilities": capabilities,
+            "frames": len(frames),
+            "smart_http_service_preamble": any(
+                frame.startswith(b"# service=git-upload-pack") for frame in frames),
+            "capabilities": capabilities,
             "scope": "remote_protocol_advertisement_not_local_git_execution",
         })
     except (UnicodeError, ValueError) as exc:
