@@ -192,12 +192,20 @@ def ground_for_capture(capture, *, hint="", decoders=None):
         "digest_scope": "full-resource" if capture["complete"] else "captured-prefix-only",
         "transport": capture.get("transport", {}),
     }
+    evidence["observation_digest"] = domain_digest(
+        "vl64.byte-capture-evidence.v1", evidence)
     ground = {"schema": "vl64.generic-byte-ground.v1",
               "observation": evidence, "view": view,
               "supported_realizers": list(DEFAULT_OPS)}
     if decoders is not None:
         ground["extended_views"] = decoders.describe(payload, hint=hint)
-    ground["ground_digest"] = domain_digest("vl64.generic-byte-ground.v1", ground)
+    # Structural identity is independent of source, clock, network latency
+    # and transport. Evidence identity is separately capture-specific.
+    structure = {"schema": ground["schema"], "view": view,
+                 "capture_scope": evidence["digest_scope"],
+                 "extended_views": ground.get("extended_views", [])}
+    ground["ground_digest"] = domain_digest(
+        "vl64.generic-byte-structure.v1", structure)
     return ground
 
 
@@ -321,6 +329,7 @@ class QualifiedByteExecutor:
             "status": "EXECUTED_LOCAL",
             "operator": operator,
             "source_ground_digest": ground["ground_digest"],
+            "source_observation_digest": ground["observation"]["observation_digest"],
             "input_sha256": sha256(data),
             "input_scope": "full" if capture["complete"] else "prefix",
             "result": result,
