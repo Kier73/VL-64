@@ -684,6 +684,8 @@ def main():
     parser = argparse.ArgumentParser(description="Observe public internet relations as VL-64 Grounds")
     parser.add_argument("--out", default="internet-ground-dataset.json")
     parser.add_argument("--verify-file", help="Offline replay of a saved dataset")
+    parser.add_argument("--require-github-navigation", action="store_true",
+                        help="Fail unless remote document route and Git cross-check succeed")
     args = parser.parse_args()
     if args.verify_file:
         saved = json.loads(Path(args.verify_file).read_text(encoding="utf-8"))
@@ -713,6 +715,10 @@ def main():
         raise SystemExit("No observations were acquired")
     if result["summary"]["loopback"] != "VERIFIED":
         raise SystemExit("Independent TCP semantic reference failed")
+    if args.require_github_navigation and (
+            result["summary"]["github_navigation_unresolved"] or
+            result["summary"]["git_wire_rest_head_match"] is not True):
+        raise SystemExit("Required remote GitHub navigation or Git-wire cross-check unresolved")
 
 
 if __name__ == "__main__":
