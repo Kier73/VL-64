@@ -252,3 +252,52 @@ def test_byte_operator_cannot_be_confused_with_hf_inference():
     assert compiled["execution_authority"] == "pure-local-allowlisted-operation-only"
     req = ObserverIntention("hf.model.infer", "openai-community/gpt2")
     assert compile_intention(req)["status"] == "UNRESOLVED"
+
+
+def test_observer_requested_data_format_can_carry_exact_binary():
+    payload = bytes((0, 1, 255, 128, 17))
+    target = "inline:b64," + base64.b64encode(payload).decode("ascii")
+    intent = request(target=target, include_data=True)
+    receipt = byte_arbitrate(intent)
+    assert receipt["observed_data"]["scope"] == "full-resource"
+    assert base64.b64decode(receipt["observed_data"]["data"]) == payload
+    assert json.loads(render_byte_receipt(receipt, "json"))["observed_data"]["encoding"] == "base64"
+    assert "Observed data (base64):" in render_byte_receipt(receipt, "text")
+
+
+def test_inline_capture_budget_and_binary_partial_execution():
+    payload = bytes(range(90))
+    target = "inline:b64," + base64.b64encode(payload).decode()
+    observed = byte_arbitrate(request(target=target, max_bytes=8, include_data=True))
+    assert observed["status"] == "PARTIAL_BYTE_GROUND"
+    assert observed["observed_data"]["scope"] == "captured-prefix"
+    assert base64.b64decode(observed["observed_data"]["data"]) == payload[:8]
+    assert observed["ground"]["observation"]["declared_total_bytes"] == 90
+    denied = byte_arbitrate(request("bytes.execute", target, operator="sha256",
+                                    max_bytes=8))
+    assert denied["status"] == "UNRESOLVED"
+    assert denied["execution"]["reason"] == "FULL_RESOURCE_REQUIRED"
+    ranged = byte_arbitrate(request("bytes.execute", target, operator="slice",
+                                    max_bytes=8, parameters={"start":4,"length":4}))
+    assert ranged["status"] == "EXECUTED_LOCAL"
+    assert ranged["execution"]["input_scope"] == "prefix"
+
+
+def test_execution_receipt_replay_rejects_modified_output():
+    req = request("bytes.execute", operator="json.pointer",
+                  parameters={"pointer": "/observer/intent"})
+    receipt = byte_arbitrate(req, root=ROOT)
+    captured = acquire(req.spec["target"], root=ROOT)
+    replayed = replay_byte_receipt(receipt, capture=captured)
+    assert replayed["status"] == "VERIFIED_BYTE_GROUND"
+    assert replayed["operations_replayed"] == 1
+    receipt["execution"]["result"]["value"] = "fabricated"
+    assert replay_byte_receipt(receipt, capture=captured)["reason"] == "EXECUTION_RESULT_MISMATCH"
+
+
+def test_byte_range_parameter_needs_explicit_boolean():
+    req = request("bytes.observe", target="inline:b64,AAAA",
+                  max_bytes=8, byte_range="yes")
+    result = byte_arbitrate(req)
+    assert result["status"] == "UNRESOLVED"
+    assert result["reason"] == "ValueError"
