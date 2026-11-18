@@ -6,6 +6,7 @@ loopback experiment. Records verifiable data, not arbitrary external authority.
 from __future__ import annotations
 
 import argparse
+import base64
 import datetime
 import hashlib
 import ipaddress
@@ -136,6 +137,89 @@ def doh_cloudflare():
         })
     except (ValueError, KeyError, TypeError) as exc:
         rec["interpretation"] = refusal("doh_json_decode", exc)
+    return rec
+
+
+def _skip_dns_name(raw, offset):
+    """Skip a DNS name with bounded labels or a compression pointer."""
+    while True:
+        if offset >= len(raw):
+            raise ValueError("Truncated DNS name")
+        n = raw[offset]
+        if n & 0xC0 == 0xC0:
+            if offset + 1 >= len(raw):
+                raise ValueError("Truncated DNS pointer")
+            return offset + 2
+        if n & 0xC0 or n > 63:
+            raise ValueError("Invalid DNS label")
+        offset += 1
+        if n == 0:
+            return offset
+        offset += n
+        if offset > len(raw):
+            raise ValueError("Truncated DNS label")
+
+
+def decode_dns_a(raw):
+    """Decode a bounded DNS message, preserving RCODE and A-answer evidence."""
+    if len(raw) < 12:
+        raise ValueError("DNS header incomplete")
+    ident, flags, qd, an, ns, ar = struct.unpack_from("!HHHHHH", raw)
+    if not (flags & 0x8000) or ident != 0 or qd != 1 or an > 128:
+        raise ValueError("Unexpected DNS response identity or counts")
+    offset = _skip_dns_name(raw, 12)
+    if offset + 4 > len(raw):
+        raise ValueError("Truncated DNS question")
+    qtype, qclass = struct.unpack_from("!HH", raw, offset)
+    if (qtype, qclass) != (1, 1):
+        raise ValueError("Unexpected DNS query type")
+    offset += 4
+    addresses, ttls = set(), []
+    for _ in range(an):
+        offset = _skip_dns_name(raw, offset)
+        if offset + 10 > len(raw):
+            raise ValueError("Truncated DNS answer")
+        kind, cls, ttl, length = struct.unpack_from("!HHIH", raw, offset)
+        offset += 10
+        if offset + length > len(raw):
+            raise ValueError("Truncated DNS answer data")
+        if (kind, cls, length) == (1, 1, 4):
+            addresses.add(str(ipaddress.IPv4Address(raw[offset:offset+4])))
+            ttls.append(ttl)
+        offset += length
+    return {
+        "dns_rcode": flags & 15,
+        "answer_count": len(addresses),
+        "answer_set_sha256": digest(json.dumps(sorted(addresses)).encode("utf-8")),
+        "ttl_min": min(ttls) if ttls else None,
+        "ttl_max": max(ttls) if ttls else None,
+        "dns_wire_response_bytes": len(raw),
+        "dns_header_answer_count": an,
+        "dns_extra_sections": ns + ar,
+    }
+
+
+def doh_wire_cloudflare():
+    """Encode an actual DNS wire-format A query carried over HTTPS."""
+    name = b"\x07example\x03com\x00"
+    raw_query = struct.pack("!HHHHHH", 0, 0x0100, 1, 0, 0, 0)
+    raw_query += name + struct.pack("!HH", 1, 1)
+    encoded = base64.urlsafe_b64encode(raw_query).rstrip(b"=").decode("ascii")
+    rec, raw = fetch(
+        "cloudflare_doh_wire_A_example.com",
+        "https://cloudflare-dns.com/dns-query?dns=" + encoded,
+        headers={"Accept": "application/dns-message"}, max_body=16384,
+    )
+    rec["query_packet_sha256"] = digest(raw_query)
+    rec["query_packet_bytes"] = len(raw_query)
+    if rec["status"] != "OBSERVED" or rec["http_status"] != 200:
+        return rec
+    try:
+        rec.update(decode_dns_a(raw))
+        rec["interpretation"] = "dns-wire-response-a"
+        rec["scope"] = "verified_dns_wire_decode_of_https_response_not_dnssec"
+    except (ValueError, struct.error) as exc:
+        rec["interpretation"] = refusal("dns_wire_decode", exc)
     return rec
 
 
@@ -390,10 +474,16 @@ def run():
             graph.link(a, b, "os_resolve", dns["address_set_sha256"])
     doh = doh_cloudflare()
     observations.append(doh)
+    wire = doh_wire_cloudflare()
+    observations.append(wire)
     if doh["status"] == "OBSERVED" and "answer_set_sha256" in doh:
         a = graph.node("doh:example.com:A", "dns_over_https_query")
         b = graph.node("dns-answers:" + doh["answer_set_sha256"], "dns_snapshot")
         graph.link(a, b, "cloudflare_doh_answer", doh["body_sha256"])
+    if wire.get("interpretation") == "dns-wire-response-a":
+        a = graph.node("doh-wire:example.com:A", "dns_wire_query")
+        b = graph.node("dns-answers:" + wire["answer_set_sha256"], "dns_snapshot")
+        graph.link(a, b, "cloudflare_doh_dns_packet", wire["body_sha256"])
     for probe in (tls_handshake, git_advertisement, loopback_transform):
         observations.append(probe())
     cf, _ = fetch("cloudflare_homepage", "https://www.cloudflare.com/",
@@ -416,6 +506,11 @@ def run():
         "github_navigation": repo_nav.get("status"),
         "github_navigation_hops": repo_nav.get("hops"),
         "cloudflare_doh": doh.get("status"),
+        "cloudflare_dns_wire": wire.get("interpretation", wire.get("status")),
+        "nested_decoding_refusals": sum(
+            isinstance(x.get("interpretation"), dict) and
+            x["interpretation"].get("status") == "UNRESOLVED"
+            for x in observations),
         "loopback": next((x["status"] for x in observations if
                           x["operation"] == "tcp_loopback_endpoint_transform"), "UNRESOLVED"),
     }
