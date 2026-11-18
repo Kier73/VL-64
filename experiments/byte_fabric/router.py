@@ -144,7 +144,7 @@ def render_byte_receipt(receipt, output):
     raise ValueError("Unqualified output format")
 
 
-def replay_byte_receipt(receipt, *, capture, decoders=None):
+def replay_byte_receipt(receipt, *, capture, decoders=None, executor=None):
     """Re-evaluate Ground evidence against supplied bytes; no remote attestations."""
     try:
         ground = receipt["ground"]
@@ -160,7 +160,15 @@ def replay_byte_receipt(receipt, *, capture, decoders=None):
             "format_hint", receipt["intention"]["target"]), decoders=decoders)
         if verified["ground_digest"] != ground["ground_digest"]:
             return {"status": "REJECTED", "reason": "GROUND_MISMATCH"}
+        operation = receipt.get("execution")
+        if operation is not None:
+            options = receipt["intention"]["options"]
+            computed = (executor or QualifiedByteExecutor()).execute(
+                capture, verified, options["operator"], options.get("parameters", {}))
+            if computed != operation:
+                return {"status": "REJECTED", "reason": "EXECUTION_RESULT_MISMATCH"}
         return {"status": "VERIFIED_BYTE_GROUND", "ground_digest": verified["ground_digest"],
-                "scope": "same-input-digest-and-syntax-replay-not-external-truth"}
+                "operations_replayed": 1 if operation is not None else 0,
+                "scope": "same-input-and-local-operation-replay-not-external-truth"}
     except (ValueError, KeyError, TypeError, OSError):
         return {"status": "REJECTED", "reason": "INVALID_EVIDENCE"}
