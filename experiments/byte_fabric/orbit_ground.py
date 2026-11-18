@@ -368,6 +368,45 @@ class ComposedGroundNavigator:
         record["receipt_digest"]=domain_digest("vl64.composed-ground-receipt.v1",record)
         return record
 
+    def test_new_observations(self, observations):
+        """Challenge predicted states with *new* independently acquired frames.
+
+        Contradictions are returned as explicit witnesses; the admitted Ground
+        is not silently rewritten or treated as universally predictive.
+        """
+        observed=list(observations)
+        if not 1 <= len(observed) <= 512:
+            raise ValueError("Provide 1..512 independently observed indexed frames")
+        agreements=[]
+        contradictions=[]
+        for index,frame in observed:
+            if (type(index) is not int or not 0 <= index <= MAX_STEPS or
+                    not isinstance(frame,bytes) or len(frame) != len(self.template)):
+                raise ValueError("Invalid indexed observation")
+            state=self._powered_jump(self.ground["initial_state"],index)
+            expected=(self.template[:self.codec.offset]+self.codec.encode(state)+
+                      self.template[self.codec.offset+self.codec.width:])
+            record={"index":index,"observed_sha256":_digest(frame),
+                    "predicted_sha256":_digest(expected)}
+            if expected==frame:
+                agreements.append(record)
+            else:
+                contradictions.append(record)
+        proof={
+            "schema":"vl64.compressed-ground-challenge.v1",
+            "ground_digest":self.ground["ground_digest"],
+            "status":"CONTRADICTED" if contradictions else "CONSISTENT_ON_NEW_OBSERVATIONS",
+            "observations":len(observed),
+            "agreements":len(agreements),
+            "contradictions":contradictions[:16],
+            "observation_evidence_digest":domain_digest(
+                "vl64.ground-challenge-evidence.v1",
+                [(index,_digest(frame)) for index,frame in observed]),
+            "scope":"exact_checked_frames_only_not_proof_for_unobserved_times",
+        }
+        proof["challenge_digest"]=domain_digest("vl64.ground-challenge.v1",proof)
+        return proof
+
     def check_against_core(self, steps):
         """Independent core's dual-matrix/monoid derivation for a chosen horizon."""
         return self._powered_jump(self.ground["initial_state"],steps)==affine_navigate(
