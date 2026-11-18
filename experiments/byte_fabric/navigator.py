@@ -110,7 +110,9 @@ class GoalNavigator:
                 reason = "COST_CEILING"
             elif relation.requires_view != "any" and relation.requires_view not in kinds:
                 reason = "REQUIRED_VIEW_UNOBSERVED"
-            elif capability.input_kind != "any" and capability.input_kind not in kinds:
+            elif capability.input_kind != "any" and capability.input_kind != ground["view"]["kind"]:
+                # The executor enforces its built-in input type; an additional
+                # extension view alone must never override its admission rule.
                 reason = "CAPABILITY_INPUT_TYPE_MISMATCH"
             elif capability.requires_complete and not capture["complete"]:
                 reason = "COMPLETE_SOURCE_REQUIRED"
