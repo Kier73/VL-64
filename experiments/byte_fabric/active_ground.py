@@ -110,6 +110,76 @@ class ActionHypothesis:
         return tuple(outputs)
 
 
+class ActionGroundNavigator:
+    """Pure state-model navigation, not actual external actuation.
+
+    For a repeated single action, powers of the finite successor map give the
+    terminal modeled state in O(|states| log n). Only the terminal-step output
+    is materialized; a trillion intermediate outputs are not claimed.
+    """
+
+    def __init__(self,ground):
+        self.model=ActionHypothesis(ground)
+        self.ground=ground
+
+    def repeat(self,action,steps):
+        if action not in self.model.actions:
+            return {"status":"UNRESOLVED","reason":"UNREGISTERED_ACTION"}
+        if type(steps) is not int or not 0<=steps<=10**18:
+            return {"status":"REFUSED","reason":"INVALID_ACTION_HORIZON"}
+        model=self.model
+        size=len(model.transitions)
+        transition=tuple(model.transitions[state][action][0]
+                         for state in range(size))
+        # A finite-state transformation is a compact computational relation;
+        # power composition avoids materializing predecessor histories.
+        def compose(left,right):
+            return tuple(left[right[i]] for i in range(size))
+        result=tuple(range(size))
+        power=transition
+        remaining=steps
+        composed=0
+        while remaining:
+            if remaining&1:
+                result=compose(power,result)
+                composed+=1
+            power=compose(power,power)
+            remaining>>=1
+            composed+=1
+        state=result[model.initial]
+        last=None
+        if steps:
+            # Find predecessor at t-1 with one more bounded power calculation
+            # rather than keeping the whole path.
+            prefix=tuple(range(size))
+            power=transition
+            remaining=steps-1
+            while remaining:
+                if remaining&1:
+                    prefix=compose(power,prefix)
+                power=compose(power,power)
+                remaining>>=1
+            before=prefix[model.initial]
+            last=model.transitions[before][action][1]
+        receipt={
+            "schema":"vl64.action-model-navigation.v1",
+            "status":"MODELED_ACTION_NAVIGATION",
+            "ground_digest":model.digest,
+            "action":action,
+            "steps":steps,
+            "terminal_state":state,
+            "last_output_hex":last.hex() if last is not None else None,
+            "last_output_sha256":_digest(last) if last is not None else None,
+            "model_transformation_size":size,
+            "power_compositions":composed,
+            "scope":"hypothetical-deterministic-model-not-remote-action-execution",
+        }
+        receipt["receipt_digest"]=domain_digest(
+            "vl64.action-model-navigation.v1",receipt)
+        return receipt
+
+
+
 class QualifiedResetProbe:
     """A host-installed callback; no observer input may install one."""
 
