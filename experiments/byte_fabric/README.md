@@ -2,7 +2,7 @@
 
 **Purpose:** make the observer's request **architecture-, source-, webpage-, and data-type-independent** at the representation layer. The same contract accepts arbitrary bytes and preserves their exact observed identity, even when no decoder recognizes their meaning. Specialized interpretation and realization are explicit, optional host capabilities.
 
-This lab is outside the 65,536-byte VL-64 source package, reusing the existing \`vld.ObserverIntention\` contract and Ground digests. It does **not** claim arbitrary machine instruction execution or full semantics from a signature.
+This lab is outside the 65,536-byte VL-64 source package, reusing the existing `vld.ObserverIntention` contract and Ground digests. It does **not** claim arbitrary machine instruction execution or full semantics from a signature.
 
 ## Core idea
 
@@ -21,14 +21,14 @@ This works whether the source is a local file, an approved HTTPS page, an inline
 
 | Observer operation | Result | Requirements |
 | --- | --- | --- |
-| \`bytes.observe\` | Exact byte/prefix digest, completeness, format hints, Ground | A qualified source adapter |
-| \`bytes.execute\` + \`sha256\` | SHA-256 of **all** acquired bytes | Complete source |
-| \`bytes.execute\` + \`slice\` | Base64-encoded exact byte interval | Interval wholly observed; up to 4 KiB return |
-| \`bytes.execute\` + \`json.pointer\` | JSON scalar/object/array at requested RFC 6901-like pointer | Complete, valid JSON |
-| \`bytes.execute\` + \`html.links\` | Syntactically observed page links and title | Complete, valid UTF-8 HTML |
-| \`bytes.execute\` + \`bytes.stats\` | Count, zero bytes, distinct-byte count | Partial accepted, but result clearly scoped to captured bytes |
+| `bytes.observe` | Exact byte/prefix digest, completeness, format hints, Ground | A qualified source adapter |
+| `bytes.execute` + `sha256` | SHA-256 of **all** acquired bytes | Complete source |
+| `bytes.execute` + `slice` | Base64-encoded exact byte interval | Interval wholly observed; up to 4 KiB return |
+| `bytes.execute` + `json.pointer` | JSON scalar/object/array at requested RFC 6901-like pointer | Complete, valid JSON |
+| `bytes.execute` + `html.links` | Syntactically observed page links and title | Complete, valid UTF-8 HTML |
+| `bytes.execute` + `bytes.stats` | Count, zero bytes, distinct-byte count | Partial accepted, but result clearly scoped to captured bytes |
 
-Only *registered* operators may execute. Byte-observation and actual action authority are separate. There is no \`python.eval\`, arbitrary system command, unrestricted API POST, or implicit model-inference operator.
+Only *registered* operators may execute. Byte-observation and actual action authority are separate. There is no `python.eval`, arbitrary system command, unrestricted API POST, or implicit model-inference operator.
 
 ## One contract for every observed system
 
@@ -64,9 +64,9 @@ python -m experiments.observer_intent.arbitrate \
   --out page-ground.json
 ~~~
 
-This sample observes \`https://example.com/\` as bytes, then recognizes HTML. It does not need a hardcoded example.com semantics module.
+This sample observes `https://example.com/` as bytes, then recognizes HTML. It does not need a hardcoded example.com semantics module.
 
-To permit a **new trusted public HTTPS host**, explicitly pass \`--allow-host host.example\` to the CLI, rather than letting an untrusted intention grant itself network access. The observer request only describes a destination; the host running the adapter sets its own scope. DNS public-address filtering is a defense-in-depth check; it is not an IP-pinned anti-rebinding security guarantee. Avoid registering untrusted domains where local network access must be excluded by policy.
+To permit a **new trusted public HTTPS host**, explicitly pass `--allow-host host.example` to the CLI, rather than letting an untrusted intention grant itself network access. The observer request only describes a destination; the host running the adapter sets its own scope. DNS public-address filtering is a defense-in-depth check; it is not an IP-pinned anti-rebinding security guarantee. Avoid registering untrusted domains where local network access must be excluded by policy.
 
 ### Arbitrary file and opaque binary
 
@@ -79,9 +79,9 @@ To permit a **new trusted public HTTPS host**, explicitly pass \`--allow-host ho
 }
 ~~~
 
-\`include_data=true\` returns up to 4 KiB of observed content as base64 alongside its digest and clear full/prefix scope. The same option works on a file or web page. For larger observations, use a registered qualified slice operation or an external streaming/capture adapter.
+`include_data=true` returns up to 4 KiB of observed content as base64 alongside its digest and clear full/prefix scope. The same option works on a file or web page. For larger observations, use a registered qualified slice operation or an external streaming/capture adapter.
 
-Local \`workspace:\` paths are resolved under an explicit \`--byte-root\` (default current working directory). Path escapes are refused, including traversal and symlink resolutions outside the root. The source is never authorized to execute simply because its extension resembles a program.
+Local `workspace:` paths are resolved under an explicit `--byte-root` (default current working directory). Path escapes are refused, including traversal and symlink resolutions outside the root. The source is never authorized to execute simply because its extension resembles a program.
 
 ## Portable built-in recognition
 
@@ -100,13 +100,13 @@ A format detection is a *declared interpretation based on observed bytes*, never
 
 ### Inspecting Safetensors without reading weight values
 
-When the source hint ends in \`.safetensors\`, the lab can parse the first eight bytes as the little-endian JSON header length, then inspect only that header if it fits the capture budget. It reports tensor names, shapes, dtypes and data offsets, with \`weight_payload_interpreted=false\`. Header interpretation is based on the public [Safetensors format specification](https://github.com/huggingface/safetensors#format); HTTP range transfer may supply only the relevant bytes. If the header is not completely acquired, the Ground says \`safetensors-unobserved-header\` rather than producing invented tensor properties.
+When the source hint ends in `.safetensors`, the lab can parse the first eight bytes as the little-endian JSON header length, then inspect only that header if it fits the capture budget. It reports tensor names, shapes, dtypes and data offsets, with `weight_payload_interpreted=false`. Header interpretation is based on the public [Safetensors format specification](https://github.com/huggingface/safetensors#format); HTTP range transfer may supply only the relevant bytes. If the header is not completely acquired, the Ground says `safetensors-unobserved-header` rather than producing invented tensor properties.
 
 For an actual remote Safetensors file, hosting/CDN and redirect policy must explicitly authorize the header-range transfer. The default HTTPS adapter refuses unapproved cross-host redirects and does not download weights in the preconfigured tests.
 
 ## Host plug-ins are the generality mechanism
 
-The optional [extensions.py](extensions.py) registry supports additional systems **without special-casing them in VL-64**. A host can register a source such as \`sensor:\`, \`process:\`, \`screen:\`, \`packet:\`, \`memory:\` and a typed decoder. The source callback returns bytes plus explicit completeness/provenance; the decoder adds a view while the original byte identity remains authoritative.
+The optional [extensions.py](extensions.py) registry supports additional systems **without special-casing them in VL-64**. A host can register a source such as `sensor:`, `process:`, `screen:`, `packet:`, `memory:` and a typed decoder. The source callback returns bytes plus explicit completeness/provenance; the decoder adds a view while the original byte identity remains authoritative.
 
 ~~~python
 from vld import ObserverIntention
@@ -138,7 +138,7 @@ assert receipt["ground"]["extended_views"][0]["value"]["interpreted_register"] =
 
 Only host-side installation registers callbacks. Arbitrary remote bytes, a JSON intention, a webpage or a model card cannot install executable Python code through this interface.
 
-A \`QualifiedByteExecutor\` can likewise register a new pure local operator under an explicit \`OperationCapability\`. The generic router considers only the admitted registry; other requests are refused. Model inference, remote writes, arbitrary code execution and spending must use **separate authority-bearing realizers** with independent verification.
+A `QualifiedByteExecutor` can likewise register a new pure local operator under an explicit `OperationCapability`. The generic router considers only the admitted registry; other requests are refused. Model inference, remote writes, arbitrary code execution and spending must use **separate authority-bearing realizers** with independent verification.
 
 ## Demonstrated, independently tested paths
 
@@ -151,7 +151,7 @@ The workflow [generic-byte-fabric.yml](../../.github/workflows/generic-byte-fabr
 ## Source and execution safety rules
 
 - Source acquisition: explicitly authorized local root, bounded inline bytes, or HTTPS host allowlist with public-DNS check.
-- HTTPS: no redirects, URL credentials, private addresses or unsafe ports; range responses require exact \`Content-Range\` consistency, and a server ignoring Range is handled as a bounded prefix when necessary.
+- HTTPS: no redirects, URL credentials, private addresses or unsafe ports; range responses require exact `Content-Range` consistency, and a server ignoring Range is handled as a bounded prefix when necessary.
 - Capture: content and completeness are separate; a prefix digest is **never** a full-resource digest.
 - Decoder: has no authority to fabricate unobserved bytes or override exact source identity.
 - Execution: a registered, pure, bounded operation; full-file operations refuse incomplete captures.
