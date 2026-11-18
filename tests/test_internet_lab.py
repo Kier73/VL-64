@@ -174,3 +174,33 @@ def test_git_smart_http_advertisement_includes_service_preamble(monkeypatch):
     assert record["smart_http_service_preamble"]
     assert "ls-refs" in record["capabilities"]
     assert "fetch" in record["capabilities"]
+
+
+def test_git_ls_refs_sends_bounded_read_only_request(monkeypatch):
+    head = "c" * 40
+    raw = (GitWireV2Parser.encode_pkt_line(head + " HEAD symref-target:refs/heads/main\n")
+           + GitWireV2Parser.encode_pkt_line(None))
+    def fake_fetch(operation, url, **kwargs):
+        assert operation == "git_v2_ls_refs"
+        assert url.endswith("/Kier73/VL-64/git-upload-pack")
+        assert kwargs["method"] == "POST"
+        payload = kwargs["payload"]
+        assert b"command=ls-refs" in payload
+        assert b"ref-prefix HEAD" in payload
+        assert b"command=fetch" not in payload
+        return ({"status": "OBSERVED", "http_status": 200,
+                 "body_sha256": lab.digest(raw)}, raw)
+    monkeypatch.setattr(lab, "fetch", fake_fetch)
+    rec = lab.git_read_only_ls_refs()
+    assert rec["head_commit"] == head
+    assert rec["interpretation"] == "git-v2-ls-refs"
+    assert rec["request_packet_bytes"] > 0
+
+
+def test_non_ls_refs_post_is_refused_before_network():
+    with pytest.raises(ValueError):
+        lab.fetch("arbitrary", "https://github.com/Kier73/VL-64/git-upload-pack",
+                  method="POST", payload=b"hello")
+    with pytest.raises(ValueError):
+        lab.fetch("git_v2_ls_refs", "https://api.github.com/repos/Kier73/VL-64",
+                  method="POST", payload=b"hello")
