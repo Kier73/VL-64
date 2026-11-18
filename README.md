@@ -200,6 +200,22 @@ python -m experiments.observer_intent.arbitrate \
 
 The observer-facing `ground.active.plan` request recommends an informative experiment without executing it. Actual action execution requires a separately installed qualified host. The `ground.action.navigate` request can later navigate a saved model through a trillion **modeled** repeated transitions without sending those actions to an external service.
 
+## Learn candidate Grounds from action traces
+
+VL-64 can now generate **action-conditioned Ground hypotheses from observed byte traces**, rather than requiring a user or host to supply every candidate transition table. It checks observed input/output consistency, searches bounded state mergings, proposes distinguishing probes, and resynthesizes after new evidence arrives.
+
+```bash
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/trace_derived_next_probe.json \
+  --out next-experiment.json
+
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/trace_derived_trillion.json \
+  --out modeled-result.json
+```
+
+The first command **recommends** an experiment from two saved input/output traces; it does not execute host actions. The second navigates the learned finite-state model, rather than physically running a trillion operations. The [Trace-Derived Action Grounds](docs/TRACE_DERIVED_ACTION_GROUNDS.md) document explains the evidence, 62 independent held-out checks, and limits of model inference.
+
 ## Documentation
 
 - [Usage guide](docs/USAGE_GUIDE.md) — commands, API examples, and extension points.
@@ -209,3 +225,4 @@ The observer-facing `ground.active.plan` request recommends an informative exper
 - [Compressive Virtual Grounds](docs/COMPRESSIVE_VIRTUAL_GROUNDS.md) — discover a predictive byte interpreter, compress observed state histories, and compose distant-state navigation.
 - [Non-Affine and Observable Grounds](docs/NONAFFINE_AND_OBSERVABLE_GROUNDS.md) — discover finite-state transitions and compress according to future-stable observer equivalence.
 - [Active Action-Conditioned Grounds](docs/ACTIVE_ACTION_GROUNDS.md) — select informative host-qualified observations, refine finite hypotheses, and navigate retained models.
+- [Trace-Derived Action Grounds](docs/TRACE_DERIVED_ACTION_GROUNDS.md) — synthesize competing finite action models from byte traces, actively distinguish them, and test modeled navigation.
