@@ -1,0 +1,14 @@
+{
+  "operation": "bytes.realize",
+  "target": "inline:b64,/wECAwQF//4=",
+  "output": "text",
+  "options": {
+    "goal": {
+      "kind": "bytes.interval",
+      "parameters": {
+        "start": 1,
+        "length": 4
+      }
+    }
+  }
+}
