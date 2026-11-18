@@ -166,6 +166,9 @@ def render_byte_receipt(receipt, output):
             "Byte digest: " + str(evidence.get("content_sha256", "unobserved")),
             "Ground digest: " + str(ground.get("ground_digest", "unavailable")),
         ]
+        if ground.get("schema") == "vl64.byte-capability-ground.v1":
+            lines.append("Available capabilities: " +
+                         json.dumps(ground["catalogue"], sort_keys=True))
         if receipt.get("observed_data") is not None:
             lines.append("Observed data (base64): " + receipt["observed_data"]["data"])
             lines.append("Observed data scope: " + receipt["observed_data"]["scope"])
