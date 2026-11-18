@@ -41,7 +41,7 @@ class SourceRegistry:
     def acquire(self, target, *, max_bytes):
         for prefix, (capability, handler) in self.adapters.items():
             if target.startswith(prefix):
-                if type(max_bytes) is not int or max_bytes > capability.max_bytes:
+                if type(max_bytes) is not int or not 1 <= max_bytes <= capability.max_bytes:
                     raise ValueError("Requested source exceeds capability")
                 capture = handler(target, max_bytes)
                 if (not isinstance(capture, dict) or
@@ -50,7 +50,12 @@ class SourceRegistry:
                         not isinstance(capture.get("source"), str) or
                         len(capture["data"]) > max_bytes):
                     raise ValueError("Source adapter produced invalid evidence")
-                return capture
+                from .sources import capture_bytes
+                return capture_bytes(
+                    capture["data"], source=capture["source"],
+                    complete=capture["complete"],
+                    total_bytes=capture.get("total_bytes"),
+                    transport=capture.get("transport"))
         raise ValueError("No registered source for target")
 
 
