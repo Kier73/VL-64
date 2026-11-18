@@ -177,6 +177,54 @@ def infer_ground(training, heldout, interpreter, modulus):
     }
 
 
+def discover_ground(training, heldout):
+    """Find one changing byte span and select only a uniquely validated codec.
+
+    This is a bounded *hypothesis discovery* pass, not automatic decoding of
+    all arbitrary byte sources. Independent variable fields, uncertain endian
+    interpretations, and absent affine witnesses are explicit refusals.
+    """
+    training, heldout = list(training), list(heldout)
+    if len(training) < 5 or len(heldout) < 3:
+        raise ValueError("Insufficient samples for interpreter discovery")
+    frames=training+heldout
+    original=frames[0]
+    if not isinstance(original,bytes) or not 1 <= len(original) <= MAX_SNAPSHOT:
+        raise ValueError("Invalid reference frame")
+    if any(not isinstance(x,bytes) or len(x)!=len(original) for x in frames):
+        raise ValueError("Not one fixed-layout byte description")
+    varying=[i for i in range(len(original))
+             if any(x[i]!=original[i] for x in training[1:])]
+    if not varying:
+        raise ValueError("No witnessed changing coordinates")
+    start,end=varying[0],varying[-1]+1
+    if end-start>8 or len(varying)!=end-start:
+        raise ValueError("Multiple or oversized changing fields: need explicit interpreter")
+    candidates=[]
+    rejected=[]
+    for encoding in ("u-le","u-be","ascii-decimal"):
+        if end-start==1 and encoding=="u-be":
+            continue
+        try:
+            codec=SpanInterpreter(start,end-start,encoding)
+            record=infer_ground(training,heldout,codec,codec.capacity)
+            candidates.append((codec,record))
+        except (ValueError,TypeError) as exc:
+            rejected.append({"encoding":encoding,"reason":str(exc)[:100]})
+    if len(candidates)!=1:
+        raise ValueError("Interpreter ambiguous or not supported: "+
+                         str(len(candidates))+" admissible interpretations")
+    codec,record=candidates[0]
+    record["discovery"]={
+        "status":"UNIQUE_OBSERVED_CODEC_HYPOTHESIS",
+        "selected":codec.to_dict(),
+        "changing_positions":list(range(start,end)),
+        "rejected_candidates":rejected,
+        "scope":"one-contiguous-varying-span-with-heldout_validation",
+    }
+    return record
+
+
 def _load_ground(ground):
     if not isinstance(ground, dict):
         raise ValueError("Expected Ground object")
