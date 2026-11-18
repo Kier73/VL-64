@@ -68,6 +68,9 @@ jobs:
           python -m experiments.observer_intent.arbitrate \
             --intent experiments/byte_fabric/intents/live_model_field.json \
             --out artifacts/live-model-field.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/live_png.json \
+            --out artifacts/live-binary-png.json
       - name: Check observer outputs and refusal boundaries
         run: |
           python - <<'PY'
@@ -84,6 +87,7 @@ jobs:
               "live-sha256.json": ("EXECUTED_LOCAL", "html"),
               "live-model-metadata.json": ("OBSERVED_BYTE_GROUND", "json"),
               "live-model-field.json": ("EXECUTED_LOCAL", "json"),
+              "live-binary-png.json": ("OBSERVED_BYTE_GROUND", "png"),
           }
           for file,(status,kind) in expected.items():
               receipt = data(file)
@@ -104,6 +108,7 @@ jobs:
           assert result["execution"]["result"]["value"] is True
           assert data("live-sha256.json")["execution"]["input_scope"] == "full"
           assert data("live-model-field.json")["execution"]["result"]["value"] == "openai-community/gpt2"
+          assert data("live-binary-png.json")["ground"]["view"]["structure"]["width"] > 0
           assert data("live-partial.json")["ground"]["observation"]["capture_status"] == "PREFIX"
           PY
       - name: Upload witnessed byte observations
