@@ -206,3 +206,66 @@ def test_explicit_unknown_operator_can_never_execute_remote_code(monkeypatch):
     assert layer.compile_intention(req)["status"] == "UNRESOLVED"
     # Dispatch uses the compiled local allowlist, not dynamically added handlers.
     assert layer.arbitrate(req)["status"] == "UNRESOLVED"
+
+
+def test_observer_requires_architecture_and_selects_next_qualified_model(monkeypatch):
+    first, second = "example/train-state", "example/configured-model"
+    catalog = [
+        {"id": first, "last_modified": "2026-11-18T19:00:00Z"},
+        {"id": second, "last_modified": "2026-11-18T18:59:00Z"},
+    ]
+
+    def fake_list(limit):
+        return {"status": "OBSERVED", "observed_bytes": 200}, catalog
+
+    def fake_get(url, max_bytes):
+        if url.endswith("/api/models/" + first):
+            value = {"id": first, "sha": "a"*40,
+                     "siblings": [{"rfilename": "weights.safetensors"}]}
+        elif url.endswith("/api/models/" + second):
+            value = {"id": second, "sha": "b"*40,
+                     "siblings": [{"rfilename": "config.json"}]}
+        elif url.endswith("/resolve/" + "b"*40 + "/config.json"):
+            value = {"model_type": "gpt2", "n_layer": 3, "n_embd": 256,
+                     "n_head": 4}
+        else:
+            raise AssertionError("Unexpected URL: " + url)
+        return {"http_status": 200, "observed_bytes": 120,
+                "body_sha256": layer.sha(json.dumps(value).encode())}, value
+
+    monkeypatch.setattr(layer, "read_model_listing", fake_list)
+    monkeypatch.setattr(layer, "metadata_get", fake_get)
+    request = intent(options={"metadata_only": True,
+                              "require_architecture": True,
+                              "catalog_limit": 2,
+                              "max_candidates": 2})
+    receipt = layer.arbitrate(request)
+    assert receipt["status"] == "OBSERVED_MODEL_STRUCTURE"
+    chosen = receipt["outcome"]
+    assert chosen["ground"]["model_id"] == second
+    assert chosen["selection"]["candidate_rank"] == 2
+    assert chosen["selection"]["attempts"][0]["status"] == "PARTIAL_MODEL_STRUCTURE"
+    assert chosen["ground"]["architecture"]["n_layer"] == 3
+    assert chosen["ground"]["claims"]["model_weight_payload_bytes_read"] == 0
+
+
+def test_architecture_requirement_refuses_inadequate_catalogue(monkeypatch):
+    def fake_list(limit):
+        return {"status": "OBSERVED", "observed_bytes": 100}, [
+            {"id": "example/checkpoint", "last_modified": "2026-11-18T19:00:00Z"}]
+
+    def fake_get(url, max_bytes):
+        return {"http_status": 200, "observed_bytes": 150}, {
+            "id": "example/checkpoint", "sha": "a"*40,
+            "siblings": [{"rfilename": "checkpoint.pt"}]}
+
+    monkeypatch.setattr(layer, "read_model_listing", fake_list)
+    monkeypatch.setattr(layer, "metadata_get", fake_get)
+    req = intent(options={"require_architecture": True, "max_candidates": 1})
+    outcome = layer.arbitrate(req)
+    assert outcome["status"] == "UNRESOLVED"
+    assert outcome["outcome"]["reason"] == "NO_CANDIDATE_MET_ARCHITECTURE_REQUIREMENT"
+    assert outcome["outcome"]["weight_payload_bytes_read"] == 0
+    for bad in (0, 11, -1, True, 2.1):
+        request = intent(options={"require_architecture": True, "max_candidates": bad})
+        assert layer.arbitrate(request)["status"] == "UNRESOLVED"
