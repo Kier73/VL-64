@@ -1,0 +1,2 @@
+Any byte sequence is a Ground candidate.
+Exact observation does not imply a semantics.
