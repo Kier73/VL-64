@@ -4,6 +4,8 @@
 **Implementation:** `vld.ObserverIntention`, plus the [external observer-intention lab](../experiments/observer_intent/README.md).  
 **Core source budget:** 65,536 bytes for the VL-64 package. Acquisition and integration remain external.
 
+The general architecture-neutral interface is described separately in [Universal Byte Ground and Execution](UNIVERSAL_BYTE_GROUND_AND_EXECUTION.md). It admits arbitrary observed bytes, host-registered decoders and qualified pure operators without requiring a specific model, page or machine type. The model-specific operations in this document remain optional specializations of that general contract.
+
 ## Purpose
 
 The **external observer** chooses an intention and a desired result. VL-64 is the communicable middleman between that request and qualified state-space descriptions/operations. The external observer should not need to name the DNS query, Git ref request, model metadata file, or HTTP endpoint sequence required to realize the intention.
