@@ -173,11 +173,9 @@ def main():
     result=experiment()
     q=quotient_experiment()
     (output/"learned-observable-quotient-ground.json").write_text(
-        json.dumps(q["ground"],sort_keys=True,indent=2)+"
-")
+        json.dumps(q["ground"],sort_keys=True,indent=2)+"\n")
     (output/"observable-quotient-measurements.json").write_text(
-        json.dumps(q["report"],sort_keys=True,indent=2)+"
-")
+        json.dumps(q["report"],sort_keys=True,indent=2)+"\n")
     quotient_request=ObserverIntention(
         "ground.navigate",
         "workspace:"+(output/"learned-observable-quotient-ground.json").as_posix(),
@@ -185,8 +183,7 @@ def main():
         options={"goal":{"kind":"state.observable","steps":10**12,
                          "max_work":2,"max_hops":2}})
     (output/"observable-quotient-intention.json").write_text(
-        json.dumps(quotient_request.to_dict(),sort_keys=True,indent=2)+"
-")
+        json.dumps(quotient_request.to_dict(),sort_keys=True,indent=2)+"\n")
     ground_path=output/"learned-discrete-ground.json"
     ground_path.write_text(json.dumps(result["ground"],sort_keys=True,indent=2)+"\n")
     request=ObserverIntention(
