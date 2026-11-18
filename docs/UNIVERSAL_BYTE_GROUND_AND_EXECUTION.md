@@ -2,7 +2,7 @@
 
 **State:** Implemented first pass with live experiments, November 18, 2026.  
 **Source:** [Generic Byte Fabric](../experiments/byte_fabric/README.md).  
-**Compact-runtime policy:** The \`vld.ObserverIntention\` contract remains within the 65,536-byte package; acquisition, codec exploration and realizer adapters remain external.
+**Compact-runtime policy:** The `vld.ObserverIntention` contract remains within the 65,536-byte package; acquisition, codec exploration and realizer adapters remain external.
 
 ## Principle of generality
 
@@ -50,8 +50,8 @@ Receipt and replay
 ### Independent identities
 
 The Ground carries two fingerprints:
-- \`ground_digest\`: identity of the byte content/prefix scope and its declared structural views, independent of where the bytes were acquired or the transport cost.
-- \`observation_digest\`: identity of a specific observer's acquisition, including source and transport evidence.
+- `ground_digest`: identity of the byte content/prefix scope and its declared structural views, independent of where the bytes were acquired or the transport cost.
+- `observation_digest`: identity of a specific observer's acquisition, including source and transport evidence.
 
 If two hosts obtain the same complete representation and interpret it identically, they can share a Ground identity while preserving distinct source/capture histories. If only a prefix was observed, that identity refers **only to the prefix**, not to the unknown full contents.
 
@@ -88,9 +88,9 @@ This is the first capability-negotiation step toward a substrate-independent pla
 }
 ~~~
 
-A pure HTTPS acquisition obtains a byte representation from an authorized host, records completeness and digest, and attempts safe local syntactic interpretations. If no codec recognizes it, the outcome remains an \`opaque-bytes\` Ground rather than a failed or fabricated semantic interpretation. \`include_data\` optionally returns up to 4,096 bytes as base64, marked full or prefix.
+A pure HTTPS acquisition obtains a byte representation from an authorized host, records completeness and digest, and attempts safe local syntactic interpretations. If no codec recognizes it, the outcome remains an `opaque-bytes` Ground rather than a failed or fabricated semantic interpretation. `include_data` optionally returns up to 4,096 bytes as base64, marked full or prefix.
 
-The system supports public HTTPS host authorization through explicit host policy and local workspace root confinement. A request does not gain permission to connect to arbitrary hosts or read arbitrary local files by changing its \`target\`.
+The system supports public HTTPS host authorization through explicit host policy and local workspace root confinement. A request does not gain permission to connect to arbitrary hosts or read arbitrary local files by changing its `target`.
 
 ### Generic computation
 
@@ -127,7 +127,7 @@ sources.register(
 )
 ~~~
 
-The code above is illustrative: the host must supply actual \`frame_bytes\` from an authorized screen capture. A separate registered decoder could interpret width/height/pixel format, an instruction stream, a binary record, or a memory map, but those interpretations retain their source evidence and explicit assumptions.
+The code above is illustrative: the host must supply actual `frame_bytes` from an authorized screen capture. A separate registered decoder could interpret width/height/pixel format, an instruction stream, a binary record, or a memory map, but those interpretations retain their source evidence and explicit assumptions.
 
 The same abstraction can support:
 - software file and memory snapshots;
@@ -144,7 +144,7 @@ Adapters operate under their own permissions, provenance and capture budgets. Ge
 
 A [GitHub Actions experiment](../.github/workflows/generic-byte-fabric.yml) ran with public web resources and local/synthetic files. It demonstrated exact Grounds for text, JSON, HTML and opaque binary, plus typed header recognition for common formats and Safetensors without reading tensor values. It executed SHA-256, JSON-pointer and HTML-link operations, and rejected complete-file operations when only 512 bytes of a larger remote file had been observed.
 
-A second live operation used the **same generic JSON-byte parser** to inspect Hugging Face model metadata and extract \`/id\`; no Hugging Face-specific Ground interpreter was involved. This demonstrated 4,863-byte actual metadata responses as ordinary JSON byte sources.
+A second live operation used the **same generic JSON-byte parser** to inspect Hugging Face model metadata and extract `/id`; no Hugging Face-specific Ground interpreter was involved. This demonstrated 4,863-byte actual metadata responses as ordinary JSON byte sources.
 
 The experiment subsequently showed **stable structural Ground digests across Python 3.11 and 3.13** for equal byte inputs, while the observation evidence remained separate. The test suite reached 107 passing cases in each environment before the documentation was completed. The original small runtime's source budget stayed intact except for the very small increase in admissible observer target length.
 
@@ -164,7 +164,7 @@ The central research objective is to **discover the representation that offers t
 ## Existing limitations to solve next
 
 1. **Streaming and distributed reconstruction:** current built-in captures are bounded to 1 MiB per request and default to 64 KiB. Large files/models require chunked Merkle evidence, streamed digests, cross-host representation identity and a checkable reconstruction contract.
-2. **Generic remote operator admission:** the current \`bytes.execute\` registry runs qualified deterministic local operations over captured bytes; it does not call arbitrary inference APIs or write to remote services. Add remote realizers with side-effect policies, provider/version qualifications, cost ceilings and independent output receipts.
+2. **Generic remote operator admission:** the current `bytes.execute` registry runs qualified deterministic local operations over captured bytes; it does not call arbitrary inference APIs or write to remote services. Add remote realizers with side-effect policies, provider/version qualifications, cost ceilings and independent output receipts.
 3. **True architecture interpretation:** ELF/WASM, image and tensor-header recognition is shallow by design. Run structural parsers in isolated host adapters, label incomplete traces, and compare candidate executable models against actual output.
 4. **Typed multi-hop navigation:** source, decoding and execution presently form an explicit short pipeline. A general planner should discover possible paths, compare cost/evidence, and select one based on the intention rather than the user's known URL.
 5. **Selection and verification:** Ground identity is structural, but an operator cannot use that identity as authority. Require independent output checks, temporal freshness and explicit observer-host provenance for any remote action.
