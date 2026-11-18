@@ -6,6 +6,7 @@ describe samples, not guaranteed behavior of an unobserved machine.
 from __future__ import annotations
 import math
 from collections import Counter
+from itertools import combinations
 from typing import Mapping, Optional, Sequence
 
 from .micro_kernel import domain_digest
@@ -160,6 +161,30 @@ class ObservedGround:
             })
         return sorted(scores, key=lambda s: (-s["score"], -s["coverage"],
                                              -s["distinct_targets"], s["view"]))
+
+    @classmethod
+    def discover(cls, training, validation, max_positions: int = 8,
+                 max_fields: int = 2) -> tuple:
+        """Try small byte-coordinate views; rank on independent observations.
+
+        Search is bounded to the first max_positions bytes and at most
+        max_fields selected positions per view.
+        """
+        if type(max_positions) is not int or type(max_fields) is not int or max_positions < 1 or max_fields < 1:
+            raise ValueError("Search dimensions must be positive integers")
+        training, validation = list(training), list(validation)
+        if not training or not validation:
+            raise ValueError("Training and validation transitions are required")
+        length = min(len(raw) for pair in training + validation for raw in pair)
+        width = min(length, max_positions)
+        if not width:
+            raise ValueError("No byte positions available")
+        views = {"bytes": None}
+        for k in range(1, min(max_fields, width) + 1):
+            for offsets in combinations(range(width), k):
+                views["byte_" + "_".join(map(str, offsets))] = offsets
+        ground = cls(views).fit(training)
+        return ground, ground.evaluate(validation)
 
     def navigate(self, raw: bytes, steps: int, view: str) -> dict:
         """Jump through an observed deterministic transition graph via cycle skip.
