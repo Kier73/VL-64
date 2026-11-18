@@ -60,8 +60,10 @@ def test_every_known_and_unknown_format_has_exact_byte_ground(payload, expected)
     assert ground["observation"]["capture_status"] == "COMPLETE"
     assert ground["observation"]["content_sha256"] == sha256(payload)
     assert ground["ground_digest"] == domain_digest(
-        "vl64.generic-byte-ground.v1",
-        {k: v for k,v in ground.items() if k != "ground_digest"})
+        "vl64.generic-byte-structure.v1",
+        {"schema": ground["schema"], "view": ground["view"],
+         "capture_scope": ground["observation"]["digest_scope"],
+         "extended_views": []})
 
 
 def test_safetensors_header_can_be_described_without_tensor_values():
@@ -301,3 +303,26 @@ def test_byte_range_parameter_needs_explicit_boolean():
     result = byte_arbitrate(req)
     assert result["status"] == "UNRESOLVED"
     assert result["reason"] == "ValueError"
+
+
+def test_same_bytes_different_hosts_share_ground_but_not_capture_identity():
+    data = b"same bytes, different observers"
+    a = capture_bytes(data, "host:a", transport={"latency_ms": 10})
+    b = capture_bytes(data, "host:b", transport={"latency_ms": 950})
+    g1,g2 = ground_for_capture(a),ground_for_capture(b)
+    assert g1["ground_digest"] == g2["ground_digest"]
+    assert g1["view"] == g2["view"]
+    assert g1["observation"]["observation_digest"] != g2["observation"]["observation_digest"]
+    assert g1["observation"]["content_sha256"] == g2["observation"]["content_sha256"]
+    assert ground_for_capture(capture_bytes(data[:8], "host:a",
+                        complete=False, total_bytes=len(data)))["ground_digest"] != g1["ground_digest"]
+
+
+def test_mutated_capture_timing_detected_by_observation_replay():
+    req = request()
+    receipt = byte_arbitrate(req, root=ROOT)
+    capture = acquire(req.spec["target"], root=ROOT)
+    capture["transport"]["recorded_at"] = "unseen_timestamp"
+    rejected = replay_byte_receipt(receipt, capture=capture)
+    assert rejected["status"] == "REJECTED"
+    assert rejected["reason"] == "OBSERVATION_MISMATCH"
