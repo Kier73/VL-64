@@ -1,0 +1,6 @@
+{
+  "operation": "bytes.observe",
+  "target": "inline:b64,/wECAwQF//4=",
+  "output": "json",
+  "options": {}
+}

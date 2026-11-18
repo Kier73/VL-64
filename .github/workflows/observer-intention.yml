@@ -43,6 +43,9 @@ jobs:
             --out artifacts/hf-control-structure.txt
       - name: Independent GitHub document intention, observer-selected JSONL
         if: always()
+        continue-on-error: true
+        # Public GitHub API may rate-limit the Actions runner (HTTP 403).
+        # This live dependency is not a substitute for the offline tests.
         run: |
           python -m experiments.observer_intent.arbitrate \
             --intent experiments/observer_intent/intents/github_research_goals.json \

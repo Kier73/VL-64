@@ -65,15 +65,17 @@ A view may describe the entire snapshot or select byte offsets corresponding to 
 from vld import ObserverIntention
 
 request = ObserverIntention(
-    "hf.model.describe",
-    "openai-community/gpt2",
+    "bytes.observe",
+    "workspace:experiments/byte_fabric/fixtures/state.json",
     output="json",
-    options={"metadata_only": True},
+    options={"include_data": True},
 )
 print(request.digest)
 ~~~
 
-A working read-only adapter in the [observer intention lab](experiments/observer_intent/README.md) accepts JSON intention files, inspects Hugging Face model metadata or navigates a GitHub document, and returns JSON, JSONL or text without downloading model weights. This is structural inspection, not execution of the trained model.
+The [generic byte-fabric lab](experiments/byte_fabric/README.md) takes this request to a qualified file, byte stream or HTTPS source, builds an exact byte Ground, and optionally attaches typed views. `bytes.execute` can request registered, bounded operations such as SHA-256, byte slicing or JSON-pointer extraction, with an execution receipt. Unknown formats remain valid byte Grounds, and host-installed plug-ins can recognize additional architectures without changing the core.
+
+For example, run `python -m experiments.observer_intent.arbitrate --intent experiments/byte_fabric/intents/host_capabilities.json --out capabilities.json` to ask an observer-host what sources, decoders and operators it supports. Specialized providers, including the earlier [model-inspection lab](experiments/observer_intent/README.md), use the same intention contract.
 
 ### Navigate a modular state
 
@@ -160,3 +162,4 @@ The tests exercise the Python API and check the source package against the 64 Ki
 - [Usage guide](docs/USAGE_GUIDE.md) — commands, API examples, and extension points.
 - [Research goals](docs/RESEARCH_GOALS.md) — the functional experiments and verification criteria guiding further development.
 - [Observer intention and model Grounds](docs/OBSERVER_INTENTION_AND_MODEL_GROUNDS.md) — the typed input contract, evidence, and remote-operation research path.
+- [Generic byte fabric](experiments/byte_fabric/README.md) — architecture-independent byte observation, decoder plug-ins, and qualified execution.

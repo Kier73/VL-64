@@ -1,0 +1,9 @@
+{
+  "operation": "bytes.observe",
+  "target": "https://raw.githubusercontent.com/Kier73/VL-64/febca2be79e30efa3121edfb743e6470091dfe57/docs/OBSERVER_INTENTION_AND_MODEL_GROUNDS.md",
+  "output": "json",
+  "options": {
+    "max_bytes": 512,
+    "byte_range": true
+  }
+}

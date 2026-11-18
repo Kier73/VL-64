@@ -1,0 +1,9 @@
+{
+  "operation": "bytes.observe",
+  "target": "https://raw.githubusercontent.com/github/explore/main/topics/python/python.png",
+  "output": "json",
+  "options": {
+    "max_bytes": 65536,
+    "byte_range": true
+  }
+}

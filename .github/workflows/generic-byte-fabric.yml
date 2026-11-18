@@ -1,0 +1,120 @@
+name: VL-64 generic byte-fabric lab
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  byte-fabric:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install VL-64
+        run: python -m pip install -e '.[dev]'
+      - name: Regression and general byte contracts
+        run: python -m pytest -q tests/
+      - name: Ask host to describe its available byte capabilities
+        run: |
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/host_capabilities.json \
+            --out artifacts/host-capabilities.json
+      - name: Observe JSON bytes independently of domain
+        run: |
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/json_observe.json \
+            --out artifacts/json-ground.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/json_execute.json \
+            --out artifacts/json-pointer.jsonl
+      - name: HTML and opaque binary observers
+        run: |
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/html_execute.json \
+            --out artifacts/html-links.txt
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/unknown_observe.json \
+            --out artifacts/unknown-binary.json
+      - name: Live Internet as an arbitrary byte resource
+        run: |
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/live_webpage.json \
+            --out artifacts/live-page.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/live_repository_bytes.json \
+            --out artifacts/live-repo.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/live_repository_partial.json \
+            --out artifacts/live-partial.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/remote_hash.json \
+            --out artifacts/live-sha256.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/live_model_metadata.json \
+            --out artifacts/live-model-metadata.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/live_model_field.json \
+            --out artifacts/live-model-field.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/live_png.json \
+            --out artifacts/live-binary-png.json
+      - name: Check observer outputs and refusal boundaries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          def data(name):
+              return json.loads((Path("artifacts")/name).read_text())
+          expected = {
+              "json-ground.json": ("OBSERVED_BYTE_GROUND", "json"),
+              "unknown-binary.json": ("OBSERVED_BYTE_GROUND", "opaque-bytes"),
+              "live-page.json": ("OBSERVED_BYTE_GROUND", "html"),
+              "live-repo.json": ("OBSERVED_BYTE_GROUND", "utf8-text"),
+              "live-partial.json": ("PARTIAL_BYTE_GROUND", "utf8-text"),
+              "live-sha256.json": ("EXECUTED_LOCAL", "html"),
+              "live-model-metadata.json": ("OBSERVED_BYTE_GROUND", "json"),
+              "live-model-field.json": ("EXECUTED_LOCAL", "json"),
+              "live-binary-png.json": ("OBSERVED_BYTE_GROUND", "png"),
+          }
+          for file,(status,kind) in expected.items():
+              receipt = data(file)
+              assert receipt["status"] == status, (file,receipt)
+              assert receipt["ground"]["view"]["kind"] == kind, (file, receipt)
+              print("VL64_GENERIC_CASE",json.dumps({
+                  "case": file, "status": status, "kind": kind,
+                  "bytes": receipt["ground"]["observation"]["captured_bytes"],
+                  "scope": receipt["ground"]["observation"]["digest_scope"],
+                  "digest": receipt["ground"]["ground_digest"]
+              },sort_keys=True))
+          catalogue = data("host-capabilities.json")
+          assert catalogue["status"] == "OBSERVED_CAPABILITY_CATALOGUE"
+          assert "https://" in catalogue["ground"]["catalogue"]["source_adapters"]
+          assert "sha256" in catalogue["ground"]["catalogue"]["execution_capabilities"]
+          result = json.loads((Path("artifacts")/"json-pointer.jsonl").read_text())
+          assert result["status"] == "EXECUTED_LOCAL"
+          assert result["execution"]["result"]["value"] is True
+          assert data("live-sha256.json")["execution"]["input_scope"] == "full"
+          assert data("live-model-field.json")["execution"]["result"]["value"] == "openai-community/gpt2"
+          assert data("live-binary-png.json")["ground"]["view"]["structure"]["width"] > 0
+          assert data("live-partial.json")["ground"]["observation"]["capture_status"] == "PREFIX"
+          PY
+      - name: Upload witnessed byte observations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: byte-ground-python-${{ matrix.python-version }}
+          path: artifacts/*
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,8 @@
+{
+  "operation": "bytes.observe",
+  "target": "https://example.com/",
+  "output": "json",
+  "options": {
+    "max_bytes": 16384
+  }
+}

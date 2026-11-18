@@ -10,6 +10,8 @@ The step-by-step programme for connecting physical machine observations, softwar
 
 The observer-facing input language, metadata-only model discovery experiment, output-format selection and next steps toward qualified remote execution are documented in [Observer Intention and Model Grounds](OBSERVER_INTENTION_AND_MODEL_GROUNDS.md).
 
+For the implemented architecture-independent byte observer, extensible source and decoder registries, and the separation between observation and qualified execution, see [Universal Byte Ground and Execution](UNIVERSAL_BYTE_GROUND_AND_EXECUTION.md). The generic byte-fabric experiments live outside the 64 KiB core.
+
 ## Development discipline
 
 A proposed capability enters the runtime only when it has:

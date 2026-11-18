@@ -1,0 +1,8 @@
+{
+  "operation": "bytes.observe",
+  "target": "workspace:experiments/byte_fabric/fixtures/state.json",
+  "output": "json",
+  "options": {
+    "max_bytes": 4096
+  }
+}
