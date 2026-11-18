@@ -16,10 +16,10 @@ from .ground import QualifiedByteExecutor, ground_for_capture
 from .sources import DEFAULT_HOSTS, acquire
 
 
-SUPPORTED = frozenset({"bytes.observe", "bytes.execute", "bytes.capabilities"})
+SUPPORTED = frozenset({"bytes.observe", "bytes.execute", "bytes.capabilities", "bytes.realize"})
 
 
-def compile_byte_plan(request, *, sources=None, executor=None):
+def compile_byte_plan(request, *, sources=None, executor=None, navigator=None):
     """Compile intention without granting source/host/operation authority."""
     if not isinstance(request, ObserverIntention):
         raise TypeError("Expected ObserverIntention")
@@ -46,14 +46,29 @@ def compile_byte_plan(request, *, sources=None, executor=None):
         if operator not in (executor or QualifiedByteExecutor()).registry:
             return {"status": "REFUSED", "reason": "UNREGISTERED_REALIZER",
                     "intention_digest": request.digest}
+    if spec["operation"] == "bytes.realize":
+        from .navigator import GoalNavigator, validate_goal
+        try:
+            wanted = validate_goal(spec["options"].get("goal"))
+        except (ValueError, TypeError):
+            return {"status": "REFUSED", "reason": "INVALID_OBSERVER_GOAL",
+                    "intention_digest": request.digest}
+        selected = navigator or GoalNavigator(executor=executor)
+        if not any(x.produces == wanted["kind"] for x in selected.relations.values()):
+            return {"status": "UNRESOLVED", "reason": "NO_QUALIFIED_GOAL_RELATION",
+                    "intention_digest": request.digest}
     plan = {
         "status": "ADMITTED_SUBJECT_TO_SOURCE_AND_CAPABILITY",
-        "kind": "OBSERVATION" if spec["operation"] == "bytes.observe" else "PURE_EXECUTION",
+        "kind": ("OBSERVATION" if spec["operation"] == "bytes.observe" else
+                 "GOAL_NAVIGATION" if spec["operation"] == "bytes.realize" else "PURE_EXECUTION"),
         "intention_digest": request.digest,
         "steps": ["qualify_source", "capture_bounded_bytes",
                   "construct_exact_byte_ground", "discover_supported_views"] + (
                   ["qualify_local_realizer", "execute_pure_operator", "bind_receipt"]
-                  if spec["operation"] == "bytes.execute" else []),
+                  if spec["operation"] == "bytes.execute" else
+                  ["qualify_declared_output", "select_admitted_relation",
+                   "realize_or_refuse", "bind_result_receipt"]
+                  if spec["operation"] == "bytes.realize" else []),
         "output": spec["output"],
         "execution_authority": "pure-local-allowlisted-operation-only",
         "source_authority": "requires_authorized-acquisition-context",
@@ -63,10 +78,16 @@ def compile_byte_plan(request, *, sources=None, executor=None):
 
 
 def byte_arbitrate(request, *, root=None, approved_hosts=None, executor=None,
-                   sources=None, decoders=None):
+                   sources=None, decoders=None, navigator=None):
     """Observe arbitrary authorized byte input; execute only registered pure ops."""
-    executor = executor or QualifiedByteExecutor()
-    plan = compile_byte_plan(request, sources=sources, executor=executor)
+    if navigator is not None and executor is not None and navigator.executor is not executor:
+        raise ValueError("Navigator and executor must use the same authority registry")
+    executor = executor or (navigator.executor if navigator is not None
+                           else QualifiedByteExecutor())
+    from .navigator import GoalNavigator
+    navigator = navigator or GoalNavigator(executor=executor)
+    plan = compile_byte_plan(request, sources=sources, executor=executor,
+                             navigator=navigator)
     spec = request.to_dict()
     base = {
         "schema": "vl64.byte-observer-receipt.v1",
@@ -91,6 +112,7 @@ def byte_arbitrate(request, *, root=None, approved_hosts=None, executor=None,
                        "requires_complete": cap.requires_complete,
                        "max_input_bytes": cap.max_input, "policy": cap.policy}
                 for name,(cap,_) in sorted(executor.registry.items())},
+            "goal_relations": navigator.advertised(),
             "allowed_https_hosts": sorted(
                 approved_hosts if approved_hosts is not None else DEFAULT_HOSTS),
         }
@@ -120,7 +142,12 @@ def byte_arbitrate(request, *, root=None, approved_hosts=None, executor=None,
             raise ValueError("Invalid representation hint")
         ground = ground_for_capture(capture, hint=hint, decoders=decoders)
         result = None
-        if spec["operation"] == "bytes.execute":
+        goal_navigation = None
+        if spec["operation"] == "bytes.realize":
+            goal_navigation = navigator.realize(opts["goal"], ground, capture)
+            result = goal_navigation["execution"]
+            status = goal_navigation["status"]
+        elif spec["operation"] == "bytes.execute":
             params = opts.get("parameters", {})
             if not isinstance(params, dict):
                 raise ValueError("Operator parameters must be an object")
@@ -130,6 +157,7 @@ def byte_arbitrate(request, *, root=None, approved_hosts=None, executor=None,
             status = "OBSERVED_BYTE_GROUND" if capture["complete"] else "PARTIAL_BYTE_GROUND"
         return {**base, "status": status, "ground": ground,
                 "execution": result,
+                "goal_navigation": goal_navigation,
                 "observed_data": ({
                     "encoding": "base64",
                     "data": base64.b64encode(capture["data"][:4096]).decode("ascii"),
@@ -172,6 +200,8 @@ def render_byte_receipt(receipt, output):
         if receipt.get("observed_data") is not None:
             lines.append("Observed data (base64): " + receipt["observed_data"]["data"])
             lines.append("Observed data scope: " + receipt["observed_data"]["scope"])
+        if receipt.get("goal_navigation") is not None:
+            lines.append("Goal navigation: " + str(receipt["goal_navigation"]))
         if execution is not None:
             lines.append("Execution: " + str(execution))
         if receipt.get("reason"):
@@ -180,7 +210,8 @@ def render_byte_receipt(receipt, output):
     raise ValueError("Unqualified output format")
 
 
-def replay_byte_receipt(receipt, *, capture, decoders=None, executor=None):
+def replay_byte_receipt(receipt, *, capture, decoders=None, executor=None,
+                        navigator=None):
     """Re-evaluate Ground evidence against supplied bytes; no remote attestations."""
     try:
         ground = receipt["ground"]
@@ -199,7 +230,16 @@ def replay_byte_receipt(receipt, *, capture, decoders=None, executor=None):
         if verified["observation"]["observation_digest"] != ground["observation"]["observation_digest"]:
             return {"status": "REJECTED", "reason": "OBSERVATION_MISMATCH"}
         operation = receipt.get("execution")
-        if operation is not None:
+        if receipt["intention"]["operation"] == "bytes.realize":
+            from .navigator import GoalNavigator
+            if navigator is not None and executor is not None and navigator.executor is not executor:
+                return {"status": "REJECTED", "reason": "NAVIGATOR_AUTHORITY_MISMATCH"}
+            active = navigator or GoalNavigator(executor=executor)
+            computed = active.realize(receipt["intention"]["options"]["goal"],
+                                      verified, capture)
+            if computed != receipt.get("goal_navigation") or computed["execution"] != operation:
+                return {"status": "REJECTED", "reason": "GOAL_REALIZATION_MISMATCH"}
+        elif operation is not None:
             options = receipt["intention"]["options"]
             computed = (executor or QualifiedByteExecutor()).execute(
                 capture, verified, options["operator"], options.get("parameters", {}))
