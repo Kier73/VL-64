@@ -42,8 +42,19 @@ def sha(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
-class NoRedirect(urllib.request.HTTPRedirectHandler):
+class ConfigOnlyRedirect(urllib.request.HTTPRedirectHandler):
+    """Follow only same-host config.json cache redirection, never weight URLs."""
+
     def redirect_request(self, req, fp, code, msg, headers, newurl):
+        old, new = (urllib.parse.urlsplit(v) for v in (req.full_url, newurl))
+        if (old.path.endswith("/config.json")
+                and new.scheme == "https" and new.hostname == "huggingface.co"
+                and new.username is None and new.password is None
+                and new.port in (None, 443)
+                and new.path.endswith("/config.json")
+                and (new.path.startswith("/api/resolve-cache/models/")
+                     or "/resolve/" in new.path)):
+            return super().redirect_request(req, fp, code, msg, headers, newurl)
         return None
 
 
@@ -69,7 +80,7 @@ def metadata_get(url, max_bytes):
     }, method="GET")
     try:
         try:
-            resp = urllib.request.build_opener(NoRedirect).open(req, timeout=12)
+            resp = urllib.request.build_opener(ConfigOnlyRedirect).open(req, timeout=12)
         except urllib.error.HTTPError as err:
             resp = err
         with resp:
@@ -82,6 +93,8 @@ def metadata_get(url, max_bytes):
                 "truncated": len(raw) > max_bytes,
                 "elapsed_ms": round(1000 * (time.perf_counter() - begin), 3),
                 "content_type": (resp.headers.get("Content-Type") or "")[:80],
+                "redirect_host": urllib.parse.urlsplit(
+                    resp.headers.get("Location") or "").hostname,
             }
             if result["http_status"] != 200:
                 return result, None
@@ -198,7 +211,9 @@ def make_hf_structure(intention):
             config = _typed_config(config_obj)
             config_status = "OBSERVED"
         else:
-            config_status = "UNRESOLVED"
+            config = _typed_config(info.get("config"))
+            config_status = ("MODEL_INFO_FALLBACK" if config else
+                             "CONFIG_HTTP_" + str(config_rec.get("http_status", "UNRESOLVED")))
     else:
         config = _typed_config(info.get("config"))
         if config:
@@ -381,6 +396,12 @@ def main():
         "revision": (receipt.get("outcome") or {}).get("ground", {}).get("revision"),
         "weight_payload_bytes_read": (receipt.get("outcome") or {})
             .get("ground", {}).get("claims", {}).get("model_weight_payload_bytes_read"),
+        "reason": (receipt.get("outcome") or {}).get("reason"),
+        "evidence_statuses": [
+            {"http_status": x.get("http_status"), "operation_url": x.get("url"),
+             "redirect_host": x.get("redirect_host"), "truncated": x.get("truncated")}
+            for x in (receipt.get("outcome") or {}).get("evidence", [])
+        ],
     }
     print("VL64_OBSERVER_RESULT " + json.dumps(summary, sort_keys=True))
     if receipt["status"] not in (
