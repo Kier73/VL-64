@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "virtual-layer-dynamics-64"
 version = "0.7.0"
-description = "Universal 64 KiB Micro-Kernel for Virtual Layer Dynamics (μVLD-64)"
+description = "64 KiB Virtual Layer utility for algebraic navigation and state operations"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Kier73" }]
