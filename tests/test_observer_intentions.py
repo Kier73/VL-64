@@ -273,3 +273,17 @@ def test_architecture_requirement_refuses_inadequate_catalogue(monkeypatch):
     for bad in (0, 11, -1, True, 2.1):
         request = intent(options={"require_architecture": True, "max_candidates": bad})
         assert layer.arbitrate(request)["status"] == "UNRESOLVED"
+
+
+def test_transformers_library_filter_only_uses_approved_catalogue(monkeypatch):
+    observed = []
+    def fake_get(url, max_bytes):
+        observed.append(url)
+        return {"http_status": 200, "observed_bytes": 2}, []
+    monkeypatch.setattr(layer, "metadata_get", fake_get)
+    rec, content = layer.read_model_listing(5, "transformers")
+    assert content == []
+    assert observed[0].endswith(
+        "pipeline_tag=text-generation&sort=lastModified&direction=-1&limit=5&library=transformers")
+    with pytest.raises(ValueError):
+        layer.read_model_listing(5, "untrusted-library")
