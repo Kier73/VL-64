@@ -404,7 +404,8 @@ def arbitrate(request, *, byte_root=None, approved_hosts=None):
     if request.spec["operation"] == "ground.navigate":
         from experiments.byte_fabric.orbit_adapter import arbitrate_orbit
         return arbitrate_orbit(request, root=byte_root, approved_hosts=approved_hosts)
-    if request.spec["operation"] in ("ground.active.plan", "ground.action.navigate"):
+    if request.spec["operation"] in (
+            "ground.active.plan", "ground.action.navigate", "ground.traces.plan"):
         from experiments.byte_fabric.active_adapter import arbitrate_active
         return arbitrate_active(request, root=byte_root, approved_hosts=approved_hosts)
     plan = compile_intention(request)
