@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 
 from vld import ObserverIntention, affine_navigate
-from .orbit_ground import SpanInterpreter, infer_ground, ComposedGroundNavigator
+from .orbit_ground import discover_ground, ComposedGroundNavigator
 
 
 def generate_observed_frames(count=144):
@@ -36,9 +36,9 @@ def generate_observed_frames(count=144):
 def experiment():
     observed=generate_observed_frames(144)
     start=time.perf_counter_ns()
-    fitted=infer_ground(
-        observed[:32],observed[32:80],
-        SpanInterpreter(431,4,"u-le"),2**32)
+    # Discover which part of the frames changes and which interpretation
+    # reproduces the held-out transitions; do not supply the offset or endian.
+    fitted=discover_ground(observed[:32],observed[32:80])
     learned_ms=(time.perf_counter_ns()-start)/1000000
     ground=fitted["ground"]
     machine=ComposedGroundNavigator(ground)
@@ -68,6 +68,8 @@ def experiment():
             "raw_training_and_holdout_bytes":raw_size,
             "ground_description_bytes":ground_size,
             "compressed_ratio":round(raw_size/ground_size,3),
+            "discovered_interpreter":fitted["discovery"]["selected"],
+            "discovery_status":fitted["discovery"]["status"],
             "compression_scope":"exact_model_description_of_this_fixed-template_trace",
             "prediction_scope":"empirically_heldout_not_universal_future_proof",
             "horizon":horizon,
