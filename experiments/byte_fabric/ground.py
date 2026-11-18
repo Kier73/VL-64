@@ -179,7 +179,7 @@ def describe(data: bytes, *, hint: str = "") -> dict:
     return generic
 
 
-def ground_for_capture(capture, *, hint=""):
+def ground_for_capture(capture, *, hint="", decoders=None):
     """Construct identity of exact/prefix evidence and typed optional views."""
     payload = capture["data"]
     view = describe(payload, hint=hint)
@@ -195,6 +195,8 @@ def ground_for_capture(capture, *, hint=""):
     ground = {"schema": "vl64.generic-byte-ground.v1",
               "observation": evidence, "view": view,
               "supported_realizers": list(DEFAULT_OPS)}
+    if decoders is not None:
+        ground["extended_views"] = decoders.describe(payload, hint=hint)
     ground["ground_digest"] = domain_digest("vl64.generic-byte-ground.v1", ground)
     return ground
 
