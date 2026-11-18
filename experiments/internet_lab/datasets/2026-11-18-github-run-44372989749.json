@@ -1,0 +1,435 @@
+{
+  "captured_at_utc": "2026-11-18T18:44:49.221367+00:00",
+  "dataset_digest": "00812c73aeab4ddd1dc666d6a8c1ad5508e87ea0e2974d507b8abbe117be5b63",
+  "graph": {
+    "edges": [
+      {
+        "from": "dns-name:example.com",
+        "relation": "os_resolve",
+        "to": "dns-answers:412dae39e9a353ff6fcbc67ac09f78f8bdebc355ef47158df5d195dede8d98a8",
+        "witness_sha256": "412dae39e9a353ff6fcbc67ac09f78f8bdebc355ef47158df5d195dede8d98a8"
+      },
+      {
+        "from": "dns-name:github.com",
+        "relation": "os_resolve",
+        "to": "dns-answers:c5e72994ac811cc6535ee4c1f76fe1ef03a35e08873c71d0fe6d3ceb5e9997dc",
+        "witness_sha256": "c5e72994ac811cc6535ee4c1f76fe1ef03a35e08873c71d0fe6d3ceb5e9997dc"
+      },
+      {
+        "from": "dns-name:cloudflare.com",
+        "relation": "os_resolve",
+        "to": "dns-answers:ba7fa1cabcdfccf86e01a5204354d63f2213c4febdb81e505b94d3d65436ac65",
+        "witness_sha256": "ba7fa1cabcdfccf86e01a5204354d63f2213c4febdb81e505b94d3d65436ac65"
+      },
+      {
+        "from": "doh:example.com:A",
+        "relation": "cloudflare_doh_answer",
+        "to": "dns-answers:3be0992791bc3cd7d13eaf9e3ddce026548e1cfb16ead8af41aa54dc166a47f3",
+        "witness_sha256": "673a70fd3606a9527be60239827528ed17a9ca255bb6c5e63831e3bd3877f657"
+      },
+      {
+        "from": "doh-wire:example.com:A",
+        "relation": "cloudflare_doh_dns_packet",
+        "to": "dns-answers:3be0992791bc3cd7d13eaf9e3ddce026548e1cfb16ead8af41aa54dc166a47f3",
+        "witness_sha256": "cc354f9c7a32e22b92edcb760b01ad2116f11755629b039c689828ac5572ecd5"
+      },
+      {
+        "from": "repo:Kier73/VL-64",
+        "relation": "resolve_default_branch_commit",
+        "to": "git-commit:891bd0287ca4cf64fa48e6c87bb2e03e28f4a551",
+        "witness_sha256": "39fbffe47fe8f1536391c41140be4727c63f57bd8856f8a1878bc2d480b0b134"
+      },
+      {
+        "from": "git-commit:891bd0287ca4cf64fa48e6c87bb2e03e28f4a551",
+        "relation": "read_pinned_readme",
+        "to": "readme:a74ca1b1b31363cf79793aea22e365124859359beb9d06ef113c5bb18dd8d087",
+        "witness_sha256": "a74ca1b1b31363cf79793aea22e365124859359beb9d06ef113c5bb18dd8d087"
+      },
+      {
+        "from": "readme:a74ca1b1b31363cf79793aea22e365124859359beb9d06ef113c5bb18dd8d087",
+        "relation": "navigate_markdown_link",
+        "to": "research-goals:53951b9fd27967238a0e5346982cbf987c5c9fd19e4b7e5fc053deef4c40fbec",
+        "witness_sha256": "53951b9fd27967238a0e5346982cbf987c5c9fd19e4b7e5fc053deef4c40fbec"
+      },
+      {
+        "from": "readme:a74ca1b1b31363cf79793aea22e365124859359beb9d06ef113c5bb18dd8d087",
+        "relation": "conditional_read_not_modified",
+        "to": "http-validator:857d1aad9e702250865e2f38ebd1df133fa41a9d96213a05fb321c3be7483627",
+        "witness_sha256": "857d1aad9e702250865e2f38ebd1df133fa41a9d96213a05fb321c3be7483627"
+      }
+    ],
+    "fingerprint": "a96cba71ee85f9e7723e389a6e526b45589853270705d73ed2ab6347ad446890",
+    "nodes": {
+      "dns-answers:3be0992791bc3cd7d13eaf9e3ddce026548e1cfb16ead8af41aa54dc166a47f3": "dns_snapshot",
+      "dns-answers:412dae39e9a353ff6fcbc67ac09f78f8bdebc355ef47158df5d195dede8d98a8": "dns_snapshot",
+      "dns-answers:ba7fa1cabcdfccf86e01a5204354d63f2213c4febdb81e505b94d3d65436ac65": "dns_snapshot",
+      "dns-answers:c5e72994ac811cc6535ee4c1f76fe1ef03a35e08873c71d0fe6d3ceb5e9997dc": "dns_snapshot",
+      "dns-name:cloudflare.com": "dns_query",
+      "dns-name:example.com": "dns_query",
+      "dns-name:github.com": "dns_query",
+      "doh-wire:example.com:A": "dns_wire_query",
+      "doh:example.com:A": "dns_over_https_query",
+      "git-commit:891bd0287ca4cf64fa48e6c87bb2e03e28f4a551": "git_commit",
+      "http-validator:857d1aad9e702250865e2f38ebd1df133fa41a9d96213a05fb321c3be7483627": "http_validator_receipt",
+      "readme:a74ca1b1b31363cf79793aea22e365124859359beb9d06ef113c5bb18dd8d087": "github_raw_document",
+      "repo:Kier73/VL-64": "github_repository",
+      "research-goals:53951b9fd27967238a0e5346982cbf987c5c9fd19e4b7e5fc053deef4c40fbec": "github_raw_document"
+    }
+  },
+  "navigation": {
+    "branch": "main",
+    "claim": "observed_remote_document_navigation_not_packet_native_execution",
+    "commit": "891bd0287ca4cf64fa48e6c87bb2e03e28f4a551",
+    "git_wire_rest_head_match": true,
+    "goal_bytes": 11279,
+    "goal_heading_valid": true,
+    "goals_sha256": "53951b9fd27967238a0e5346982cbf987c5c9fd19e4b7e5fc053deef4c40fbec",
+    "ground_digest": "a96cba71ee85f9e7723e389a6e526b45589853270705d73ed2ab6347ad446890",
+    "hops": 3,
+    "path": [
+      {
+        "from": "repo:Kier73/VL-64",
+        "relation": "resolve_default_branch_commit",
+        "to": "git-commit:891bd0287ca4cf64fa48e6c87bb2e03e28f4a551",
+        "witness_sha256": "39fbffe47fe8f1536391c41140be4727c63f57bd8856f8a1878bc2d480b0b134"
+      },
+      {
+        "from": "git-commit:891bd0287ca4cf64fa48e6c87bb2e03e28f4a551",
+        "relation": "read_pinned_readme",
+        "to": "readme:a74ca1b1b31363cf79793aea22e365124859359beb9d06ef113c5bb18dd8d087",
+        "witness_sha256": "a74ca1b1b31363cf79793aea22e365124859359beb9d06ef113c5bb18dd8d087"
+      },
+      {
+        "from": "readme:a74ca1b1b31363cf79793aea22e365124859359beb9d06ef113c5bb18dd8d087",
+        "relation": "navigate_markdown_link",
+        "to": "research-goals:53951b9fd27967238a0e5346982cbf987c5c9fd19e4b7e5fc053deef4c40fbec",
+        "witness_sha256": "53951b9fd27967238a0e5346982cbf987c5c9fd19e4b7e5fc053deef4c40fbec"
+      }
+    ],
+    "readme_sha256": "a74ca1b1b31363cf79793aea22e365124859359beb9d06ef113c5bb18dd8d087",
+    "scope": "cached_evidence_only_requires_reobservation_for_fresh_claim",
+    "status": "OBSERVED_DESCRIPTION_PATH"
+  },
+  "observations": [
+    {
+      "address_count": 4,
+      "address_set_sha256": "412dae39e9a353ff6fcbc67ac09f78f8bdebc355ef47158df5d195dede8d98a8",
+      "elapsed_ms": 13.112,
+      "families": [
+        2,
+        10
+      ],
+      "hostname": "example.com",
+      "operation": "os_dns:example.com",
+      "scope": "os_getaddrinfo_snapshot_no_dns_ttl_or_packet_proof",
+      "status": "OBSERVED"
+    },
+    {
+      "address_count": 1,
+      "address_set_sha256": "c5e72994ac811cc6535ee4c1f76fe1ef03a35e08873c71d0fe6d3ceb5e9997dc",
+      "elapsed_ms": 2.425,
+      "families": [
+        2
+      ],
+      "hostname": "github.com",
+      "operation": "os_dns:github.com",
+      "scope": "os_getaddrinfo_snapshot_no_dns_ttl_or_packet_proof",
+      "status": "OBSERVED"
+    },
+    {
+      "address_count": 4,
+      "address_set_sha256": "ba7fa1cabcdfccf86e01a5204354d63f2213c4febdb81e505b94d3d65436ac65",
+      "elapsed_ms": 9.573,
+      "families": [
+        2,
+        10
+      ],
+      "hostname": "cloudflare.com",
+      "operation": "os_dns:cloudflare.com",
+      "scope": "os_getaddrinfo_snapshot_no_dns_ttl_or_packet_proof",
+      "status": "OBSERVED"
+    },
+    {
+      "answer_count": 2,
+      "answer_set_sha256": "3be0992791bc3cd7d13eaf9e3ddce026548e1cfb16ead8af41aa54dc166a47f3",
+      "body_sha256": "673a70fd3606a9527be60239827528ed17a9ca255bb6c5e63831e3bd3877f657",
+      "cache_control": "",
+      "cf_ray_present": true,
+      "content_type": "application/dns-json",
+      "dns_rcode": 0,
+      "elapsed_ms": 47.769,
+      "etag": "",
+      "github_request_id_present": false,
+      "http_status": 200,
+      "max_ttl": 142,
+      "method": "GET",
+      "min_ttl": 142,
+      "operation": "cloudflare_doh_A_example.com",
+      "response_bytes": 251,
+      "scope": "dns_https_json_answer_from_public_resolver",
+      "status": "OBSERVED",
+      "truncated": false,
+      "url": "https://cloudflare-dns.com/dns-query?name=example.com&type=A"
+    },
+    {
+      "answer_count": 2,
+      "answer_set_sha256": "3be0992791bc3cd7d13eaf9e3ddce026548e1cfb16ead8af41aa54dc166a47f3",
+      "body_sha256": "cc354f9c7a32e22b92edcb760b01ad2116f11755629b039c689828ac5572ecd5",
+      "cache_control": "",
+      "cf_ray_present": true,
+      "content_type": "application/dns-message",
+      "dns_extra_sections": 0,
+      "dns_header_answer_count": 2,
+      "dns_rcode": 0,
+      "dns_wire_response_bytes": 61,
+      "elapsed_ms": 70.209,
+      "etag": "",
+      "github_request_id_present": false,
+      "http_status": 200,
+      "interpretation": "dns-wire-response-a",
+      "method": "GET",
+      "operation": "cloudflare_doh_wire_A_example.com",
+      "query_packet_bytes": 29,
+      "query_packet_sha256": "e0a692ab9b41642052449b0aa806a43410cc96aa3fff3c77ef72756e6d655033",
+      "raw_packet_b64": "AACBgAABAAIAAAAAB2V4YW1wbGUDY29tAAABAAHADAABAAEAAAA5AARoFBeawAwAAQABAAAAOQAErEKT8w==",
+      "response_bytes": 61,
+      "scope": "verified_dns_wire_decode_of_https_response_not_dnssec",
+      "status": "OBSERVED",
+      "truncated": false,
+      "ttl_max": 57,
+      "ttl_min": 57,
+      "url": "https://cloudflare-dns.com/dns-query?dns=AAABAAABAAAAAAAAB2V4YW1wbGUDY29tAAABAAE"
+    },
+    {
+      "certificate_sha256": "85ca6ab068e9bcce88b6c4aa3c47f7d17228134a457f870d3800e6223a0df07a",
+      "cipher": "TLS_AES_256_GCM_SHA384",
+      "elapsed_ms": 56.651,
+      "operation": "tls_direct:example.com",
+      "scope": "direct_socket_tls_handshake_not_route_attestation",
+      "status": "OBSERVED",
+      "tls_version": "TLSv1.3"
+    },
+    {
+      "body_sha256": "fa9a27d30b9da0f147d48688269eee12cf8dc7e8303af54d4998b7cd2ea370c8",
+      "cache_control": "no-cache, max-age=0, must-revalidate",
+      "capabilities": [
+        "agent",
+        "fetch",
+        "ls-refs",
+        "object-format",
+        "server-option"
+      ],
+      "cf_ray_present": false,
+      "content_type": "application/x-git-upload-pack-advertisement",
+      "elapsed_ms": 132.606,
+      "etag": "",
+      "frames": 9,
+      "github_request_id_present": true,
+      "http_status": 200,
+      "interpretation": "git-protocol-v2-capability-advertisement",
+      "method": "GET",
+      "operation": "git_v2_capabilities",
+      "raw_packet_b64": "MDAxZSMgc2VydmljZT1naXQtdXBsb2FkLXBhY2sKMDAwMDAwMGV2ZXJzaW9uIDIKMDAyOGFnZW50PWdpdC9naXRodWItZjM1MWI1MmZlM2Q3LUxpbnV4CjAwMTNscy1yZWZzPXVuYm9ybgowMDI3ZmV0Y2g9c2hhbGxvdyB3YWl0LWZvci1kb25lIGZpbHRlcgowMDEyc2VydmVyLW9wdGlvbgowMDE3b2JqZWN0LWZvcm1hdD1zaGExCjAwMDA=",
+      "response_bytes": 191,
+      "scope": "remote_protocol_advertisement_not_local_git_execution",
+      "smart_http_service_preamble": true,
+      "status": "OBSERVED",
+      "truncated": false,
+      "url": "https://github.com/Kier73/VL-64/info/refs?service=git-upload-pack"
+    },
+    {
+      "body_sha256": "d7695f22ff994365aa84b9bc436d180de87722d1087970d4e64b310cc5879898",
+      "cache_control": "no-cache, max-age=0, must-revalidate",
+      "cf_ray_present": false,
+      "content_type": "application/x-git-upload-pack-result",
+      "elapsed_ms": 113.157,
+      "etag": "",
+      "github_request_id_present": true,
+      "head_commit": "891bd0287ca4cf64fa48e6c87bb2e03e28f4a551",
+      "http_status": 200,
+      "interpretation": "git-v2-ls-refs",
+      "method": "POST",
+      "operation": "git_v2_ls_refs",
+      "raw_packet_b64": "MDA1MDg5MWJkMDI4N2NhNGNmNjRmYTQ4ZTZjODdiYjJlMDNlMjhmNGE1NTEgSEVBRCBzeW1yZWYtdGFyZ2V0OnJlZnMvaGVhZHMvbWFpbgowMDAw",
+      "request_packet_bytes": 60,
+      "request_packet_sha256": "50b61d8dc5297f890b73f8622e4744ea15d130c8ff24cdd227c6d4342fca5439",
+      "response_bytes": 84,
+      "response_frames": 2,
+      "scope": "read_only_git_protocol_response_not_host_authority",
+      "status": "OBSERVED",
+      "truncated": false,
+      "url": "https://github.com/Kier73/VL-64/git-upload-pack"
+    },
+    {
+      "elapsed_ms": 0.348,
+      "endpoint_semantic_check": true,
+      "input_bytes": 1024,
+      "input_sha256": "ccd04a7c11ce9093ee86d9486831d3d862e196dd7f472156203852a02895326e",
+      "operation": "tcp_loopback_endpoint_transform",
+      "output_bytes": 32,
+      "output_sha256": "c18efdea9b6d11a215926d8f7480f55310c7f5da9a021990b58a70c2920cd09b",
+      "request_frame_bytes": 1028,
+      "response_frame_bytes": 36,
+      "scope": "actual_local_tcp_endpoint_operation_not_in_flight_transformation",
+      "status": "VERIFIED",
+      "wire_endpoint_received_digest": "ccd04a7c11ce9093ee86d9486831d3d862e196dd7f472156203852a02895326e"
+    },
+    {
+      "body_sha256": "26aef515fa33f6cdc0e3933fae7625445f1fc647fa0458d46efd59f27a61d973",
+      "cache_control": "public, max-age=10, s-maxage=10",
+      "cf_ray_present": true,
+      "content_type": "text/html; charset=utf-8",
+      "elapsed_ms": 480.111,
+      "etag": "",
+      "github_request_id_present": false,
+      "http_status": 200,
+      "method": "GET",
+      "operation": "cloudflare_homepage",
+      "response_bytes": 16384,
+      "status": "OBSERVED",
+      "truncated": true,
+      "url": "https://www.cloudflare.com/"
+    },
+    {
+      "body_sha256": "25ddf2c883e0d1958ea971d279a7e4f0fd446724ee3db7db19dadabd4a62e484",
+      "cache_control": "",
+      "cf_ray_present": true,
+      "content_type": "text/html; charset=utf-8",
+      "elapsed_ms": 75.917,
+      "etag": "",
+      "github_request_id_present": false,
+      "http_status": 200,
+      "method": "GET",
+      "operation": "example_com_homepage",
+      "response_bytes": 577,
+      "status": "OBSERVED",
+      "truncated": false,
+      "url": "https://example.com/"
+    },
+    {
+      "body_sha256": "0712a8ceaa5632c0eec0b69e3a2beec95666b5b6736f0f1ec7b1d7681eb484ec",
+      "cache_control": "public, max-age=60, s-maxage=60",
+      "cf_ray_present": false,
+      "content_type": "application/json; charset=utf-8",
+      "elapsed_ms": 219.281,
+      "etag": "W/\"0f7c9ce125d59afbf2ae682bccd342b20667f6a2961483a39439f9aefebb27bc\"",
+      "github_request_id_present": true,
+      "http_status": 200,
+      "method": "GET",
+      "operation": "github_repository_metadata",
+      "response_bytes": 4730,
+      "status": "OBSERVED",
+      "truncated": false,
+      "url": "https://api.github.com/repos/Kier73/VL-64"
+    },
+    {
+      "body_sha256": "39fbffe47fe8f1536391c41140be4727c63f57bd8856f8a1878bc2d480b0b134",
+      "cache_control": "public, max-age=60, s-maxage=60",
+      "cf_ray_present": false,
+      "content_type": "application/json; charset=utf-8",
+      "elapsed_ms": 236.727,
+      "etag": "W/\"efee9eee2253e54fe670da6ca281bab5861caf9ab7dd8a28518e5f9cc5b0536f\"",
+      "github_request_id_present": true,
+      "http_status": 200,
+      "method": "GET",
+      "operation": "github_branch_reference",
+      "response_bytes": 322,
+      "status": "OBSERVED",
+      "truncated": false,
+      "url": "https://api.github.com/repos/Kier73/VL-64/git/ref/heads/main"
+    },
+    {
+      "body_sha256": "a74ca1b1b31363cf79793aea22e365124859359beb9d06ef113c5bb18dd8d087",
+      "cache_control": "max-age=300",
+      "cf_ray_present": false,
+      "content_type": "text/plain; charset=utf-8",
+      "elapsed_ms": 151.956,
+      "etag": "\"65adf87ccd7adbab3624c9bfb3677e9f5c9654ebee99b82fead22f6f680d1073\"",
+      "github_request_id_present": true,
+      "http_status": 200,
+      "method": "GET",
+      "operation": "github_pinned_readme",
+      "response_bytes": 6745,
+      "status": "OBSERVED",
+      "truncated": false,
+      "url": "https://raw.githubusercontent.com/Kier73/VL-64/891bd0287ca4cf64fa48e6c87bb2e03e28f4a551/README.md"
+    },
+    {
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes_avoided": 6745,
+      "cache_control": "max-age=300",
+      "cache_result": "NOT_MODIFIED_ACCEPTED_BY_ORIGIN",
+      "cf_ray_present": false,
+      "content_type": "",
+      "elapsed_ms": 113.827,
+      "etag": "\"65adf87ccd7adbab3624c9bfb3677e9f5c9654ebee99b82fead22f6f680d1073\"",
+      "github_request_id_present": false,
+      "http_status": 304,
+      "method": "GET",
+      "operation": "github_pinned_readme_conditional",
+      "response_bytes": 0,
+      "status": "OBSERVED",
+      "truncated": false,
+      "url": "https://raw.githubusercontent.com/Kier73/VL-64/891bd0287ca4cf64fa48e6c87bb2e03e28f4a551/README.md"
+    },
+    {
+      "body_sha256": "53951b9fd27967238a0e5346982cbf987c5c9fd19e4b7e5fc053deef4c40fbec",
+      "cache_control": "max-age=300",
+      "cf_ray_present": false,
+      "content_type": "text/plain; charset=utf-8",
+      "elapsed_ms": 247.226,
+      "etag": "\"46398b2bde952b12ec39a1ef4c46cb2a493a963fea272bc837f20c1dbbcdd312\"",
+      "github_request_id_present": true,
+      "http_status": 200,
+      "method": "GET",
+      "operation": "github_pinned_research_goals",
+      "response_bytes": 11279,
+      "status": "OBSERVED",
+      "truncated": false,
+      "url": "https://raw.githubusercontent.com/Kier73/VL-64/891bd0287ca4cf64fa48e6c87bb2e03e28f4a551/docs/RESEARCH_GOALS.md"
+    }
+  ],
+  "probe_policy": {
+    "bounded_http_body_bytes": 65536,
+    "dns_names": [
+      "example.com",
+      "github.com",
+      "cloudflare.com"
+    ],
+    "max_http_timeout_seconds": 8,
+    "no_credential_use": true,
+    "operations": "public_read_only_plus_local_loopback",
+    "redirect_following": false,
+    "target_hosts": [
+      "api.github.com",
+      "cloudflare-dns.com",
+      "example.com",
+      "github.com",
+      "raw.githubusercontent.com",
+      "www.cloudflare.com"
+    ]
+  },
+  "runner": {
+    "arch": "x86_64",
+    "git_revision": "891bd0287ca4cf64fa48e6c87bb2e03e28f4a551",
+    "os": "Linux",
+    "python": "3.13.18"
+  },
+  "schema": "vl64.internet-ground-observation.v1",
+  "summary": {
+    "cloudflare_dns_wire": "dns-wire-response-a",
+    "cloudflare_doh": "OBSERVED",
+    "git_wire_rest_head_match": true,
+    "github_navigation": "OBSERVED_DESCRIPTION_PATH",
+    "github_navigation_hops": 3,
+    "github_navigation_unresolved": false,
+    "loopback": "VERIFIED",
+    "nested_decoding_refusals": 0,
+    "nodes": 14,
+    "observations": 16,
+    "relations": 9,
+    "successful_observations": 16,
+    "truncated_http_observations": 1,
+    "unresolved_or_rejected": 0
+  }
+}
