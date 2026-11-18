@@ -232,6 +232,19 @@ python -m experiments.observer_intent.arbitrate \
 
 A separate optional `--live-only` experiment uses **actual read-only public GitHub bytes** for a resource-identity discrimination task, not a remote stateful model. See [Active Action-Conditioned Grounds](../../docs/ACTIVE_ACTION_GROUNDS.md) for its authority and evidence contracts.
 
+## Synthesize the interpreter from observed actions
+
+[TraceGroundSynthesizer](trace_synthesis.py) constructs small finite deterministic Ground hypotheses directly from recorded resettable action/output traces. Unlike the previous [active Ground module](active_ground.py), the observer does not need to supply candidate models. A bounded prefix-tree state-merging search proposes descriptions; actual host-qualified observations update the evidence ledger and cause a fresh synthesis.
+
+```bash
+python -m experiments.byte_fabric.trace_lab --out artifacts
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/trace_derived_next_probe.json \
+  --out next-experiment.json
+```
+
+The [saved trace ledger](datasets/2026-11-18-initial-trace-ledger.json) reproduces candidate synthesis, and the [saved Ground](datasets/2026-11-18-trace-derived-action-ground.json) navigates the learned state model. See the [method and measured evidence](../../docs/TRACE_DERIVED_ACTION_GROUNDS.md). A separate optional experiment probes pinned GitHub files under read-only authorization; it does not claim those static files form a stateful service.
+
 ## Next frontier
 
 The general observer-to-realizer interface should evolve into an **evidence- and cost-aware typed relation search**:
