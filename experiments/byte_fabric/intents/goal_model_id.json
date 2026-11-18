@@ -1,0 +1,18 @@
+{
+  "operation": "bytes.realize",
+  "target": "https://huggingface.co/api/models/openai-community/gpt2",
+  "output": "json",
+  "options": {
+    "max_bytes": 65536,
+    "goal": {
+      "kind": "value.json",
+      "parameters": {
+        "path": "/id"
+      },
+      "expected_result": {
+        "value": "openai-community/gpt2",
+        "value_type": "str"
+      }
+    }
+  }
+}
