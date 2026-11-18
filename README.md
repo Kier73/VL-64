@@ -59,7 +59,7 @@ A view may describe the entire snapshot or select byte offsets corresponding to 
 
 ### Describe an observer intention
 
-\`ObserverIntention\` turns a bounded, structured request into a content-addressed contract. The core stores the observer's requested operation, target, output format, and options; external adapters decide how to realize it.
+`ObserverIntention` turns a bounded, structured request into a content-addressed contract. The core stores the observer's requested operation, target, output format, and options; external adapters decide how to realize it.
 
 ~~~python
 from vld import ObserverIntention
@@ -159,3 +159,4 @@ The tests exercise the Python API and check the source package against the 64 Ki
 
 - [Usage guide](docs/USAGE_GUIDE.md) — commands, API examples, and extension points.
 - [Research goals](docs/RESEARCH_GOALS.md) — the functional experiments and verification criteria guiding further development.
+- [Observer intention and model Grounds](docs/OBSERVER_INTENTION_AND_MODEL_GROUNDS.md) — the typed input contract, evidence, and remote-operation research path.
