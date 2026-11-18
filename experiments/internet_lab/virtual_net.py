@@ -492,6 +492,22 @@ def github_readme_to_goals(graph: InternetGround):
     records.append(readme)
     if readme["status"] != "OBSERVED" or readme["http_status"] != 200:
         return records, {"status": "UNRESOLVED", "reason": "readme"}, None
+    if readme.get("etag"):
+        validated, returned = fetch(
+            "github_pinned_readme_conditional", base + "README.md",
+            headers={"If-None-Match": readme["etag"]})
+        if validated["status"] == "OBSERVED":
+            status = validated["http_status"]
+            if status == 304:
+                validated["cache_result"] = "NOT_MODIFIED_ACCEPTED_BY_ORIGIN"
+                validated["bytes_avoided"] = len(raw)
+            elif status == 200 and digest(returned) == digest(raw):
+                validated["cache_result"] = "SAME_BYTES_RETURNED"
+                validated["bytes_avoided"] = 0
+            else:
+                validated["cache_result"] = "CONTENT_UNVERIFIED_OR_CHANGED"
+                validated["bytes_avoided"] = 0
+        records.append(validated)
     match = GOAL_LINK.search(raw.decode("utf-8", errors="replace"))
     if not match:
         return records, {"status": "UNRESOLVED", "reason": "requested_link_absent"}, None
@@ -507,6 +523,11 @@ def github_readme_to_goals(graph: InternetGround):
     graph.link(a, b, "resolve_default_branch_commit", commit_rec["body_sha256"])
     graph.link(b, c, "read_pinned_readme", readme["body_sha256"])
     graph.link(c, d, "navigate_markdown_link", goals["body_sha256"])
+    for cached in records:
+        if cached.get("cache_result") == "NOT_MODIFIED_ACCEPTED_BY_ORIGIN":
+            v = graph.node("http-validator:" + cached["body_sha256"], "http_validator_receipt")
+            graph.link(c, v, "conditional_read_not_modified",
+                       domain_digest("vl64.http-cache-receipt.v1", cached))
     result = graph.navigate(a, d)
     result.update({
         "commit": rev, "readme_sha256": digest(raw),
@@ -674,6 +695,7 @@ def main():
     print("VL64_INTERNET_GROUND_SHA256 " + result["graph"]["fingerprint"])
     print("VL64_INTERNET_DATASET_SHA256 " + result["dataset_digest"])
     print("VL64_INTERNET_OFFLINE_VERIFY " + json.dumps(check, sort_keys=True))
+    print("VL64_INTERNET_DATASET_JSON " + json.dumps(result, sort_keys=True, separators=(",", ":")))
     # A successful lab run includes honest unresolved probes. Fail only on loss
     # of all observation capability or failure of the independent TCP reference.
     if not result["summary"]["successful_observations"]:
