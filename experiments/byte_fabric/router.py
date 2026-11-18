@@ -18,7 +18,7 @@ from .sources import DEFAULT_HOSTS, acquire
 SUPPORTED = frozenset({"bytes.observe", "bytes.execute"})
 
 
-def compile_byte_plan(request):
+def compile_byte_plan(request, *, sources=None, executor=None):
     """Compile intention without granting source/host/operation authority."""
     if not isinstance(request, ObserverIntention):
         raise TypeError("Expected ObserverIntention")
@@ -27,12 +27,14 @@ def compile_byte_plan(request):
         return {"status": "UNRESOLVED", "reason": "UNKNOWN_BYTE_INTENTION",
                 "intention_digest": request.digest}
     target = spec["target"]
-    if not target.startswith(("workspace:", "inline:b64,", "https://")):
+    if not (target.startswith(("workspace:", "inline:b64,", "https://")) or
+            (sources is not None and any(
+                target.startswith(prefix) for prefix in sources.adapters))):
         return {"status": "REFUSED", "reason": "NO_SOURCE_ADAPTER",
                 "intention_digest": request.digest}
     if spec["operation"] == "bytes.execute":
         operator = spec["options"].get("operator")
-        if operator not in QualifiedByteExecutor().registry:
+        if operator not in (executor or QualifiedByteExecutor()).registry:
             return {"status": "REFUSED", "reason": "UNREGISTERED_REALIZER",
                     "intention_digest": request.digest}
     plan = {
@@ -51,9 +53,11 @@ def compile_byte_plan(request):
     return plan
 
 
-def byte_arbitrate(request, *, root=None, approved_hosts=None, executor=None):
+def byte_arbitrate(request, *, root=None, approved_hosts=None, executor=None,
+                   sources=None, decoders=None):
     """Observe arbitrary authorized byte input; execute only registered pure ops."""
-    plan = compile_byte_plan(request)
+    executor = executor or QualifiedByteExecutor()
+    plan = compile_byte_plan(request, sources=sources, executor=executor)
     spec = request.to_dict()
     base = {
         "schema": "vl64.byte-observer-receipt.v1",
@@ -65,18 +69,22 @@ def byte_arbitrate(request, *, root=None, approved_hosts=None, executor=None):
     if plan["status"] != "ADMITTED_SUBJECT_TO_SOURCE_AND_CAPABILITY":
         return {**base, "status": plan["status"], "reason": plan.get("reason")}
     opts = spec["options"]
-    executor = executor or QualifiedByteExecutor()
     try:
-        capture = acquire(
-            spec["target"], root=Path(root) if root is not None else Path.cwd(),
-            approved_hosts=approved_hosts if approved_hosts is not None else DEFAULT_HOSTS,
-            max_bytes=opts.get("max_bytes", 65536),
-            byte_range=opts.get("byte_range", False),
-        )
+        use_registered_source = (sources is not None and any(
+            spec["target"].startswith(prefix) for prefix in sources.adapters))
+        capture = (sources.acquire(
+            spec["target"], max_bytes=opts.get("max_bytes", 65536))
+            if use_registered_source else
+            acquire(
+                spec["target"], root=Path(root) if root is not None else Path.cwd(),
+                approved_hosts=approved_hosts if approved_hosts is not None else DEFAULT_HOSTS,
+                max_bytes=opts.get("max_bytes", 65536),
+                byte_range=opts.get("byte_range", False),
+            ))
         hint = opts.get("format_hint", spec["target"])
         if not isinstance(hint, str) or len(hint) > 300:
             raise ValueError("Invalid representation hint")
-        ground = ground_for_capture(capture, hint=hint)
+        ground = ground_for_capture(capture, hint=hint, decoders=decoders)
         result = None
         if spec["operation"] == "bytes.execute":
             params = opts.get("parameters", {})
@@ -124,7 +132,7 @@ def render_byte_receipt(receipt, output):
     raise ValueError("Unqualified output format")
 
 
-def replay_byte_receipt(receipt, *, capture):
+def replay_byte_receipt(receipt, *, capture, decoders=None):
     """Re-evaluate Ground evidence against supplied bytes; no remote attestations."""
     try:
         ground = receipt["ground"]
@@ -137,7 +145,7 @@ def replay_byte_receipt(receipt, *, capture):
                 "COMPLETE" if capture["complete"] else "PREFIX"):
             return {"status": "REJECTED", "reason": "COMPLETENESS_MISMATCH"}
         verified = ground_for_capture(capture, hint=receipt["intention"]["options"].get(
-            "format_hint", receipt["intention"]["target"]))
+            "format_hint", receipt["intention"]["target"]), decoders=decoders)
         if verified["ground_digest"] != ground["ground_digest"]:
             return {"status": "REJECTED", "reason": "GROUND_MISMATCH"}
         return {"status": "VERIFIED_BYTE_GROUND", "ground_digest": verified["ground_digest"],
