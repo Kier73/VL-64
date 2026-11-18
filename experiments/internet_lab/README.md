@@ -22,6 +22,7 @@ The Linux GitHub Actions experiment on **November 18, 2026** produced 16 success
 
 - [Live execution](https://github.com/Kier73/VL-64/actions/runs/44371133726)
 - [Saved first dataset](datasets/2026-11-18-github-run-44371133726.json)
+- [Saved second dataset](datasets/2026-11-18-github-run-44372989749.json) — larger repository, compact Git-reference lookup
 - [Network-native runtime design](../../docs/VIRTUAL_INTERNET_RUNTIME_PLAN.md)
 
 These are finite observations made from a GitHub runner, **not** universal laws about Internet behavior, physical path instrumentation, or independent attestation of external providers.
@@ -38,6 +39,25 @@ python -m experiments.internet_lab.virtual_net --verify-file internet-ground-dat
 The first command runs existing package and experiment contract tests. The second invokes live public resources and a local TCP server. The last replays retained protocol packets and validates the dataset and relation-graph fingerprints **without accessing the Internet**.
 
 The automated workflow records the live dataset as a downloadable Actions artifact; the first complete successful observation is also committed as a research record. Later runs may differ because the Internet changes. A main-branch run on November 18 exposed that an oversized commit-details JSON response could exceed the 64 KiB capture budget; the lab now uses the much smaller branch-reference API to obtain only the needed commit ID. Keep separate snapshots instead of overwriting prior observations.
+
+## Compare two captured sessions
+
+~~~bash
+python -m experiments.internet_lab.compare_ground \
+  experiments/internet_lab/datasets/2026-11-18-github-run-44371133726.json \
+  experiments/internet_lab/datasets/2026-11-18-github-run-44372989749.json \
+  --out internet-ground-temporal-report.json
+~~~
+
+The comparer verifies the saved packet and graph evidence of **both** datasets before classifying observed state as the same, changed, or insufficiently interpreted. It uses operation-specific projections rather than comparing the raw response bytes blindly.
+
+These two measured sessions are instructive:
+- Git HEAD changed from the earlier commit to the new network-lab commit, and the research-goals file changed.
+- The README body was byte-identical at both pinned revisions.
+- Cloudflare's JSON and DNS-wire payload hashes changed but their interpreted A-answer sets were equal during the two observations; DNS TTL is allowed to change.
+- The conditional HTTP request returned \`304\` and avoided the same 6,745-byte body in both sessions.
+
+**Two samples are not enough to establish predictive stability.** Their purpose is to show that choosing the right interpretation can distinguish state changes from protocol-level or temporal variations.
 
 ## Example: navigation by evidence
 
