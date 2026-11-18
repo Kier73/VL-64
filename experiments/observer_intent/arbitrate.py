@@ -380,7 +380,7 @@ def compile_intention(request):
     elif operation == "github.document.describe":
         steps = ["resolve_git_revision", "fetch_pinned_readme",
                  "follow_declared_link", "verify_content_digests"]
-    elif operation in ("bytes.observe", "bytes.execute"):
+    elif operation in ("bytes.observe", "bytes.execute", "bytes.capabilities"):
         from experiments.byte_fabric.router import compile_byte_plan
         return compile_byte_plan(request)
     else:
@@ -398,7 +398,7 @@ def compile_intention(request):
 
 def arbitrate(request, *, byte_root=None, approved_hosts=None):
     """Resolve observer intent through qualified metadata or byte operators."""
-    if request.spec["operation"] in ("bytes.observe", "bytes.execute"):
+    if request.spec["operation"] in ("bytes.observe", "bytes.execute", "bytes.capabilities"):
         from experiments.byte_fabric.router import byte_arbitrate
         return byte_arbitrate(request, root=byte_root, approved_hosts=approved_hosts)
     plan = compile_intention(request)
@@ -499,7 +499,8 @@ def main():
     if receipt["status"] not in (
             "OBSERVED_MODEL_STRUCTURE", "PARTIAL_MODEL_STRUCTURE",
             "OBSERVED_DESCRIPTION_PATH", "OBSERVED_BYTE_GROUND",
-            "PARTIAL_BYTE_GROUND", "EXECUTED_LOCAL"):
+            "PARTIAL_BYTE_GROUND", "EXECUTED_LOCAL",
+            "OBSERVED_CAPABILITY_CATALOGUE"):
         raise SystemExit("Observer intention could not be realized")
 
 
