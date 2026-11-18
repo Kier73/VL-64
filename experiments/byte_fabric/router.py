@@ -7,6 +7,7 @@ capabilities decide whether a requested operation is qualified.
 from __future__ import annotations
 
 import json
+import base64
 from pathlib import Path
 
 from vld import ObserverIntention, domain_digest
@@ -96,6 +97,14 @@ def byte_arbitrate(request, *, root=None, approved_hosts=None, executor=None,
             status = "OBSERVED_BYTE_GROUND" if capture["complete"] else "PARTIAL_BYTE_GROUND"
         return {**base, "status": status, "ground": ground,
                 "execution": result,
+                "observed_data": ({
+                    "encoding": "base64",
+                    "data": base64.b64encode(capture["data"][:4096]).decode("ascii"),
+                    "returned_bytes": min(len(capture["data"]), 4096),
+                    "captured_bytes": len(capture["data"]),
+                    "scope": ("full-resource" if capture["complete"] and
+                              len(capture["data"]) <= 4096 else "captured-prefix"),
+                } if opts.get("include_data") is True else None),
                 "acquisition_scope": "authorized-source-bytes-or-captured-prefix"}
     except (ValueError, KeyError, TypeError, OSError) as exc:
         return {**base, "status": "UNRESOLVED", "reason": type(exc).__name__,
@@ -124,6 +133,9 @@ def render_byte_receipt(receipt, output):
             "Byte digest: " + str(evidence.get("content_sha256", "unobserved")),
             "Ground digest: " + str(ground.get("ground_digest", "unavailable")),
         ]
+        if receipt.get("observed_data") is not None:
+            lines.append("Observed data (base64): " + receipt["observed_data"]["data"])
+            lines.append("Observed data scope: " + receipt["observed_data"]["scope"])
         if execution is not None:
             lines.append("Execution: " + str(execution))
         if receipt.get("reason"):
