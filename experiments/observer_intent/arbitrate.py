@@ -270,6 +270,34 @@ def make_hf_structure(intention):
         {"from": "revision", "to": "weight_manifest",
          "relation": "file_listing_at_revision"},
     ]
+    # Translate declared configuration variables into typed Ground leaves.
+    for field, value in sorted(config.items()):
+        node = "config_field:" + field
+        nodes.append({
+            "id": node, "kind": "declared_config_variable",
+            "value_digest": domain_digest("vl64.hf-config-field.v1", value),
+            "value_type": type(value).__name__,
+        })
+        edges.append({"from": "config", "to": node,
+                      "relation": "declares_field"})
+    # Hints are family-specific interpretation, not checked operation traces.
+    gpt2_hint = {}
+    if config.get("model_type") == "gpt2":
+        if all(type(config.get(k)) is int and config[k] > 0
+               for k in ("n_layer", "n_head", "n_embd", "vocab_size")):
+            gpt2_hint = {
+                "family": "gpt2", "scope": "unverified_family_template_not_actual_inference",
+                "decoder_blocks": config["n_layer"],
+                "hidden_size": config["n_embd"],
+                "attention_heads": config["n_head"],
+                "vocabulary_size": config["vocab_size"],
+                "operator_families": [
+                    "token_embedding", "masked_self_attention",
+                    "feed_forward", "normalization", "language_model_head"],
+            }
+    provider_mapping = info.get("inferenceProviderMapping") or {}
+    offered_providers = sorted(provider_mapping) if isinstance(
+        provider_mapping, dict) else []
     ground = {
         "schema": "vl64.hf-model-structure-ground.v1",
         "model_id": name, "revision": rev,
@@ -283,6 +311,8 @@ def make_hf_structure(intention):
         "total_listed_files": len(files),
         "safetensors_summary": safe,
         "graph": {"nodes": nodes, "edges": edges},
+        "family_operator_hints": gpt2_hint,
+        "advertised_inference_providers": offered_providers[:20],
         "claims": {
             "source": "public_huggingface_metadata_and_bounded_config_json",
             "model_weights_downloaded": False,
@@ -291,6 +321,7 @@ def make_hf_structure(intention):
             "model_behavior_predicted": False,
             "execution_capability": "UNQUALIFIED_NO_WEIGHTS_OR_REMOTE_INFERENCE_RECEIPT",
             "tensor_shape_complete": False,
+            "provider_advertisement_is_not_execution_authority": True,
         },
     }
     ground["ground_digest"] = domain_digest("vl64.hf-model-ground.v1", ground)
