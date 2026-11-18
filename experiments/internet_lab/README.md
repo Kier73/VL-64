@@ -12,7 +12,7 @@ This is a **separate experimental tool**, not part of the 65,536-byte VL-64 sour
 | Direct TLS to example.com | Establish a certificate-validated TLS connection | Version, negotiated cipher, certificate digest and timing |
 | GitHub smart HTTP | Request Git upload-pack protocol v2 capabilities | Retained advertisement packet and decoded capabilities |
 | GitHub upload-pack | Issue an actual bounded **read-only ls-refs** command using Git v2 pkt-lines | Retained response packet and reported HEAD |
-| GitHub REST | Read the default branch and its commit identity | Remote JSON observations, response digests |
+| GitHub REST | Read the default branch and its compact Git-reference identity | Remote JSON observations, response digests |
 | GitHub raw content | Read pinned README and its selected research-goals link | Checked document content hashes and three-hop Ground route |
 | HTTP conditional request | If-None-Match against the pinned README | 304 response: reuse previously observed contents without transfer |
 | Cloudflare and example.com | Bounded HTTPS GET | HTTP status, content digest, caching metadata |
@@ -37,11 +37,11 @@ python -m experiments.internet_lab.virtual_net --verify-file internet-ground-dat
 
 The first command runs existing package and experiment contract tests. The second invokes live public resources and a local TCP server. The last replays retained protocol packets and validates the dataset and relation-graph fingerprints **without accessing the Internet**.
 
-The automated workflow records the live dataset as a downloadable Actions artifact; the first complete successful observation is also committed as a research record. Later runs may differ because the Internet changes. Keep separate snapshots instead of overwriting prior observations.
+The automated workflow records the live dataset as a downloadable Actions artifact; the first complete successful observation is also committed as a research record. Later runs may differ because the Internet changes. A main-branch run on November 18 exposed that an oversized commit-details JSON response could exceed the 64 KiB capture budget; the lab now uses the much smaller branch-reference API to obtain only the needed commit ID. Keep separate snapshots instead of overwriting prior observations.
 
 ## Example: navigation by evidence
 
-The lab requests repository metadata, determines the default branch, asks GitHub for the branch's commit, then retrieves the README **pinned to that commit**. It finds the selected research-goals link, fetches the target pinned to the same commit and constructs a three-edge representation graph:
+The lab requests repository metadata, determines the default branch, asks GitHub for the compact branch-reference object (rather than a commit-diff report), then retrieves the README **pinned to that commit**. It finds the selected research-goals link, fetches the target pinned to the same commit and constructs a three-edge representation graph:
 
 ~~~text
 repo:Kier73/VL-64
