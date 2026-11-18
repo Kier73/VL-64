@@ -173,6 +173,20 @@ python -m experiments.observer_intent.arbitrate \
 
 This sample navigates a saved fixed-layout, modular-affine Ground across one trillion *modeled* transitions. The measured description reduced 81,920 bytes of observed frames to 1,947 bytes. Its future behavior is a validated hypothesis rather than a guarantee about every possible machine.
 
+## Discover a non-affine or observable Ground
+
+VL-64 can now compare **multiple state-model families** against held-out byte observations. A new finite-state learner recognizes a witnessed closed non-affine cycle, retaining one byte template and a small state table instead of repeated snapshots. A second mechanism merges states only when their **entire modeled observable future** remains equivalent.
+
+Use the existing observer interface with either saved Ground:
+
+```bash
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/nonaffine_trillion.json \
+  --out result.json
+```
+
+For an observation-only result, use `observable_quotient_trillion.json`. That smaller Ground can answer the observer's future-state question but **cannot reconstruct discarded internal bytes**. See [Non-Affine and Observable Grounds](docs/NONAFFINE_AND_OBSERVABLE_GROUNDS.md) for exact validation and limits.
+
 ## Documentation
 
 - [Usage guide](docs/USAGE_GUIDE.md) — commands, API examples, and extension points.
@@ -180,3 +194,4 @@ This sample navigates a saved fixed-layout, modular-affine Ground across one tri
 - [Observer intention and model Grounds](docs/OBSERVER_INTENTION_AND_MODEL_GROUNDS.md) — the typed input contract, evidence, and remote-operation research path.
 - [Generic byte fabric](experiments/byte_fabric/README.md) — architecture-independent byte observation, decoder plug-ins, and qualified execution.
 - [Compressive Virtual Grounds](docs/COMPRESSIVE_VIRTUAL_GROUNDS.md) — discover a predictive byte interpreter, compress observed state histories, and compose distant-state navigation.
+- [Non-Affine and Observable Grounds](docs/NONAFFINE_AND_OBSERVABLE_GROUNDS.md) — discover finite-state transitions and compress according to future-stable observer equivalence.

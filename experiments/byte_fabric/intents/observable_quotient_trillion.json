@@ -1,0 +1,13 @@
+{
+  "operation": "ground.navigate",
+  "target": "workspace:experiments/byte_fabric/datasets/2026-11-18-observable-quotient-ground.json",
+  "output": "json",
+  "options": {
+    "goal": {
+      "kind": "state.observable",
+      "steps": 1000000000000,
+      "max_work": 2,
+      "max_hops": 2
+    }
+  }
+}

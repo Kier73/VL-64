@@ -1,0 +1,31 @@
+{
+  "classes": [
+    {
+      "label": "A",
+      "next": 1,
+      "source_states": 4
+    },
+    {
+      "label": "A",
+      "next": 2,
+      "source_states": 4
+    },
+    {
+      "label": "B",
+      "next": 0,
+      "source_states": 4
+    }
+  ],
+  "ground_digest": "0460697ca61665dc0330392fd72bb0bee5d6f413f7d6fe3fd824107e6829ffa8",
+  "initial_block": 0,
+  "label_contract_digest": "101a92534dcf1e882caf0652ddc9270a30b86aaf183aa7c9b5ab280df8c078b6",
+  "reconstruction_claim": {
+    "exact_source_bytes_recoverable_from_quotient_alone": false,
+    "requested_observables_preserved_within_declared_model": true,
+    "unlisted_external_states_proven": false
+  },
+  "schema": "vl64.observable-quotient-ground.v1",
+  "scope": "complete-finite-declared-model-and-observer-supplied-labels",
+  "source_ground_digest": "e885809bcbd8525a377f18c1eb9f18d3d421e092b27cd067c7629fbe83ee4495",
+  "source_state_count": 12
+}

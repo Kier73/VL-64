@@ -1,0 +1,92 @@
+name: VL-64 non-affine finite-state Ground experiment
+
+on:
+  push:
+    branches:
+      - main
+      - feature/nonaffine-discrete-ground-20261118
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  nonaffine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - name: Install VL-64 test environment
+        run: python -m pip install -e ".[dev]"
+      - name: Validate existing and non-affine Ground tests
+        run: python -m pytest -q tests/
+      - name: Discover and benchmark a compressed finite Ground from bytes
+        run: |
+          python -m experiments.byte_fabric.discrete_lab --out artifacts
+          python -m experiments.observer_intent.arbitrate \
+            --intent artifacts/nonaffine-observer-intention.json \
+            --out artifacts/navigated-state.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent artifacts/observable-quotient-intention.json \
+            --out artifacts/navigated-observable.json
+      - name: Independent output and core-size controls
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from experiments.byte_fabric.ground_families import GroundFamilies
+          p=Path("artifacts")
+          measured=json.loads((p/"nonaffine-ground-measurements.json").read_text())
+          descriptor=json.loads((p/"learned-discrete-ground.json").read_text())
+          result=json.loads((p/"navigated-state.json").read_text())
+          assert measured["selected_family"]=="closed-finite-cycle", measured
+          assert measured["compression_ratio"]>20, measured
+          assert measured["heldout_frames"]==52
+          assert len(measured["new_unseen_indices"])==4
+          assert measured["matched_challenge"]=="CONSISTENT_ON_NEW_OBSERVATIONS"
+          assert measured["contradictory_challenge"]=="CONTRADICTED"
+          assert measured["core_crosscheck"] is True
+          assert result["status"]=="OBSERVED_GROUND_NAVIGATION",result
+          assert result["navigation"]["result"]["value"]==measured["trillion_result_digest"]
+          quotient=json.loads((p/"learned-observable-quotient-ground.json").read_text())
+          qreport=json.loads((p/"observable-quotient-measurements.json").read_text())
+          qresult=json.loads((p/"navigated-observable.json").read_text())
+          assert qreport["source_states"]==12
+          assert qreport["quotient_states"]==3
+          assert qreport["fresh_observable_continuations_checked"]==26
+          assert qreport["exact_source_bytes_reconstructible"] is False
+          assert qreport["matched_challenge"]=="CONSISTENT_ON_NEW_OBSERVATIONS"
+          assert qreport["contradictory_challenge"]=="CONTRADICTED"
+          assert qresult["status"]=="OBSERVED_GROUND_NAVIGATION"
+          assert qresult["navigation"]["result"]["value"]==qreport["horizon_observed_value"]
+          assert GroundFamilies().open(quotient).realize(10**12,"state.observable")["result"]["value"]==qreport["horizon_observed_value"]
+          assert GroundFamilies().open(descriptor).realize(10**12,"digest.sha256")["result"]["value"] == measured["trillion_result_digest"]
+          core=sum(x.stat().st_size for x in Path("src/vld").glob("*.py"))
+          assert core<=65536, core
+          print("VL64_NONAFFINE_VERIFIED",json.dumps({
+              "ground_digest":descriptor["ground_digest"],
+              "descriptor_bytes":measured["ground_description_bytes"],
+              "raw_observed_bytes":measured["raw_observed_bytes"],
+              "compression_ratio":measured["compression_ratio"],
+              "cycle_length":measured["cycle_length"],
+              "horizon":measured["trillion_horizon"],
+              "core_bytes":core,
+              "quotient_states":qreport["quotient_states"],
+              "quotient_bytes":qreport["quotient_description_bytes"],
+          },sort_keys=True))
+          PY
+      - name: Preserve portable Ground, evidence and observer result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-nonaffine-ground-${{ matrix.python-version }}
+          path: artifacts/*
+          retention-days: 30
+          if-no-files-found: warn

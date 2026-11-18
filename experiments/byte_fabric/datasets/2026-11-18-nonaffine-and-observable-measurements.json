@@ -1,0 +1,96 @@
+{
+  "schema": "vl64.nonaffine-and-observable-model-comparison.v1",
+  "source_run": "https://github.com/Kier73/VL-64/actions/runs/44415931778",
+  "scope": "controlled reference state machines; Python CI empirical performance and validation, not universal source equivalence",
+  "exact_discrete": {
+    "compression_ratio": 52.269,
+    "contradictory_challenge": "CONTRADICTED",
+    "core_crosscheck": true,
+    "core_modified": false,
+    "cycle_length": 17,
+    "discovered_state_span": {
+      "offset": 427,
+      "width": 2
+    },
+    "discrete_navigation_ms": 0.0911,
+    "family_candidates": [
+      {
+        "candidate": "closed-finite-cycle",
+        "description_bytes": 2155,
+        "ground_digest": "f7042016b507aab12d80ff54fcd2dce0a489fd1079c21df4d8729b82b6dc5e84",
+        "schema": "vl64.discrete-orbit-ground.v1",
+        "status": "HELDOUT_VALIDATED"
+      },
+      {
+        "candidate": "modular-affine",
+        "detail": "Interpreter ambiguous or not supported: 0 admissible interpretations",
+        "reason": "ValueError",
+        "status": "UNRESOLVED"
+      }
+    ],
+    "frame_bytes": 1024,
+    "future_external_behavior_proven": false,
+    "ground_description_bytes": 2155,
+    "ground_discovery_ms": 9.2673,
+    "heldout_frames": 52,
+    "horizon_relation_count": 4,
+    "matched_challenge": "CONSISTENT_ON_NEW_OBSERVATIONS",
+    "new_unseen_indices": [
+      110,
+      133,
+      159,
+      191
+    ],
+    "prefix_length": 3,
+    "raw_observed_bytes": 112640,
+    "reference_source": "VL-64 README static template plus controlled synthetic state changes",
+    "reference_stepping_horizon": 300000,
+    "reference_stepping_ms": 10.2643,
+    "schema": "vl64.nonaffine-discrete-ground-measurement.v1",
+    "selected_family": "closed-finite-cycle",
+    "speedup_one_run": 112.63,
+    "status": "HELDOUT_AND_NEW_OBSERVATIONS_RECONSTRUCTED",
+    "training_frames": 58,
+    "trillion_horizon": 1000000000000,
+    "trillion_result_digest": "87b359993378995d6d4636a9a9362731a9151ab0d0e8d30630748c820ab8eafb"
+  },
+  "observable_quotient": {
+    "contradictory_challenge": "CONTRADICTED",
+    "erasure_entropy_bits": 2,
+    "exact_source_bytes_reconstructible": false,
+    "fresh_observable_continuations_checked": 26,
+    "horizon": 1000000000000,
+    "horizon_observed_value": "A",
+    "matched_challenge": "CONSISTENT_ON_NEW_OBSERVATIONS",
+    "meaning": "observer-output-equivalence-not-full-byte-reconstruction",
+    "original_observed_snapshot_bytes": 35840,
+    "quotient_description_bytes": 743,
+    "quotient_states": 3,
+    "schema": "vl64.observation-quotient-experiment.v1",
+    "source_states": 12,
+    "status": "OBSERVABLE_FUTURES_PRESERVED_IN_DECLARED_MODEL"
+  },
+  "cross_runtime": {
+    "runtimes": [
+      "nonaffine (3.11)",
+      "nonaffine (3.13)"
+    ],
+    "discrete_ground_identity_equal": true,
+    "quotient_ground_identity_equal": true,
+    "compact_core_bytes": 65093,
+    "measured_speedups": [
+      {
+        "job": "nonaffine (3.11)",
+        "speedup_one_run": 112.63,
+        "direct_step_ms": 10.2643,
+        "navigator_ms": 0.0911
+      },
+      {
+        "job": "nonaffine (3.13)",
+        "speedup_one_run": 268.71,
+        "direct_step_ms": 12.9678,
+        "navigator_ms": 0.0483
+      }
+    ]
+  }
+}

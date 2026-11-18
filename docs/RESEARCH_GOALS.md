@@ -16,6 +16,8 @@ The first observer-specified result selector is implemented in [Goal-Directed By
 
 [Compressive Virtual Grounds](COMPRESSIVE_VIRTUAL_GROUNDS.md) now demonstrates automatic byte-span interpreter discovery, empirically validated modular transitions, composable state navigation, exact frame reconstruction, and independent contradiction witnesses. The new code is external to the 64 KiB runtime core; the structural description remains a small, portable artifact.
 
+The implemented [Non-Affine and Observable Grounds](NONAFFINE_AND_OBSERVABLE_GROUNDS.md) compare validated algebraic and finite-state descriptions, discover a closed non-affine state graph from bytes and refine the finite model into a smaller future-equivalent observer-specific quotient. They retain counterexample receipts while leaving the 64 KiB core unchanged.
+
 ## Development discipline
 
 A proposed capability enters the runtime only when it has:

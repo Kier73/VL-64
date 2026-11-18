@@ -1,0 +1,22 @@
+{
+  "byte_template_b64": "IyBWTC02NDogNjQgS2lCIFZpcnR1YWwgTGF5ZXIgUnVudGltZQoKQSAqKjY0IEtpQiBWaXJ0dWFsIExheWVyIFV0aWxpdHkqKi4KClZMLTY0IHRyYW5zbGF0ZXMgY2FwdHVyZWQgYnl0ZXMgaW50byBjYW5kaWRhdGUgdmlydHVhbCBzdGF0ZSByZXByZXNlbnRhdGlvbnMsIG1lYXN1cmVzIHdoaWNoIGRlc2NyaXB0aW9ucyBwcmVkaWN0IG9ic2VydmVkIHRyYW5zaXRpb25zLCBhbmQgbmF2aWdhdGVzIHF1YWxpZmllZCBzdGF0ZXMgdGhyb3VnaCBjb21wb3NpdGlvbiBhbmQgY3ljbGUgZGV0ZWN0aW9uLiBJdCBhbHNvIHByb3ZpZGVzIG1hdGhlbWF0aWNhbCwgc3RydWN0dXJhbCwgYW5kIHZlcmlmaWNhdGlvbiB1dGlsaXRpZXMgZm9yIHBlcmZvcm1pbmcgd29yayBvbiB0aG9zZSByZXByZXNlbnRhdGlvbnMuIEl0cyBzb3VyY2UgcGFja2FnZSBpcyBtYWludAAAbmVkIHdpdGhpbiBhIDY1LDUzNi1ieXRlIGJ1ZGdldC4gSXQgcnVucyBvbiBQeXRob24gMy4xMSsgdXNpbmcgdGhlIHN0YW5kYXJkIGxpYnJhcnkuCgpVc2UgdGhlIGB2bGRgIGNvbW1hbmQgZm9yIGJ1aWx0LWluIGNoZWNrcyBhbmQgbW9kdWxhciBhZmZpbmUgbmF2aWdhdGlvbiwgb3IgaW1wb3J0IGB2bGRgIHRvIGNvbXBvc2UgdGhlIGF2YWlsYWJsZSBvcGVyYXRpb25zIGluIHlvdXIgb3duIGNvZGUuCgojIyBJbnN0YWxsCgpgYGBiYXNoCmdpdCBjbG9uZSBodHRwczovL2dpdGh1Yi5jb20vS2llcjczL1ZMLTY0LmdpdApjZCBWTC02NApweXRob24gLW0gcGlwIGluc3RhbGwgLWUgLgpgYGAKCiMjIENvbW1hbmQtbGluZSB1c2UKCmBgYGJhc2gKdmxkIHZlcmlmeQp2bGQgaW5mbwp2bGQgbmF2aWdhdGUgLS1hIDUgLS1iIDEgLS14MCAzIC0tc3RlcHMgMTAwMCAtLW1vZHVsdXMgMjU2CmBgYAoKLSBgdmVyaWZ5YCBwcmludHMgYSBKU09OIHJlcG9ydCBvZiBmaXZlIGJ1aWx0LWluIGNoZWNrczogRWQyNTUxOSwgYWZmaW5lIG5hdmlnYXRpb24sIHN0cnVjdHVyZWQgbGluZWFyIG9wZXJhdGlvbiwgcXVvcnVtIGNlcnRpZmljYXRlIHZlcmlmaWNhdGlvbg==",
+  "claims": {
+    "action_alphabet": "one_unlabeled_time_step",
+    "closed_successor_relation_witnessed": true,
+    "complete_arbitrary_machine_model": false,
+    "unobserved_future_behavior_proven": false
+  },
+  "cycle_states": 17,
+  "ground_digest": "f7042016b507aab12d80ff54fcd2dce0a489fd1079c21df4d8729b82b6dc5e84",
+  "heldout_evidence_digest": "bfff4e0380dca780ed7cbf0fc3c747a401d91ff384bfd018883ba1dd534c1b3b",
+  "heldout_frames": 52,
+  "preperiod_states": 3,
+  "schema": "vl64.discrete-orbit-ground.v1",
+  "scope": "finite-closed-observed-orbit-hypothesis",
+  "state_tokens_b64": "4gveEOj7tTdutRp0T7QAMQD2rAH2dGC3npAuW4ZfE75g+/Blw7G3Mw==",
+  "template_bytes": 1024,
+  "training_evidence_digest": "a0c560c733ccafbe59a82deddbe19cc9491dfe1f8af79b331dff0effccc0c927",
+  "training_frames": 58,
+  "variable_offset": 427,
+  "variable_width": 2
+}

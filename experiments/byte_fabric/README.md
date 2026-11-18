@@ -200,6 +200,25 @@ python -m experiments.observer_intent.arbitrate \
 
 The measured fixed-layout experiment encoded 81,920 bytes of training and validation snapshots with a 1,947-byte description (42.075×). A separate challenge API checks new observed frames and returns explicit contradictions without silently rewriting the Ground. This experiment is **a validated state generator for one pattern**, not arbitrary machine emulation.
 
+## Non-affine and observer-specific Virtual Grounds
+
+The [non-affine byte Ground](discrete_ground.py) learns a finite deterministic preperiod/cycle from observed byte snapshots and validates exact reconstruction on held-out frames. [GroundFamilies](ground_families.py) compares the finite interpretation with the modular-affine interpretation, selecting the smallest qualified stored description.
+
+The [observable quotient](quotient_ground.py) reuses the compact core's Myhill–Nerode partition refinement to retain only states distinguishable by the observer's declared outputs and future transitions. It is deliberately **not a lossless Ground** for discarded source bytes.
+
+Two independently navigable examples:
+
+```bash
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/nonaffine_trillion.json \
+  --out exact-modeled-result.json
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/observable_quotient_trillion.json \
+  --out observable-only-result.json
+```
+
+See the [evidence and methodology](../../docs/NONAFFINE_AND_OBSERVABLE_GROUNDS.md), [saved non-affine Ground](datasets/2026-11-18-nonaffine-ground.json), [saved quotient](datasets/2026-11-18-observable-quotient-ground.json) and [controlled measurements](datasets/2026-11-18-nonaffine-and-observable-measurements.json). These experiments change no source bytes in the compact runtime.
+
 ## Next frontier
 
 The general observer-to-realizer interface should evolve into an **evidence- and cost-aware typed relation search**:
