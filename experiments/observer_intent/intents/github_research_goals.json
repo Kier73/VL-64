@@ -1,0 +1,6 @@
+{
+  "operation": "github.document.describe",
+  "target": "Kier73/VL-64:docs/RESEARCH_GOALS.md",
+  "output": "jsonl",
+  "options": {}
+}
