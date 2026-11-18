@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feature/generic-byte-ground-execution-20261118
   pull_request:
   workflow_dispatch:
 
