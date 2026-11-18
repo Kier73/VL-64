@@ -14,6 +14,8 @@ For the implemented architecture-independent byte observer, extensible source an
 
 The first observer-specified result selector is implemented in [Goal-Directed Byte Navigation](GOAL_DIRECTED_BYTE_NAVIGATION.md). A typed goal is matched to admitted source/decoder/realizer relations rather than a fixed operator name.
 
+[Compressive Virtual Grounds](COMPRESSIVE_VIRTUAL_GROUNDS.md) now demonstrates automatic byte-span interpreter discovery, empirically validated modular transitions, composable state navigation, exact frame reconstruction, and independent contradiction witnesses. The new code is external to the 64 KiB runtime core; the structural description remains a small, portable artifact.
+
 ## Development discipline
 
 A proposed capability enters the runtime only when it has:
