@@ -2,7 +2,7 @@
 
 A **64 KiB Virtual Layer Utility**.
 
-VL-64 is a compact Python package for working with state representations, algebraic navigation, structured numerical operators, and verifiable transitions. Its source package is maintained within a 65,536-byte budget. It runs on Python 3.11+ using the standard library.
+VL-64 translates captured bytes into candidate virtual state representations, measures which descriptions predict observed transitions, and navigates qualified states through composition and cycle detection. It also provides mathematical, structural, and verification utilities for performing work on those representations. Its source package is maintained within a 65,536-byte budget. It runs on Python 3.11+ using the standard library.
 
 Use the `vld` command for built-in checks and modular affine navigation, or import `vld` to compose the available operations in your own code.
 
