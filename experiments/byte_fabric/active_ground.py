@@ -254,10 +254,10 @@ class ActiveGroundSession:
             for word in itertools.product(self.actions,repeat=depth):
                 if examined>=max_words:
                     break
+                examined+=1
                 cost=sum(self.costs[action] for action in word)
                 if cost>max_cost:
                     continue
-                examined+=1
                 groups,gain=_partitions(self.models,word)
                 if gain<=1e-12:
                     continue
