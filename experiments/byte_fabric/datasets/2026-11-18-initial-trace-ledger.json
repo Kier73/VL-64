@@ -1,0 +1,48 @@
+{
+  "actions": [
+    "flip",
+    "read"
+  ],
+  "contradiction_count": 0,
+  "ledger_digest": "761c9a31fc43aae6fc671df5bd81352d97cd48a71cc105decc3759ed891df813",
+  "observations": [
+    {
+      "conflicts": [],
+      "evidence_digest": "d42a196dd88339d6a059cb6a0079712163c7e415c5ae3d2c28bb1699677db7ff",
+      "host_policy": "local-simulated",
+      "output_sha256": [
+        "f9194e73f9e9459e3450ea10a179cdf77aafa695beecd3b9344a98d111622243"
+      ],
+      "outputs_hex": [
+        "7a65726f"
+      ],
+      "schema": "vl64.action-trace-evidence.v1",
+      "scope": "observed_resettable_action_word_not_unobserved_edges",
+      "source": "independent-controlled-machine",
+      "status": "OBSERVED_ACTION_TRACE",
+      "word": [
+        "read"
+      ]
+    },
+    {
+      "conflicts": [],
+      "evidence_digest": "9ceda4283ed1cf042606b1129e8a4509afeeb2fa32ba58612016cb40fa54d05c",
+      "host_policy": "local-simulated",
+      "output_sha256": [
+        "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+      ],
+      "outputs_hex": [
+        "6f6b"
+      ],
+      "schema": "vl64.action-trace-evidence.v1",
+      "scope": "observed_resettable_action_word_not_unobserved_edges",
+      "source": "independent-controlled-machine",
+      "status": "OBSERVED_ACTION_TRACE",
+      "word": [
+        "flip"
+      ]
+    }
+  ],
+  "schema": "vl64.action-trace-ledger.v1",
+  "scope": "resettable_observed_paths_only"
+}
