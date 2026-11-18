@@ -172,26 +172,24 @@ class ObservedGround:
         state = self._key(raw, view)
         initial = state
         seen = {}
+        sequence = []
         evaluated = 0
         cycle = 0
+        steps_skipped = 0
         while evaluated < steps:
             if state in seen:
-                cycle = evaluated - seen[state]
-                remaining = (steps - evaluated) % cycle
-                # Only a bounded suffix remains after finding a cycle.
-                steps_skipped = steps - evaluated - remaining
-                for _ in range(remaining):
-                    state = next(iter(self.edges[view][state]))
-                evaluated += remaining
+                start = seen[state]
+                cycle = evaluated - start
+                state = sequence[start + (steps - start) % cycle]
+                steps_skipped = steps - evaluated
                 break
             targets = self.edges[view].get(state)
             if not targets or len(targets) != 1:
                 raise ValueError("Observed transition is missing or ambiguous at state " + state)
             seen[state] = evaluated
+            sequence.append(state)
             state = next(iter(targets))
             evaluated += 1
-        else:
-            steps_skipped = 0
         return {
             "status": "OBSERVED_MODEL_NAVIGATION",
             "view": view,
