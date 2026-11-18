@@ -207,5 +207,70 @@
     "network_http_observations_performed": true,
     "partial_response_unqualified_for_full_hash": true,
     "remote_model_inference_executed": false
+  },
+  "cross_runtime_comparison": {
+    "runtimes": [
+      "Python 3.11",
+      "Python 3.13"
+    ],
+    "compared_cases": 9,
+    "ground_digest_equal": true,
+    "cases": [
+      {
+        "case": "json-ground.json",
+        "ground_digest_equal": true,
+        "byte_count_equal": true,
+        "status_equal": true
+      },
+      {
+        "case": "unknown-binary.json",
+        "ground_digest_equal": true,
+        "byte_count_equal": true,
+        "status_equal": true
+      },
+      {
+        "case": "live-page.json",
+        "ground_digest_equal": true,
+        "byte_count_equal": true,
+        "status_equal": true
+      },
+      {
+        "case": "live-repo.json",
+        "ground_digest_equal": true,
+        "byte_count_equal": true,
+        "status_equal": true
+      },
+      {
+        "case": "live-partial.json",
+        "ground_digest_equal": true,
+        "byte_count_equal": true,
+        "status_equal": true
+      },
+      {
+        "case": "live-sha256.json",
+        "ground_digest_equal": true,
+        "byte_count_equal": true,
+        "status_equal": true
+      },
+      {
+        "case": "live-model-metadata.json",
+        "ground_digest_equal": true,
+        "byte_count_equal": true,
+        "status_equal": true
+      },
+      {
+        "case": "live-model-field.json",
+        "ground_digest_equal": true,
+        "byte_count_equal": true,
+        "status_equal": true
+      },
+      {
+        "case": "live-binary-png.json",
+        "ground_digest_equal": true,
+        "byte_count_equal": true,
+        "status_equal": true
+      }
+    ],
+    "scope": "identical structural Ground fingerprints over observed byte contents, not independent authority"
   }
 }
