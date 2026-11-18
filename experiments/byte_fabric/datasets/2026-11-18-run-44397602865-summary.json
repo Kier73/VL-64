@@ -1,0 +1,211 @@
+{
+  "schema": "vl64.byte-fabric-run-summary.v1",
+  "source_run": "https://github.com/Kier73/VL-64/actions/runs/44397602865",
+  "job_id": 135131591171,
+  "scope": "public GitHub Actions log summaries; full output receipts in run artifacts; not an external attestation",
+  "python": "3.13",
+  "tests_passed": 107,
+  "cases": [
+    {
+      "bytes": 290,
+      "case": "json-ground.json",
+      "digest": "5659a3055a76e09b08477309941363bf89410bac09da71657567446cde876330",
+      "kind": "json",
+      "scope": "full-resource",
+      "status": "OBSERVED_BYTE_GROUND"
+    },
+    {
+      "bytes": 8,
+      "case": "unknown-binary.json",
+      "digest": "6240f859fdb4cc84514e6f9826c5fde9639c459feb98316a4e31d60fb70e5532",
+      "kind": "opaque-bytes",
+      "scope": "full-resource",
+      "status": "OBSERVED_BYTE_GROUND"
+    },
+    {
+      "bytes": 577,
+      "case": "live-page.json",
+      "digest": "ff4baf12bd59e85048b8f16f8dd2a0c123fcbe57b1e0d48b70662018477487d6",
+      "kind": "html",
+      "scope": "full-resource",
+      "status": "OBSERVED_BYTE_GROUND"
+    },
+    {
+      "bytes": 7832,
+      "case": "live-repo.json",
+      "digest": "0e5c329328b0ada7c1a540912ecb95e09011d4932504dca132d43422a33e86e8",
+      "kind": "utf8-text",
+      "scope": "full-resource",
+      "status": "OBSERVED_BYTE_GROUND"
+    },
+    {
+      "bytes": 512,
+      "case": "live-partial.json",
+      "digest": "5cf10865400e3a865ffc3dea88f57536c85129816d0bc079891a5aa3bb06680d",
+      "kind": "utf8-text",
+      "scope": "captured-prefix-only",
+      "status": "PARTIAL_BYTE_GROUND"
+    },
+    {
+      "bytes": 577,
+      "case": "live-sha256.json",
+      "digest": "ff4baf12bd59e85048b8f16f8dd2a0c123fcbe57b1e0d48b70662018477487d6",
+      "kind": "html",
+      "scope": "full-resource",
+      "status": "EXECUTED_LOCAL"
+    },
+    {
+      "bytes": 4863,
+      "case": "live-model-metadata.json",
+      "digest": "3f2aed1053ed4fbc937e218e29526b4f138a3f6afd0eb121d67a8637a608b1ac",
+      "kind": "json",
+      "scope": "full-resource",
+      "status": "OBSERVED_BYTE_GROUND"
+    },
+    {
+      "bytes": 4863,
+      "case": "live-model-field.json",
+      "digest": "3f2aed1053ed4fbc937e218e29526b4f138a3f6afd0eb121d67a8637a608b1ac",
+      "kind": "json",
+      "scope": "full-resource",
+      "status": "EXECUTED_LOCAL"
+    },
+    {
+      "bytes": 8991,
+      "case": "live-binary-png.json",
+      "digest": "cd62a4d1379cbe054bc815e72b52b54edd2f147532b35c18cd25d1cfef1cdcc6",
+      "kind": "png",
+      "scope": "full-resource",
+      "status": "OBSERVED_BYTE_GROUND"
+    }
+  ],
+  "outputs": [
+    {
+      "intention_digest": "fc05326fc723128e3ed599d259f9a44078ce0e27bde48c238e17fb7bb4a429a3",
+      "status": "OBSERVED_CAPABILITY_CATALOGUE",
+      "byte_kind": null,
+      "byte_count": null,
+      "byte_ground_digest": "038951d569b42c2a96f87a77915a6e526a0a507d00c5243607edfdc264eeb5c3",
+      "output_sha256": "47bf1c9f03d653bd0e112074a973dfc3519e642e2786551c411b6a390bbaa90c",
+      "format": "json",
+      "reason": null
+    },
+    {
+      "intention_digest": "54449d5886be0338ef18566b4cc3831e4aa8028dd8475c9ed4a6cec5d9f38556",
+      "status": "OBSERVED_BYTE_GROUND",
+      "byte_kind": "json",
+      "byte_count": 290,
+      "byte_ground_digest": "5659a3055a76e09b08477309941363bf89410bac09da71657567446cde876330",
+      "output_sha256": "85d5343a11671d7c85894a6eca4ed3b735028dbf6ce8d8703f7e1d3b2ad350d5",
+      "format": "json",
+      "reason": null
+    },
+    {
+      "intention_digest": "2b67682843ae829d860e691dab86056896677e9d8dd65e822226d46f82bc5cd5",
+      "status": "EXECUTED_LOCAL",
+      "byte_kind": "json",
+      "byte_count": 290,
+      "byte_ground_digest": "5659a3055a76e09b08477309941363bf89410bac09da71657567446cde876330",
+      "output_sha256": "f1e7290e6ed9742302c5ace154c64de8180776bb0f2334b7154e099e71d276d0",
+      "format": "jsonl",
+      "reason": null
+    },
+    {
+      "intention_digest": "f4bae8da4fe168e372601cf4b2c9bf5ffad7218ca178677f426102ba4acf0d6b",
+      "status": "EXECUTED_LOCAL",
+      "byte_kind": "html",
+      "byte_count": 300,
+      "byte_ground_digest": "ebd37985d5a69f2b914742d21e2781ee83cba4b860817e4fc94b899879006883",
+      "output_sha256": "cbd65fee9ef756a67733cf32bb029cc0ff566df3b52e4dc54f21daec1abbfb83",
+      "format": "text",
+      "reason": null
+    },
+    {
+      "intention_digest": "232c5e3c00acf2071ee9f11bc7f01f431ee859be65ab0060766b44768db8699a",
+      "status": "OBSERVED_BYTE_GROUND",
+      "byte_kind": "opaque-bytes",
+      "byte_count": 8,
+      "byte_ground_digest": "6240f859fdb4cc84514e6f9826c5fde9639c459feb98316a4e31d60fb70e5532",
+      "output_sha256": "60d51d26b32fc8321caee67370ee551301783aec90e16f10ab93f1bb74cce1eb",
+      "format": "json",
+      "reason": null
+    },
+    {
+      "intention_digest": "a4ec8d85b40ca1db1038c08c377c2317caa40758d22a55346147757a17c4f2e1",
+      "status": "OBSERVED_BYTE_GROUND",
+      "byte_kind": "html",
+      "byte_count": 577,
+      "byte_ground_digest": "ff4baf12bd59e85048b8f16f8dd2a0c123fcbe57b1e0d48b70662018477487d6",
+      "output_sha256": "15d81b7e38e42d3f02312ccd5de7efa8ac1b5b01fdce83b1804a4acc48fe6335",
+      "format": "json",
+      "reason": null
+    },
+    {
+      "intention_digest": "9b0444cf50db2262a163aae05a2213a9c77c6c43ff6a2554b0c447d3de182dde",
+      "status": "OBSERVED_BYTE_GROUND",
+      "byte_kind": "utf8-text",
+      "byte_count": 7832,
+      "byte_ground_digest": "0e5c329328b0ada7c1a540912ecb95e09011d4932504dca132d43422a33e86e8",
+      "output_sha256": "28c2c0b9d0f53cd1d4992f40ec06748d57da534782acc46c6f09160bcc4af2f7",
+      "format": "json",
+      "reason": null
+    },
+    {
+      "intention_digest": "75c4f622ee8138750a6d25237e29b194c7fe0815c1dda1916066e629960951b2",
+      "status": "PARTIAL_BYTE_GROUND",
+      "byte_kind": "utf8-text",
+      "byte_count": 512,
+      "byte_ground_digest": "5cf10865400e3a865ffc3dea88f57536c85129816d0bc079891a5aa3bb06680d",
+      "output_sha256": "0f47fdb459805e039e3eff2a5754cea3174ed71fdebfc2193bbb3df29369f9a1",
+      "format": "json",
+      "reason": null
+    },
+    {
+      "intention_digest": "306dbdc57074dc397d83f525beb62f96391de6e9e2e39b1dff11d612b056d035",
+      "status": "EXECUTED_LOCAL",
+      "byte_kind": "html",
+      "byte_count": 577,
+      "byte_ground_digest": "ff4baf12bd59e85048b8f16f8dd2a0c123fcbe57b1e0d48b70662018477487d6",
+      "output_sha256": "f97575fc5731c661311ab6ad80d2871d5acc800800f89acc102004684af967af",
+      "format": "json",
+      "reason": null
+    },
+    {
+      "intention_digest": "ba7d4f0d493783d26df267c2be557e920a75e0289226bdee094feace77217f33",
+      "status": "OBSERVED_BYTE_GROUND",
+      "byte_kind": "json",
+      "byte_count": 4863,
+      "byte_ground_digest": "3f2aed1053ed4fbc937e218e29526b4f138a3f6afd0eb121d67a8637a608b1ac",
+      "output_sha256": "df5a2e8c3386689ae3b3197f5a5fa5c5b162b2f01fff741bc808a568899c19d5",
+      "format": "json",
+      "reason": null
+    },
+    {
+      "intention_digest": "48f297bb9f97e018b787e0874263ed94522e8f93d9ceec52e0e1efd7477674e8",
+      "status": "EXECUTED_LOCAL",
+      "byte_kind": "json",
+      "byte_count": 4863,
+      "byte_ground_digest": "3f2aed1053ed4fbc937e218e29526b4f138a3f6afd0eb121d67a8637a608b1ac",
+      "output_sha256": "1dd575c7cad6c5fe00549d15ceca95e81feb82580d96e58ba844394685dab362",
+      "format": "json",
+      "reason": null
+    },
+    {
+      "intention_digest": "757a70dbfb51e51f60d76f0d711db9ef5e4f899a3c1156a2f8099a177e144a36",
+      "status": "OBSERVED_BYTE_GROUND",
+      "byte_kind": "png",
+      "byte_count": 8991,
+      "byte_ground_digest": "cd62a4d1379cbe054bc815e72b52b54edd2f147532b35c18cd25d1cfef1cdcc6",
+      "output_sha256": "3e24e1cf84f2ab8ce8aefa1ce0bf507730c976e21ba416871527787a5336e5a0",
+      "format": "json",
+      "reason": null
+    }
+  ],
+  "claims": {
+    "generic_json_text_html_binary_observation": true,
+    "actual_png_bytes_observed": 8991,
+    "network_http_observations_performed": true,
+    "partial_response_unqualified_for_full_hash": true,
+    "remote_model_inference_executed": false
+  }
+}
