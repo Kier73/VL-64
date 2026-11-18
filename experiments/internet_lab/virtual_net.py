@@ -55,27 +55,40 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
-def fetch(label: str, url: str, *, headers=None, max_body=MAX_BODY):
-    """One bounded read-only HTTPS request to a fixed public host."""
+def fetch(label: str, url: str, *, headers=None, max_body=MAX_BODY,
+          method="GET", payload=None):
+    """Bounded read-only HTTPS request, including a pinned Git ls-refs POST."""
     parsed = urllib.parse.urlsplit(url)
     if parsed.scheme != "https" or parsed.hostname not in HOSTS:
         raise ValueError("URL outside explicit read-only HTTPS allowlist")
     if parsed.username or parsed.password or parsed.port not in (None, 443):
         raise ValueError("Unexpected URL credentials or port")
+    if method != "GET":
+        if not (method == "POST" and label == "git_v2_ls_refs" and
+                parsed.hostname == "github.com" and
+                parsed.path == "/Kier73/VL-64/git-upload-pack" and
+                not parsed.query and isinstance(payload, bytes) and
+                len(payload) <= 2048):
+            raise ValueError("POST permitted only for bounded read-only Git ls-refs")
+    elif payload is not None:
+        raise ValueError("GET cannot supply request payload")
     request = urllib.request.Request(
-        url, headers={**HEADERS, **(headers or {})}, method="GET")
+        url, data=payload, headers={**HEADERS, **(headers or {})},
+        method=method)
     began = time.perf_counter_ns()
     try:
         response = urllib.request.build_opener(NoRedirect).open(request, timeout=8)
     except urllib.error.HTTPError as exc:
         response = exc
+    except (OSError, TimeoutError, ValueError) as exc:
+        return refusal(label, exc), b""
     try:
         with response:
             content = response.read(max_body + 1)
             fields = response.headers
             rec = {
                 "operation": label, "status": "OBSERVED",
-                "url": url, "method": "GET",
+                "url": url, "method": method,
                 "http_status": response.status if hasattr(response, "status") else response.code,
                 "response_bytes": min(len(content), max_body),
                 "body_sha256": digest(content[:max_body]),
@@ -274,6 +287,44 @@ def git_advertisement():
         })
     except (UnicodeError, ValueError) as exc:
         rec["interpretation"] = refusal("git_pktline_decode", exc)
+    return rec
+
+
+def git_read_only_ls_refs():
+    """Issue a real Git upload-pack v2 ls-refs command, no fetch or push."""
+    body = (GitWireV2Parser.encode_pkt_line("command=ls-refs\n")
+            + b"0001"
+            + GitWireV2Parser.encode_pkt_line("symrefs\n")
+            + GitWireV2Parser.encode_pkt_line("ref-prefix HEAD\n")
+            + b"0000")
+    rec, raw = fetch(
+        "git_v2_ls_refs",
+        "https://github.com/Kier73/VL-64/git-upload-pack",
+        headers={
+            "Git-Protocol": "version=2",
+            "Content-Type": "application/x-git-upload-pack-request",
+            "Accept": "application/x-git-upload-pack-result",
+        },
+        method="POST", payload=body, max_body=16384,
+    )
+    rec["request_packet_bytes"] = len(body)
+    rec["request_packet_sha256"] = digest(body)
+    if rec["status"] != "OBSERVED" or rec["http_status"] != 200:
+        return rec
+    try:
+        frames = GitWireV2Parser.parse_pkt_lines(raw)
+        head = next((line for line in frames
+                     if re.match(rb"^[0-9a-f]{40} HEAD(?: |$)", line)), None)
+        if head is None:
+            raise ValueError("Missing HEAD in Git ls-refs response")
+        sha = head[:40].decode("ascii")
+        rec.update({
+            "interpretation": "git-v2-ls-refs",
+            "head_commit": sha, "response_frames": len(frames),
+            "scope": "read_only_git_protocol_response_not_host_authority",
+        })
+    except (ValueError, UnicodeError) as exc:
+        rec["interpretation"] = refusal("git_ls_refs_decode", exc)
     return rec
 
 
@@ -484,7 +535,8 @@ def run():
         a = graph.node("doh-wire:example.com:A", "dns_wire_query")
         b = graph.node("dns-answers:" + wire["answer_set_sha256"], "dns_snapshot")
         graph.link(a, b, "cloudflare_doh_dns_packet", wire["body_sha256"])
-    for probe in (tls_handshake, git_advertisement, loopback_transform):
+    for probe in (tls_handshake, git_advertisement, git_read_only_ls_refs,
+                  loopback_transform):
         observations.append(probe())
     cf, _ = fetch("cloudflare_homepage", "https://www.cloudflare.com/",
                   max_body=16384)
@@ -494,6 +546,10 @@ def run():
     observations.append(example)
     records, repo_nav, _ = github_readme_to_goals(graph)
     observations.extend(records)
+    git_heads = [x["head_commit"] for x in observations
+                 if x.get("interpretation") == "git-v2-ls-refs"]
+    if repo_nav.get("commit") and git_heads:
+        repo_nav["git_wire_rest_head_match"] = repo_nav["commit"] in git_heads
 
     # A cached graph route is not an authenticated claim of a current result.
     success = [x for x in observations if
@@ -505,6 +561,7 @@ def run():
         "nodes": len(graph.nodes), "relations": len(graph.edges),
         "github_navigation": repo_nav.get("status"),
         "github_navigation_hops": repo_nav.get("hops"),
+        "git_wire_rest_head_match": repo_nav.get("git_wire_rest_head_match"),
         "cloudflare_doh": doh.get("status"),
         "cloudflare_dns_wire": wire.get("interpretation", wire.get("status")),
         "nested_decoding_refusals": sum(
