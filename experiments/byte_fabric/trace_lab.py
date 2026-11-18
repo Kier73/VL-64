@@ -51,6 +51,7 @@ def controlled_experiment():
     research=TraceDrivenDiscovery(host,max_states=2,max_candidates=24)
     start=time.perf_counter_ns()
     initial=research.seed((("read",),("flip",)))
+    initial_ledger=research.ledger.snapshot()
     if initial["candidate_count"]<2:
         raise RuntimeError("Initial observations did not admit multiple hypotheses")
     early=[]
@@ -102,6 +103,7 @@ def controlled_experiment():
     final=research.receipt()
     elapsed_ms=(time.perf_counter_ns()-start)/1e6
     return {
+        "initial_ledger":initial_ledger,
         "ledger":research.ledger.snapshot(),
         "ground":chosen,
         "candidate_catalogue":{
@@ -213,6 +215,7 @@ def main():
         return
     experiment=controlled_experiment()
     for name,key in (
+        ("initial-trace-ledger.json","initial_ledger"),
         ("observed-trace-ledger.json","ledger"),
         ("learned-action-ground.json","ground"),
         ("trace-derived-candidates.json","candidate_catalogue"),
@@ -223,7 +226,7 @@ def main():
         _save(out/name,experiment[key])
     intention=ObserverIntention(
         "ground.traces.plan",
-        "workspace:"+(out/"observed-trace-ledger.json").as_posix(),
+        "workspace:"+(out/"initial-trace-ledger.json").as_posix(),
         options={"max_states":2,"max_depth":3,"max_words":64},output="json")
     jump=ObserverIntention(
         "ground.action.navigate",
