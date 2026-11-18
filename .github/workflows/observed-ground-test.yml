@@ -1,18 +1,22 @@
-name: Test VL-64 observed Ground translation
+name: VL-64 runtime tests
 
 on:
   push:
-    branches: [feature/observed-ground-translation-20261118]
+    branches: [main]
+  pull_request:
 
 jobs:
   translation:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.13']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: ${{ matrix.python-version }}
       - name: Install VL-64
         run: python -m pip install -e '.[dev]'
       - name: Check regression and translation suites
