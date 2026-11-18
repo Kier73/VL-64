@@ -1,61 +1,114 @@
-# μVLD-64: Universal 64 KiB Virtual Layer Dynamics Runtime
+# VL-64: 64 KiB Virtual Layer Runtime
 
-A complete, formally verified, zero-dependency implementation of **Virtual Layer Dynamics** compressed into a hard budget of **64 KiB** ($65,536\text{ bytes}$).
+A **64 KiB Virtual Layer Utility**.
 
----
+VL-64 is a compact Python package for working with state representations, algebraic navigation, structured numerical operators, and verifiable transitions. Its source package is maintained within a 65,536-byte budget. It runs on Python 3.11+ using the standard library.
 
-## 1. Mathematical Architecture & Code Allocation
+Use the `vld` command for built-in checks and modular affine navigation, or import `vld` to compose the available operations in your own code.
 
-$$\text{Total Source Code: } \mathbf{52,806\text{ bytes}} \quad (51.57\text{ KiB}) \;\le\; 65,536\text{ bytes} \quad (64.00\text{ KiB})$$
+## Install
 
-$$\text{Headroom: } \mathbf{12,730\text{ bytes}} \quad (12.43\text{ KiB})$$
-
-| Module | Purpose | Size | Budget |
-| :--- | :--- | :--- | :--- |
-| `micro_kernel.py` | Ed25519, RREF, Sheaf $H^0/H^1$, Monoid, Kleene $\mathcal{K}_3$, E-Graph | $16,608\text{ B}$ | $18.0\text{ KiB}$ |
-| `micro_control.py` | Compiler, $2q > N$ Quorum, WAL Effect Ledger, B5-B7 Autopoiesis, CLI | $13,795\text{ B}$ | $13.5\text{ KiB}$ |
-| `micro_operators.py` | Structural Contraction, Codecs (FP8/UE8M0/FP4), Sinkhorn, Flash-Stream | $11,148\text{ B}$ | $11.0\text{ KiB}$ |
-| `micro_substrates.py`| ByteLens, CoW Memory, Git v2 Set-Diff, Headless OS VM, Safetensors 206 | $8,676\text{ B}$ | $8.5\text{ KiB}$ |
-| `__init__.py` | Exported Public API & Clean Namespace | $2,500\text{ B}$ | $2.5\text{ KiB}$ |
-| `__main__.py` | Executable Module Entry Point | $79\text{ B}$ | $0.1\text{ KiB}$ |
-| **Total** | **Full Capability Virtual Layer Dynamics Engine** | **$\mathbf{52,806\text{ B}}$** | **$\mathbf{64.0\text{ KiB}}$** |
-
----
-
-## 2. Governing Equations
-
-1. **RFC 8032 Ed25519 Complete Curve Addition:**
-   $$-x^2 + y^2 = 1 - \frac{121665}{121666} x^2 y^2 \pmod{2^{255}-19}$$
-2. **Kleene $\mathcal{K}_3$ 3-Valued Truth Logic:**
-   $$a \land b = \min(a, b), \quad a \lor b = \max(a, b), \quad \lnot a = 2 - a \quad \text{over } \{0, 1, 2\}$$
-3. **Logarithmic Affine Orbit Jumping:**
-   $$(a_2, b_2) \circ (a_1, b_1) = \big(a_2 a_1 \bmod m, \; (a_2 b_1 + b_2) \bmod m\big)$$
-4. **Sheaf Cohomology Fredholm Obstruction:**
-   $$(\delta^0)^\top y = \mathbf{0} \quad \land \quad \langle y, c \rangle = \omega \neq 0$$
-5. **Flash-Stream Online Attention Monoid:**
-   $$(m_A, \ell_A, O_A) \otimes (m_B, \ell_B, O_B) = \big(\max(m_A, m_B), \; e^{m_A - m_{AB}}\ell_A + e^{m_B - m_{AB}}\ell_B, \; e^{m_A - m_{AB}}O_A + e^{m_B - m_{AB}}O_B\big)$$
-6. **Sub-Stochastic Birkhoff Sinkhorn Normalization:**
-   $$C^{(t)}_{i,j} = \frac{\widetilde{C}^{(t-1)}_{i,j}}{\sum_{r} \widetilde{C}^{(t-1)}_{r,j} + \varepsilon} \implies \|C^{(K)}\|_1 < 1$$
-7. **Git Wire Protocol v2 Merkle-DAG Set-Difference:**
-   $$\Delta_{\text{diff}} = \operatorname{Reachable}(\text{want}) \setminus \operatorname{Reachable}(\text{have})$$
-8. **Autopoietic Adjoint Functor Pair:**
-   $$\operatorname{Compile}_t \dashv \operatorname{Discover}_t, \quad \mathcal{R}_t \subseteq \mathcal{R}_{t+1} \implies \min_{r \in \mathcal{R}_{t+1}} \mathbf{C}(r) \preceq_{\text{Pareto}} \min_{r \in \mathcal{R}_t} \mathbf{C}(r)$$
-
----
-
-## 3. Verification & Execution
-
-### Run Invariant Self-Checks:
 ```bash
-python -m vld verify
+git clone https://github.com/Kier73/VL-64.git
+cd VL-64
+python -m pip install -e .
 ```
 
-### Run Comprehensive Pytest Suite:
+## Command-line use
+
 ```bash
-pytest tests/ -v
+vld verify
+vld info
+vld navigate --a 5 --b 1 --x0 3 --steps 1000 --modulus 256
 ```
 
-### Execute Affine Navigation:
-```bash
-python -m vld navigate --a 5 --b 1 --x0 3 --steps 1000 --modulus 256
+- `verify` prints a JSON report of five built-in checks: Ed25519, affine navigation, structured linear operation, quorum certificate verification, and compiler realization.
+- `info` prints the installed runtime version information.
+- `navigate` evaluates `x[t+1] = (a*x[t] + b) % modulus` after the requested number of steps, using composition rather than a step-by-step loop.
+
+You can also call the CLI as `python -m vld` after installing the package.
+
+## Use from Python
+
+### Navigate a modular state
+
+```python
+from vld import affine_navigate, certify_modular_progression
+
+state = affine_navigate(a=5, b=1, x0=3, n=1_000_000, m=256)
+print(state)
+
+is_identified, parameters = certify_modular_progression([240, 250, 4, 14])
+assert is_identified and parameters == (10, 256)
 ```
+
+`affine_navigate` composes repeated affine transitions in logarithmic time and compares two derivations of the result. `certify_modular_progression` checks an observed modular step sequence.
+
+### Compile and realize an affine intention
+
+```python
+from vld import IntentionCompiler, IntentionSpec, IntentExpr
+
+compiler = IntentionCompiler()
+spec = IntentionSpec(
+    intention_id="example",
+    target_expr=IntentExpr.iterate_affine("x", a=5, b=1, steps=1000, modulus=256),
+    contract_kind="int_vector",
+    lineage_id="example-session",
+)
+plan = compiler.compile(spec)
+receipt = compiler.realize(plan, {"x": [3]})
+
+print(plan["selected_plan"])
+print(receipt["admitted_observation"])
+```
+
+The compiler selects between direct stepping and an affine monoid jump using its cost model. `realize` checks the resulting value against affine navigation before returning an admission receipt. Optional `NavigationCostVector` ceilings can constrain plan selection.
+
+### Work with bytes and forked state
+
+```python
+from vld import LENS_UTF8, PageSpace
+
+data = b"Hello, VL-64"
+assert LENS_UTF8.verify_roundtrip(data)
+assert LENS_UTF8.lower(LENS_UTF8.lift(data)) == data
+
+parent = PageSpace()
+parent.write_page(0, 0, b"initial")
+child = parent.fork()
+child.write_page(0, 0, b"updated")
+
+assert parent.read_page(0).startswith(b"initial")
+assert child.read_page(0).startswith(b"updated")
+print(child.commit_manifest()["digest"])
+```
+
+## Available utilities
+
+| Area | Python interfaces | Function |
+| --- | --- | --- |
+| Representation | `ByteLens`, `LENS_RAW`, `LENS_UTF8`, `LENS_U32LE` | Lift and lower byte representations; check round trips |
+| State and time | `PageSpace`, `HashChainedJournal`, `ScopedVectorClock` | Copy-on-write pages, event digests, and scoped event ordering |
+| Navigation | `monoid_power`, `affine_navigate`, `certify_modular_progression`, `myhill_nerode_quotient` | Compose transitions and analyze finite-state behavior |
+| Exact reasoning | `ExactFieldMatrix`, `solve_sheaf_cohomology`, `syndrome_decode_sparse_fault`, Kleene K3 operators | Rational/finite-field reduction, consistency tests, and three-valued guards |
+| Execution control | `IntentionCompiler`, `NavigationCostVector`, `EffectLedger`, `GroundRegistry` | Select affine plans, deduplicate effects within a ledger instance, and register grounds/lenses/rules |
+| Certificates | `ed25519_sign`, `ed25519_verify`, `QuorumAuthority`, `verify_bundle_standalone` | Sign and check messages, local quorum certificates, and supported audit bundles |
+| Numerical operations | `StructuralLinearOperator`, `LoRAMorphism`, FP8/FP4 decoding, `rms_norm`, `FlashStreamState` | Evaluate structured matrices, low-rank deltas, quantized values, normalization, and attention accumulators |
+| Adapters and inspection | `GitWireV2Parser`, `SafetensorsGlance`, `HeadlessOS`, `StreamPathMachine` | Parse packet lines, inspect supplied tensor headers, manage simple process state, and transform byte streams |
+
+The full examples, including certificates, structured operators, model metadata, stream operations, and extension points, are in the [usage guide](docs/USAGE_GUIDE.md).
+
+## Run tests
+
+```bash
+python -m pip install -e ".[dev]"
+python -m pytest tests/ -v
+```
+
+The tests exercise the Python API and check the source package against the 64 KiB budget.
+
+## Documentation
+
+- [Usage guide](docs/USAGE_GUIDE.md) — commands, API examples, and extension points.
+- [Research goals](docs/RESEARCH_GOALS.md) — the functional experiments and verification criteria guiding further development.

@@ -1,221 +1,317 @@
-# $\mu\text{VLD-64}$ Comprehensive Developer & Researcher Usage Guide
+# VL-64 Usage Guide
 
-This guide provides copy-pasteable, verified code examples for each of the core capability domains in `μVLD-64`.
+This guide shows how to use the packaged commands and Python interfaces. All examples use the repository's `vld` package.
 
----
+## Install and verify
 
-## 1. Quickstart & Command-Line Interface
+Python 3.11 or newer is required.
 
-### Invariant Self-Verification
-Verify that all mathematical invariants, cryptographic routines, and algebraic operators are intact:
 ```bash
-python -m vld verify
+git clone https://github.com/Kier73/VL-64.git
+cd VL-64
+python -m pip install -e .
+vld verify
 ```
 
-### Logarithmic Affine Orbit Jumping
-Navigate $10^{12}$ coordinates of an affine dynamical system $x_{t+1} \equiv (5 x_t + 1) \pmod{256}$ in $O(\log T)$ time:
+The `verify` command prints JSON with `status`, `checks`, and `total_assertions`. Use `vld info` for the version string and `python -m vld verify` when you prefer module execution.
+
+Run the broader test suite with:
+
 ```bash
-python -m vld navigate --a 5 --b 1 --x0 3 --steps 1000000000000 --modulus 256
+python -m pip install -e ".[dev]"
+python -m pytest tests/ -v
 ```
 
----
+## 1. Navigate an affine state
 
-## 2. Coordinate Lenses: Lifting Bytes into State Spaces
+The CLI evaluates the state after `steps` applications of `x -> (a*x + b) % modulus`:
+
+```bash
+vld navigate --a 5 --b 1 --x0 3 --steps 1000000 --modulus 256
+```
+
+The Python interface also exposes the composition primitive:
 
 ```python
-from vld import ByteLens, LENS_RAW, LENS_UTF8, LENS_U32LE
+from vld import affine_navigate, certify_modular_progression, monoid_power
 
-# 1. Exact round-trip verification
-raw_bytes = b"Hello, Virtual Layer!"
-assert LENS_UTF8.verify_roundtrip(raw_bytes) is True
+result = affine_navigate(a=5, b=1, x0=3, n=1_000_000, m=256)
+assert 0 <= result < 256
 
-# 2. Lifting into typed representation
-state = LENS_UTF8.lift(raw_bytes)
-assert state == "Hello, Virtual Layer!"
+# Identify an additive modular step from a trace with a witnessed wrap.
+ok, step_and_modulus = certify_modular_progression([240, 250, 4, 14])
+assert ok and step_and_modulus == (10, 256)
 
-# 3. Lowering back to product ring (Z/256Z)*
-recovered = LENS_UTF8.lower(state)
-assert recovered == raw_bytes
+# Compose any associative operation with a supplied identity.
+power = monoid_power(2, 10, lambda a, b: a * b, 1)
+assert power == 1024
 ```
 
----
+## 2. Select and realize a plan
 
-## 3. Cryptographic Quorum & RFC 8032 Ed25519 Authority
+`IntentionCompiler` currently compiles affine iteration expressions. The cost vector has four dimensions: estimated latency, operation count, bytes moved, and recovery overhead.
 
 ```python
-from vld import QuorumAuthority, ed25519_keypair_from_seed, ed25519_sign, ed25519_verify
+from vld import (
+    IntentionCompiler, IntentionSpec, IntentExpr, NavigationCostVector
+)
 
-# Provision 3 independent authority members
-seeds = [b"\x01" * 32, b"\x02" * 32, b"\x03" * 32]
-quorum = QuorumAuthority(member_seeds=seeds)
+spec = IntentionSpec(
+    intention_id="orbit-request",
+    target_expr=IntentExpr.iterate_affine("x", a=5, b=1, steps=1000, modulus=256),
+    contract_kind="int_vector",
+    lineage_id="run-1",
+    cost_ceilings=NavigationCostVector(
+        latency=1.0, compute_ops=100.0, byte_movement=64.0, recovery_overhead=0.0
+    ),
+)
+compiler = IntentionCompiler()
+plan = compiler.compile(spec)
+assert plan["selected_plan"] == "monoid_jump"
 
-# Required strict majority quorum threshold: 2q > N => q = 2 of 3
-assert quorum.q_min == 2
-
-# Issue a quorum-attested state transition certificate
-proposal = {"slot": 42, "state_digest": "4789abf3...", "epoch": 1}
-cert = quorum.sign_proposal(proposal)
-
-# Independently verify the certificate
-assert quorum.verify_quorum_certificate(cert) is True
+receipt = compiler.realize(plan, env={"x": [3]})
+assert receipt["status"] == "ADMITTED"
+assert receipt["admitted_observation"] == [
+    __import__("vld").affine_navigate(5, 1, 3, 1000, 256)
+]
 ```
 
----
+`compile` uses the package's current cost estimates to choose `direct_step` or `monoid_jump`. `realize` evaluates the chosen route and compares it with the affine reference operation.
 
-## 4. Affine Monoids & 5-Rung Wrap Identifiability Certification
+## 3. Represent bytes and manage state
+
+### Coordinate lenses
 
 ```python
-from vld import affine_navigate, certify_modular_progression
+from vld import LENS_RAW, LENS_UTF8, LENS_U32LE
 
-# Advance x_{t+1} = (5 x_t + 1) mod 256 across 1,000,000 steps in O(log n)
-# Evaluated with independent dual matrix exponentiation check
-y_jump = affine_navigate(a=5, b=1, x0=3, n=1000000, m=256)
+raw = b"hello"
+assert LENS_UTF8.lift(raw) == "hello"
+assert LENS_UTF8.lower("hello") == raw
+assert LENS_UTF8.verify_roundtrip(raw)
 
-# Strict Degree-of-Freedom Wrap Identifiability Check (df >= 1)
-# 1. Unwrapped trace (infinitely many moduli possible): REFUSED
-unwrapped = [10, 15, 20, 25] # step 5, no wrap witnessed
-certified, _ = certify_modular_progression(unwrapped, declared_modulus=None)
-assert certified is False
-
-# 2. Witnessed wrap-around drop: CERTIFIED
-wrapped = [240, 250, 4, 14] # step 10, mod 256 (250+10-256 = 4)
-certified, (step, modulus) = certify_modular_progression(wrapped, declared_modulus=None)
-assert certified is True
-assert (step, modulus) == (10, 256)
+assert LENS_RAW.lift(bytes([1, 2, 3])) == [1, 2, 3]
+assert LENS_U32LE.lift(bytes([1, 0, 0, 0])) == [1]
 ```
 
----
+For `LENS_U32LE`, supply a byte length divisible by four when an exact round trip is required.
 
-## 5. Cellular Sheaf Cohomology & Active Syndrome Fault Isolation
+### Copy-on-write pages and manifests
+
+```python
+from vld import PageSpace
+
+parent = PageSpace()
+parent.write_page(0, 0, b"before")
+child = parent.fork()
+child.write_page(0, 0, b"after!")
+
+assert parent.read_page(0).startswith(b"before")
+assert child.read_page(0).startswith(b"after!")
+manifest = child.commit_manifest()
+print(manifest["pages"], manifest["digest"])
+```
+
+### Journal and vector clock
+
+```python
+from vld import HashChainedJournal, ScopedVectorClock, verify_bundle_standalone
+
+journal = HashChainedJournal()
+journal.record("OBSERVED", {"value": 7})
+audit = verify_bundle_standalone({
+    "kind": "journal_continuity",
+    "genesis": "0" * 64,
+    "entries": journal.entries,
+})
+assert audit["status"] == "VERIFIED"
+
+a = ScopedVectorClock("scheduler-1")
+b = ScopedVectorClock("scheduler-1")
+a.tick("worker-1")
+assert a.compare(b) == 1
+```
+
+## 4. Check observations and exact relations
+
+### Three-valued interval guards
+
+```python
+from vld import (
+    classify_interval_guard, k3_and,
+    K3_TRUE, K3_FALSE, K3_INDETERMINATE
+)
+
+assert classify_interval_guard(0.1, 0.4, threshold=0.5) == K3_TRUE
+assert classify_interval_guard(0.6, 0.8, threshold=0.5) == K3_FALSE
+assert classify_interval_guard(0.4, 0.7, threshold=0.5) == K3_INDETERMINATE
+assert k3_and(K3_TRUE, K3_INDETERMINATE) == K3_INDETERMINATE
+```
+
+### Sheaf consistency and sparse syndrome
 
 ```python
 from fractions import Fraction
 from vld import solve_sheaf_cohomology, syndrome_decode_sparse_fault
 
-# 1. Inconsistent Observer Loop (Triangle v0 -> v1 -> v2 -> v0)
-delta0 = [[-1, 1, 0], [0, -1, 1], [1, 0, -1]]
-c_inconsistent = [Fraction(1), Fraction(1), Fraction(1)] # Nonzero holonomy loop
+edges = [[-1, 1, 0], [0, -1, 1]]
+ok, values = solve_sheaf_cohomology(edges, [Fraction(3), Fraction(4)])
+assert ok
+assert values[2] - values[0] == 7
 
-is_consistent, witness = solve_sheaf_cohomology(delta0, c_inconsistent)
-assert is_consistent is False
-# Witness is a dual 1-cocycle in ker((δ^0)^T) with <y, c> != 0
-print("Fredholm Obstruction Cocycle:", witness)
+triangle = [[-1, 1, 0], [0, -1, 1], [1, 0, -1]]
+ok, witness = solve_sheaf_cohomology(triangle, [1, 1, 1])
+assert not ok
+print("Inconsistency witness:", witness)
 
-# 2. Active Cohomological Syndrome Repair
-# Find sparse sensor corruption e such that Y e = syndrome (mod 7)
-Y_syndrome = [[1, 0, 1], [0, 1, 1]]
-syndrome = [3, 3] # Injected fault on column 1 of magnitude 3
-recovered_error = syndrome_decode_sparse_fault(Y_syndrome, syndrome, p=7)
-assert recovered_error == [0, 3, 0]
-```
-
----
-
-## 6. Sufficient-Statistic Linear Operator Contraction
-
-Evaluate $y = W x$ where $W = W_{\text{bilinear}} + W_{\text{orbit}} + U V^\top + \Delta$ in $O(M + N + M P)$ FLOPs without dense matrix allocation:
-
-```python
-from vld import StructuralLinearOperator
-
-# 1024 x 1024 structured operator
-op = StructuralLinearOperator(
-    rows=1024, cols=1024,
-    alpha=1.0, beta=0.01, gamma=0.02, delta=0.0001,
-    orbit=[1.0, 0.5, 0.25, 0.125], stride=2,
-    sparse_delta={(10, 20): 100.0}
+# A single-column fault with syndrome (0, 3) modulo 7.
+error = syndrome_decode_sparse_fault(
+    [[1, 0, 1], [0, 1, 1]], [0, 3], p=7
 )
-
-x = [1.0] * 1024
-y = op.matvec(x)
-assert len(y) == 1024
+assert error == [0, 3, 0]
 ```
 
----
+## 5. Sign, inspect, and deduplicate operations
 
-## 7. Flash-Stream Online Attention Monoid
-
-Stream multi-shard attention across distributed paths without central materialization:
-
-```python
-import math
-from vld import FlashStreamState
-
-# Worker A evaluates shard 1
-shard_A = FlashStreamState(m=1.0, l=1.0, O=[2.0])
-
-# Worker B evaluates shard 2
-shard_B = FlashStreamState(m=2.0, l=1.0, O=[4.0])
-
-# Path accumulator combines states associatively in transit
-accum = shard_A.combine(shard_B)
-
-# Normalize solely at terminal receiver: O / l
-output = accum.normalize()
-expected = (2.0 * math.exp(1.0 - 2.0) + 4.0 * 1.0) / (math.exp(1.0 - 2.0) + 1.0)
-assert abs(output[0] - expected) < 1e-12
-```
-
----
-
-## 8. Compiler, WAL Effect Ledger & Componentwise Ceilings
+### Messages and quorum certificates
 
 ```python
 from vld import (
-    IntentionCompiler, IntentionSpec, IntentExpr,
-    NavigationCostVector, EffectLedger
+    ed25519_keypair_from_seed, ed25519_sign, ed25519_verify, QuorumAuthority
 )
 
-compiler = IntentionCompiler()
-spec = IntentionSpec(
-    intention_id="nav_1",
-    target_expr=IntentExpr.iterate_affine("x", a=5, b=1, steps=1000, modulus=256),
-    contract_kind="int_vector",
-    lineage_id="session_42",
-    cost_ceilings=NavigationCostVector(latency=1.0, compute_ops=100.0, byte_movement=64.0, recovery_overhead=0.0)
-)
+# Fixed seeds are for a reproducible example, not operational key material.
+seed = bytes([7]) * 32
+_, public_key = ed25519_keypair_from_seed(seed)
+signature = ed25519_sign(seed, b"example")
+assert ed25519_verify(public_key, b"example", signature)
 
-# 1. Compile to Pareto-minimal realization
-plan = compiler.compile(spec)
-assert plan["selected_plan"] == "monoid_jump"
-
-# 2. Realize with mathematical semantic verification
-receipt = compiler.realize(plan, env={"x": [3]})
-assert receipt["status"] == "ADMITTED"
-assert receipt["admitted_observation"] == [affine_navigate(5, 1, 3, 1000, 256)]
-
-# 3. WAL Effect Ledger ensures idempotent external transitions
-ledger = EffectLedger()
-calls = []
-def send_external_packet():
-    calls.append(1)
-    return "SENT"
-
-res = ledger.execute_effect("intent_1", "packet_1", send_external_packet)
-assert len(calls) == 1
-# Subsequent identical effect key returns cached outcome without re-executing
-res2 = ledger.execute_effect("intent_1", "packet_1", send_external_packet)
-assert len(calls) == 1
+authority = QuorumAuthority([
+    bytes([1]) * 32, bytes([2]) * 32, bytes([3]) * 32
+])
+certificate = authority.sign_proposal({"state": "ready", "epoch": 1})
+assert authority.q_min == 2
+assert authority.verify_quorum_certificate(certificate)
 ```
 
----
+`QuorumAuthority` signs using local member keys supplied to the constructor. Certificate verification checks the signatures against those configured public keys.
 
-## 9. Autopoietic Residual Loop & M1 LoRA Morphisms (Direction B)
+### Effect ledger
 
 ```python
-from vld import AutopoieticDiscoveryLoop, LoRAMorphism
+from vld import EffectLedger
 
-loop = AutopoieticDiscoveryLoop(threshold=2.0)
+ledger = EffectLedger()
+events = []
 
-# Evaluate execution residual: rho = C_realized / C_lower_bound
-opp = loop.evaluate_residual(intention_id="dense_matmul_bottleneck", realized_cost=10.0, lower_bound=2.0)
-assert opp is not None
-assert opp["status"] == "DISPATCHED"
+def record_once():
+    events.append("sent")
+    return "sent"
 
-# Synthesize M1 Low-Rank Delta Morphism: W' = W + (alpha / r) A B^T
-A = [[1.0], [2.0]] # 2 x 1
-B = [[1.0], [1.0]] # 2 x 1
-lora = LoRAMorphism(alpha=2.0, r=1, A=A, B=B)
-delta_output = lora.contract([1.0, 1.0])
-assert delta_output == [4.0, 8.0]
+assert ledger.execute_effect("intent-1", "event-1", record_once) == "sent"
+assert ledger.execute_effect("intent-1", "event-1", record_once) == "sent"
+assert events == ["sent"]
 ```
+
+The ledger holds its journal and deduplication map in the Python process. Reuse the same instance to deduplicate the same `(intention_id, effect_key)` pair.
+
+## 6. Evaluate structured and streaming operators
+
+### Structured matrix-vector product and low-rank delta
+
+```python
+from vld import StructuralLinearOperator, LoRAMorphism
+
+op = StructuralLinearOperator(rows=2, cols=3, alpha=1.0)
+assert op.matvec([1.0, 2.0, 3.0]) == [6.0, 6.0]
+
+adapter = LoRAMorphism(
+    alpha=2.0, r=1,
+    A=[[1.0], [2.0]], B=[[1.0], [1.0]]
+)
+assert adapter.contract([1.0, 1.0]) == [4.0, 8.0]
+```
+
+`StructuralLinearOperator` accepts affine row/column coefficients, an optional periodic orbit, low-rank `U`/`V` factors, and sparse `(row, column)` corrections.
+
+### Combine attention accumulators
+
+```python
+from vld import FlashStreamState
+
+left = FlashStreamState(m=1.0, l=1.0, O=[2.0])
+right = FlashStreamState(m=2.0, l=1.0, O=[4.0])
+combined = left.combine(right)
+result = combined.normalize()
+assert len(result) == 1
+assert 2.0 < result[0] < 4.0
+```
+
+For other numerical operations, see `dequant_block_fp8`, `dequant_mxfp4_nibble`, `sinkhorn_birkhoff_substochastic`, `rms_norm`, `linear_cka_consensus`, and `topk_moe_routing`.
+
+## 7. Read metadata and transform streams
+
+### Safetensors header supplied as bytes
+
+```python
+import json
+import struct
+from vld import SafetensorsGlance
+
+header = json.dumps({
+    "weight": {"dtype": "F32", "shape": [2], "data_offsets": [0, 8]}
+}).encode("utf-8")
+prefix = struct.pack("<Q", len(header)) + header
+
+length, fields = SafetensorsGlance.parse_header_bytes(prefix)
+assert length == len(header)
+assert fields["weight"]["shape"] == [2]
+```
+
+`parse_header_bytes` accepts a complete supplied header prefix; callers decide how to obtain those bytes.
+
+### Git packet lines and object reachability
+
+```python
+from vld import GitWireV2Parser
+
+raw = GitWireV2Parser.encode_pkt_line("command=fetch\n")
+assert GitWireV2Parser.parse_pkt_lines(raw) == [b"command=fetch\n"]
+
+dag = {"C": ["B"], "B": ["A"], "A": []}
+missing = GitWireV2Parser.compute_set_difference({"C"}, {"B"}, dag)
+assert missing == {"C"}
+```
+
+### Process state and local stream transforms
+
+```python
+from vld import HeadlessOS, StreamPathMachine
+
+process = HeadlessOS()
+process.write_fd(1, b"hello")
+assert process.read_fd(1) == b"hello"
+
+stream = StreamPathMachine()
+output, accepted = stream.process_hop("reverse", b"abc")
+assert accepted and output == b"cba"
+assert len(stream.hop_receipts) == 1
+```
+
+## 8. Register a Ground or operator rule
+
+```python
+from vld import GroundRegistry
+
+registry = GroundRegistry()
+registry.register_ground("mod256", {"type": "cyclic", "modulus": 256})
+registry.register_lens("utf8", "utf8")
+registry.register_rule("identity", lambda term: None)
+
+assert registry.grounds["mod256"]["modulus"] == 256
+assert len(registry.rules) == 1
+```
+
+`GroundRegistry.default()` returns a shared process-local registry. Instantiate `GroundRegistry()` for an isolated registry.
+
+For proposed runtime extensions and their acceptance tests, see [Research Goals](RESEARCH_GOALS.md).
