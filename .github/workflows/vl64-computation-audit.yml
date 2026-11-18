@@ -1,0 +1,197 @@
+name: VL-64 computational audit
+
+on:
+  push:
+    branches:
+      - experiment/computation-audit-20261118
+
+jobs:
+  runtime-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install package and tests
+        run: python -m pip install -e '.[dev]'
+      - name: Run existing tests
+        run: python -m pytest tests/ -q
+      - name: Run CLI
+        run: |
+          python -m vld verify
+          python -m vld info
+          python -m vld navigate --a 5 --b 1 --x0 3 --steps 1000000000000 --modulus 256
+      - name: Exercise computational paths and independent references
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, math, os, platform, statistics, time
+          from pathlib import Path
+          from fractions import Fraction
+          from vld import (
+              affine_navigate, IntentionCompiler, IntentionSpec, IntentExpr,
+              NavigationCostVector, StructuralLinearOperator, FlashStreamState,
+              PageSpace, HashChainedJournal, verify_bundle_standalone,
+              QuorumAuthority, ed25519_verify, solve_sheaf_cohomology,
+              StreamPathMachine, GitWireV2Parser, SafetensorsGlance,
+              dequant_e4m3_byte, LENS_UTF8, topk_moe_routing,
+              classify_interval_guard, K3_INDETERMINATE,
+              EffectLedger
+          )
+          def emit(name, **metrics):
+              print("VL64_AUDIT " + json.dumps({"case": name, **metrics}, sort_keys=True), flush=True)
+          def timed(fn, reps=5):
+              measures = []
+              val = None
+              for _ in range(reps):
+                  begin = time.perf_counter()
+                  val = fn()
+                  measures.append(time.perf_counter() - begin)
+              return val, statistics.median(measures)
+          src = list(Path("src/vld").glob("*.py"))
+          budget_bytes = sum(p.stat().st_size for p in src)
+          assert budget_bytes <= 65536
+          emit("environment", python=platform.python_version(), platform=platform.platform(),
+               source_bytes=budget_bytes, source_files=len(src), headroom=65536-budget_bytes)
+          def linear_reference(n):
+              x = 3
+              for _ in range(n):
+                  x = (5*x+1) % 256
+              return x
+          n = 200_000
+          direct_result, t_direct = timed(lambda: linear_reference(n), 3)
+          jump_result, t_jump = timed(lambda: affine_navigate(5,1,3,n,256), 7)
+          assert jump_result == direct_result
+          huge_result, t_huge = timed(lambda: affine_navigate(5,1,3,10**12,256), 7)
+          emit("affine_navigation", checked_steps=n, direct_result=direct_result,
+               direct_ms=round(t_direct*1000,3), jump_ms=round(t_jump*1000,4),
+               speedup=round(t_direct/max(t_jump,1e-12),1),
+               horizon=10**12, horizon_result=huge_result,
+               horizon_ms=round(t_huge*1000,4))
+          spec = IntentionSpec("audit", IntentExpr.iterate_affine("x",5,1,1000,256),
+                               "int_vector", "audit", NavigationCostVector(1,100,64,0))
+          compiler = IntentionCompiler()
+          plan = compiler.compile(spec)
+          receipt = compiler.realize(plan, {"x":[3]})
+          assert receipt["status"] == "ADMITTED"
+          assert receipt["admitted_observation"] == [affine_navigate(5,1,3,1000,256)]
+          emit("compiler", selected_plan=plan["selected_plan"], observed=receipt["admitted_observation"],
+               estimated_compute_ops=plan["cost"].compute_ops)
+          # Independent dense implementation of the same structured matrix.
+          rows, cols, P = 128, 128, 8
+          orbit = [.1,.2,.3,.4,.5,.6,.7,.8]
+          U = [[(i%7)/13.0] for i in range(rows)]
+          V = [[(j%5)/11.0] for j in range(cols)]
+          sparse = {(9,20):3.25,(100,75):-1.75}
+          x = [((j*11)%31 - 15)/17.0 for j in range(cols)]
+          op = StructuralLinearOperator(rows, cols, alpha=1.0, beta=.001,
+              gamma=.002,delta=.0001,orbit=orbit,stride=2,U=U,V=V,sparse_delta=sparse)
+          def dense():
+              out=[]
+              for i in range(rows):
+                  v=0.0
+                  for j in range(cols):
+                      w = 1+.001*i+.002*j+.0001*i*j + orbit[(j-2*i)%P] + U[i][0]*V[j][0]
+                      w+=sparse.get((i,j),0.0)
+                      v += w*x[j]
+                  out.append(v)
+              return out
+          out_struct,t_struct=timed(lambda:op.matvec(x),10)
+          out_dense,t_dense=timed(dense,5)
+          err=max(abs(a-b) for a,b in zip(out_struct,out_dense))
+          assert err < 1e-9, err
+          emit("structural_matvec", shape=[rows,cols], max_abs_error=err,
+               dense_ms=round(t_dense*1000,3),
+               structured_ms=round(t_struct*1000,3),
+               speedup=round(t_dense/max(t_struct,1e-12),1))
+          # Independently calculated normalized softmax-weighted values.
+          logits=[math.sin(i*1.7)*4 for i in range(128)]
+          values=[math.cos(i*.21)*3 for i in range(128)]
+          states=[]
+          for start in range(0,len(logits),8):
+              local=logits[start:start+8]
+              local_v=values[start:start+8]
+              m=max(local)
+              w=[math.exp(z-m) for z in local]
+              states.append(FlashStreamState(m,sum(w),[sum(a*b for a,b in zip(w,local_v))]))
+          acc=states[0]
+          for state in states[1:]:
+              acc=acc.combine(state)
+          target=sum(math.exp(z-max(logits))*v for z,v in zip(logits,values))/sum(math.exp(z-max(logits)) for z in logits)
+          actual=acc.normalize()[0]
+          assert abs(actual-target)<1e-12
+          emit("flash_stream", shards=len(states), items=len(logits), result=actual,
+               reference=target, abs_error=abs(actual-target))
+          parent=PageSpace()
+          for idx in range(60):
+              parent.write_page(idx,0,bytes([idx])*4096)
+          child=parent.fork()
+          child.write_page(5,0,b"new")
+          assert parent.read_page(5)[:3] == bytes([5])*3
+          assert child.read_page(5)[:3] == b"new"
+          manifest=child.commit_manifest()
+          emit("page_space", parent_pages=len(parent.pages), child_changed_pages=len(child.pages),
+               parent_bytes=sum(map(len,parent.pages.values())), child_bytes=sum(map(len,child.pages.values())),
+               child_manifest_digest=manifest["digest"])
+          journal=HashChainedJournal()
+          for i in range(20): journal.record("EVENT",{"i":i})
+          verified=verify_bundle_standalone({"kind":"journal_continuity","entries":journal.entries})
+          assert verified["status"] == "VERIFIED"
+          tampered=[dict(x) for x in journal.entries]
+          tampered[10]=dict(tampered[10],payload={"i":999})
+          rejected=verify_bundle_standalone({"kind":"journal_continuity","entries":tampered})
+          assert rejected["status"] == "REJECTED"
+          emit("journal", entries=len(journal.entries), verified=verified["status"],
+               tampered=rejected["status"])
+          q=QuorumAuthority([bytes([i])*32 for i in (1,2,3)])
+          cert=q.sign_proposal({"epoch":1,"state":"ok"})
+          assert q.verify_quorum_certificate(cert)
+          copied=dict(cert)
+          copied["signatures"]=[cert["signatures"][0],cert["signatures"][0]]
+          duplicate_signer_accepted=q.verify_quorum_certificate(copied)
+          altered=dict(cert,proposal={"epoch":1,"state":"other"})
+          altered_accepted=q.verify_quorum_certificate(altered)
+          assert not altered_accepted
+          emit("quorum_probe", members=q.N, threshold=q.q_min,
+               valid_certificate_accepted=True,
+               altered_proposal_accepted=altered_accepted,
+               duplicated_one_signer_accepted=duplicate_signer_accepted)
+          unknown=verify_bundle_standalone({"kind":"nonexistent"})
+          emit("audit_unknown_kind", result=unknown)
+          ledger=EffectLedger()
+          called=[]
+          def effect():
+              called.append(1)
+              return "ok"
+          assert ledger.execute_effect("a","b",effect)=="ok"
+          assert ledger.execute_effect("a","b",effect)=="ok"
+          assert len(called)==1
+          emit("effect_ledger", calls=len(called), entries=len(ledger.journal.entries))
+          good,witness=solve_sheaf_cohomology([[-1,1,0],[0,-1,1]],[Fraction(3),Fraction(4)])
+          assert good and witness[2]-witness[0]==7
+          bad,y=solve_sheaf_cohomology([[-1,1,0],[0,-1,1],[1,0,-1]],[1,1,1])
+          assert not bad
+          emit("sheaf", consistent_section=[str(v) for v in witness],
+               inconsistent_witness=[str(v) for v in y])
+          stream=StreamPathMachine()
+          payload=b"hello"
+          transformed,ok=stream.process_hop("reverse",payload)
+          assert ok and transformed==b"olleh"
+          same,ok2=stream.process_hop("identity",payload)
+          assert not ok2
+          dag={"C":["B"],"B":["A"],"A":[]}
+          diff=GitWireV2Parser.compute_set_difference({"C"},{"B"},dag)
+          assert diff=={"C"}
+          assert LENS_UTF8.verify_roundtrip(b"computational layer")
+          assert abs(dequant_e4m3_byte(0x38)-1)<1e-9
+          indices,gates=topk_moe_routing([1.1,2.0,0.9],k=2)
+          assert len(indices)==2 and math.isclose(sum(gates),1.0,abs_tol=1e-8)
+          assert classify_interval_guard(.4,.6,.5) == K3_INDETERMINATE
+          emit("substrate_and_codecs", transformed=transformed.decode(),
+               identity_accepted=ok2, git_diff=sorted(diff),
+               fp8_one=dequant_e4m3_byte(0x38),
+               moe_indices=indices, moe_gates=gates)
+          emit("end", result="PASS")
+          PY
