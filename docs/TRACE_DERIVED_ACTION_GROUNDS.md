@@ -137,7 +137,15 @@ python -m experiments.observer_intent.arbitrate \
 python -m experiments.byte_fabric.trace_lab --out artifacts --live-only
 ~~~
 
-The versioned Ground, raw trace evidence, measurements and two example observer intentions live in [experiments/byte_fabric/datasets](../experiments/byte_fabric/datasets/) and [experiments/byte_fabric/intents](../experiments/byte_fabric/intents/). GitHub Actions checks on Python 3.11 and 3.13 include the full earlier test suite and the 65,536-byte core ceiling.
+The experiment's versioned artifacts are directly readable:
+
+- [Initial two observed traces](../experiments/byte_fabric/datasets/2026-11-18-initial-trace-ledger.json) — enough to generate 14 competing descriptions.
+- [Complete observed training ledger](../experiments/byte_fabric/datasets/2026-11-18-observed-trace-ledger.json) — actual resettable action/output traces, including adaptive probes and training coverage.
+- [Learned two-state action Ground](../experiments/byte_fabric/datasets/2026-11-18-trace-derived-action-ground.json) — portable model used for the distant-state projection.
+- [Controlled and live Internet measurements](../experiments/byte_fabric/datasets/2026-11-18-trace-derived-measurements.json) — test scope, held-out results, byte digests and cross-runtime agreement.
+- [Observer request to synthesize and plan](../experiments/byte_fabric/intents/trace_derived_next_probe.json) and [observer request to navigate the learned Ground](../experiments/byte_fabric/intents/trace_derived_trillion.json).
+
+[GitHub Actions' verified experiment](https://github.com/Kier73/VL-64/actions/runs/44423271415) passed the full test suite on Python 3.11 and 3.13, including the compact source budget check. The saved network evidence is from public read-only pinned GitHub resources; real future network responses and availability may vary.
 
 ## Relationship to established research
 
