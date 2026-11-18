@@ -143,6 +143,45 @@ This establishes that the same typed action-and-evidence mechanism can operate o
 
 GitHub Actions runs both experiments and stores candidate Grounds, planned actions, selected model, observation receipts and result artifacts for independent inspection.
 
+## Measured evidence and saved Grounds
+
+The verified [GitHub Actions active research run](https://github.com/Kier73/VL-64/actions/runs/44419367534) completed 172 tests on each of Python 3.11 and 3.13, then executed both independent experiment types. Later regression tests also exercise the persisted evidence files.
+
+| Measurement | Actual observation |
+| --- | ---: |
+| Candidate models before experiments | 4 |
+| First chosen experiment | \`advance, inspect\` |
+| Candidates after first observation | 2 |
+| Second chosen experiment | \`switch, inspect\` |
+| Candidates after second observation | 1 |
+| Measured uniform-prior information gain per round | 1 bit |
+| Total executed synthetic reference actions | 4 |
+| Modeled repeat horizon (without external actuation) | 1,000,000,000,000 |
+| Transformation compositions | 53 |
+| Compact core size | 65,093 bytes |
+
+The real public-GitHub probe independently captured **12,829 bytes** from the pinned research-goals document and **11,061 bytes** from the pinned README. These are *complete bytes from public pinned GitHub resources*, not guesses based on names or paths. It selected the informative read-only \`read_readme\` action and retained the observed byte digests. Both Python runners obtained equal digests for these pinned resources. The number of read requests is small; it does not demonstrate performance gains over conventional network retrieval.
+
+All retained versioned artifacts live in the [byte-fabric dataset folder](../experiments/byte_fabric/datasets/):
+
+- [Original candidate catalogue](../experiments/byte_fabric/datasets/2026-11-18-active-candidates.json)
+- [Selected finite action Ground](../experiments/byte_fabric/datasets/2026-11-18-active-selected-ground.json)
+- [Observation and elimination receipts](../experiments/byte_fabric/datasets/2026-11-18-active-session.json)
+- [Network and controlled measurements](../experiments/byte_fabric/datasets/2026-11-18-active-measurements.json)
+
+Run the **saved observer intentions** without regenerating candidate models:
+
+~~~bash
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/active_next_probe.json \
+  --out next-probe.json
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/active_action_trillion.json \
+  --out modeled-state.json
+~~~
+
+The first selects a proposed experiment but does **not** perform it; the second navigates a stored deterministic model, not the original physical or network host.
+
 ## Research references
 
 - [A research agenda for active automata learning (2026)](https://sfortz.github.io/publication/2026-al-agenda/2026-al-agenda.pdf): observation tables, discrimination trees, and query selection.
