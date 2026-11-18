@@ -151,6 +151,8 @@ def acquire(target: str, *, root: Path, approved_hosts=DEFAULT_HOSTS,
             max_bytes=MAX_CAPTURE, byte_range=False):
     if type(max_bytes) is not int or not 1 <= max_bytes <= 1024*1024:
         raise ValueError("Capture budget must be 1..1048576 bytes")
+    if type(byte_range) is not bool:
+        raise ValueError("Byte-range request must be boolean")
     if not isinstance(target, str):
         raise TypeError("Target must be a source identifier")
     if target.startswith("workspace:"):
@@ -159,7 +161,10 @@ def acquire(target: str, *, root: Path, approved_hosts=DEFAULT_HOSTS,
         raw = target[len("inline:b64,"):]
         if len(raw) > 2048:
             raise ValueError("Inline bytes exceed budget")
-        return capture_bytes(base64.b64decode(raw, validate=True), "inline:b64")
+        data = base64.b64decode(raw, validate=True)
+        return capture_bytes(data[:max_bytes], "inline:b64",
+                             complete=len(data) <= max_bytes,
+                             total_bytes=len(data))
     if target.startswith("https://"):
         return read_https(target, approved_hosts=approved_hosts,
                           max_bytes=max_bytes, byte_range=byte_range)
