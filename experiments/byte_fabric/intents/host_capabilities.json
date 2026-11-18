@@ -1,0 +1,6 @@
+{
+  "operation": "bytes.capabilities",
+  "target": "*",
+  "output": "json",
+  "options": {}
+}
