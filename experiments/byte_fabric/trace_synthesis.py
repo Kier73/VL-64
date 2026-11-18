@@ -90,6 +90,47 @@ class TraceLedger:
         observed=host.run(word)
         return self.observe(word,observed,source=host.source,policy=host.policy)
 
+    @classmethod
+    def from_snapshot(cls,record):
+        """Replay a serialized evidence ledger, checking every observation.
+
+        A digest protects integrity of the description but cannot authenticate
+        a host's claimed source or prove that a physical action really ran.
+        """
+        if (not isinstance(record,dict) or set(record)!={
+                "schema","actions","observations","contradiction_count",
+                "scope","ledger_digest"} or
+                record["schema"]!="vl64.action-trace-ledger.v1" or
+                not isinstance(record["observations"],list) or
+                len(record["observations"])>256):
+            raise ValueError("Unsupported or oversized trace ledger")
+        if domain_digest("vl64.action-trace-ledger.v1",{
+                k:v for k,v in record.items() if k!="ledger_digest"})!=record[
+                    "ledger_digest"]:
+            raise ValueError("Trace ledger content digest mismatch")
+        ledger=cls(record["actions"])
+        for saved in record["observations"]:
+            if (not isinstance(saved,dict) or
+                    not isinstance(saved.get("outputs_hex"),list)):
+                raise ValueError("Malformed trace evidence object")
+            try:
+                values=tuple(bytes.fromhex(v) for v in saved["outputs_hex"])
+                              if all(isinstance(v,str) for v in saved["outputs_hex"])
+                              else None
+            except ValueError as exc:
+                raise ValueError("Malformed byte output representation") from exc
+            if values is None or any(v.hex()!=encoded for v,encoded in zip(
+                    values,saved["outputs_hex"])):
+                raise ValueError("Noncanonical byte output representation")
+            generated=ledger.observe(saved.get("word"),values,
+                                     source=saved.get("source"),
+                                     policy=saved.get("host_policy"))
+            if generated!=saved:
+                raise ValueError("Observed trace receipt is not independently reconstructible")
+        if ledger.snapshot()!=record:
+            raise ValueError("Trace ledger history does not reconstruct exactly")
+        return ledger
+
     def traces(self):
         return [
             (tuple(record["word"]),
