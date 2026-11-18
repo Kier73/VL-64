@@ -1,0 +1,36 @@
+name: VL-64 virtual internet lab
+
+on:
+  push:
+    branches:
+      - main
+      - experiment/internet-ground-runtime-20261118
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  internet-ground:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install clean VL-64 environment
+        run: python -m pip install -e '.[dev]'
+      - name: Check original runtime and offline Internet contracts
+        run: python -m pytest -q tests/
+      - name: Run bounded public Internet and loopback experiments
+        run: |
+          python -m experiments.internet_lab.virtual_net --out artifacts/internet-ground-observation.json
+      - name: Upload witnessed dataset
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: internet-ground-observation
+          path: artifacts/internet-ground-observation.json
+          if-no-files-found: warn
+          retention-days: 30
