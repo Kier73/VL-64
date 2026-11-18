@@ -10,6 +10,7 @@ import json
 
 from .discrete_ground import discover_discrete_ground, DiscreteGroundNavigator
 from .orbit_ground import discover_ground, ComposedGroundNavigator
+from .quotient_ground import ObservableQuotientNavigator
 
 
 BUILDERS={
@@ -19,6 +20,7 @@ BUILDERS={
 DRIVERS={
     "vl64.compressive-orbit-ground.v1":ComposedGroundNavigator,
     "vl64.discrete-orbit-ground.v1":DiscreteGroundNavigator,
+    "vl64.observable-quotient-ground.v1":ObservableQuotientNavigator,
 }
 
 
