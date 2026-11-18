@@ -42,4 +42,4 @@ def test_ground_description_is_not_merely_full_snapshot_archive():
     assert measurement["constant_invariants"]["source_snapshot_bytes"]==81920
     assert "frames" not in desc
     assert "future_states_proven" not in desc
-    assert desc["scope"]=="single-fixed-template-affine-observed_hypothesis".replace("_observed_hypothesis","_observed_hypothesis") if False else desc["scope"]=="single-fixed-template-affine-observed-hypothesis"
+    assert desc["scope"]=="single-fixed-template-affine-observed-hypothesis"
