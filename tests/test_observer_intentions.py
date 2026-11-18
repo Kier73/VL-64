@@ -175,3 +175,34 @@ def test_compact_vl64_source_budget():
     import vld
     root = Path(vld.__file__).parent
     assert sum(p.stat().st_size for p in root.glob("*.py")) <= 65536
+
+
+def test_config_redirect_policy_only_allows_same_host_config_cache():
+    from urllib.request import Request
+    handler = layer.ConfigOnlyRedirect()
+    original = Request(
+        "https://huggingface.co/openai-community/gpt2/resolve/"
+        + "a"*40 + "/config.json"
+    )
+    safe_target = (
+        "https://huggingface.co/api/resolve-cache/models/openai-community/"
+        "gpt2/" + "a"*40 + "/config.json"
+    )
+    assert handler.redirect_request(original, None, 302, "found", {},
+                                    safe_target) is not None
+    assert handler.redirect_request(original, None, 302, "found", {},
+                                    "https://other.example/config.json") is None
+    assert handler.redirect_request(original, None, 302, "found", {},
+                                    "https://huggingface.co/org/repo/weights.safetensors") is None
+    from_listing = Request("https://huggingface.co/api/models")
+    assert handler.redirect_request(from_listing, None, 302, "found", {},
+                                    safe_target) is None
+
+
+def test_explicit_unknown_operator_can_never_execute_remote_code(monkeypatch):
+    monkeypatch.setitem(layer.ROUTES, "hf.model.generate",
+                        lambda _item: pytest.fail("No execution admission"))
+    req = ObserverIntention("hf.model.generate", "org/model")
+    assert layer.compile_intention(req)["status"] == "UNRESOLVED"
+    # Dispatch uses the compiled local allowlist, not dynamically added handlers.
+    assert layer.arbitrate(req)["status"] == "UNRESOLVED"
