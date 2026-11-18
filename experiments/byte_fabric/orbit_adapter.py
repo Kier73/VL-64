@@ -7,7 +7,7 @@ import binascii
 from pathlib import Path
 
 from vld import ObserverIntention, domain_digest
-from .orbit_ground import ComposedGroundNavigator
+from .ground_families import GroundFamilies
 from .sources import DEFAULT_HOSTS, acquire
 
 
@@ -52,7 +52,7 @@ def arbitrate_orbit(intention, *, root=None, approved_hosts=None):
             return {**base,"status":"UNRESOLVED",
                     "reason":"COMPLETE_GROUND_DESCRIPTION_REQUIRED"}
         descriptor=json.loads(capture["data"].decode("utf-8"))
-        navigator=ComposedGroundNavigator(descriptor)
+        navigator=GroundFamilies().open(descriptor)
         result=navigator.realize(
             goal["steps"],goal["kind"],
             max_work=goal.get("max_work",10),
