@@ -1,0 +1,122 @@
+{
+  "schema": "vl64.compressive-ground-measurement.v1",
+  "source_run": "https://github.com/Kier73/VL-64/actions/runs/44411287662",
+  "ground_file": "2026-11-18-compressive-orbit-ground.json",
+  "note": "One controlled fixed-layout byte-state machine; timing observations are individual CI runs, not generalized throughput claims",
+  "cross_runtime_ground_agrees": true,
+  "constant_invariants": {
+    "source_snapshot_bytes": 81920,
+    "ground_description_bytes": 1947,
+    "compression_ratio": 42.075,
+    "training_frames": 32,
+    "heldout_frames": 48,
+    "unseen_frames": [
+      80,
+      85,
+      100,
+      127,
+      143
+    ],
+    "discovered_interpreter": {
+      "encoding": "u-le",
+      "offset": 431,
+      "width": 4
+    },
+    "observed_horizon": 1000000000000,
+    "virtual_horizon_result_digest": "0319b4ab11a81b0bc9fe7f7c3dbd2d035a2b3f7c16d50d53a63917a35aa74293"
+  },
+  "runs": [
+    {
+      "python": "compressive-ground (3.11)",
+      "report": {
+        "basis_entries_cached": 40,
+        "compressed_jump_ms": 0.0776,
+        "compressed_ratio": 42.075,
+        "compression_scope": "exact_model_description_of_this_fixed-template_trace",
+        "core_source_modified": false,
+        "direct_reference_horizon": 200000,
+        "direct_reference_ms": 24.0545,
+        "discovered_interpreter": {
+          "encoding": "u-le",
+          "offset": 431,
+          "width": 4
+        },
+        "discovery_status": "UNIQUE_OBSERVED_CODEC_HYPOTHESIS",
+        "frame_bytes": 1024,
+        "ground_description_bytes": 1947,
+        "heldout_frames": 48,
+        "horizon": 1000000000000,
+        "horizon_model_state": 1528107015,
+        "horizon_output_digest": "0319b4ab11a81b0bc9fe7f7c3dbd2d035a2b3f7c16d50d53a63917a35aa74293",
+        "independent_unseen_frame_indices": [
+          80,
+          85,
+          100,
+          127,
+          143
+        ],
+        "prediction_scope": "empirically_heldout_not_universal_future_proof",
+        "raw_training_and_holdout_bytes": 81920,
+        "route": [
+          "interpret-span",
+          "navigate-affine",
+          "materialize-span",
+          "digest-realization"
+        ],
+        "schema": "vl64.compressive-ground-experiment.v1",
+        "short_horizon_speedup": 309.95,
+        "status": "VERIFIED_ON_OBSERVED_AND_UNSEEN_SAMPLES",
+        "train_frames": 32,
+        "training_ms": 2.1681,
+        "trillion_step_navigation_ms": 0.0684
+      },
+      "job_id": 135179794531
+    },
+    {
+      "python": "compressive-ground (3.13)",
+      "report": {
+        "basis_entries_cached": 40,
+        "compressed_jump_ms": 0.2573,
+        "compressed_ratio": 42.075,
+        "compression_scope": "exact_model_description_of_this_fixed-template_trace",
+        "core_source_modified": false,
+        "direct_reference_horizon": 200000,
+        "direct_reference_ms": 36.3251,
+        "discovered_interpreter": {
+          "encoding": "u-le",
+          "offset": 431,
+          "width": 4
+        },
+        "discovery_status": "UNIQUE_OBSERVED_CODEC_HYPOTHESIS",
+        "frame_bytes": 1024,
+        "ground_description_bytes": 1947,
+        "heldout_frames": 48,
+        "horizon": 1000000000000,
+        "horizon_model_state": 1528107015,
+        "horizon_output_digest": "0319b4ab11a81b0bc9fe7f7c3dbd2d035a2b3f7c16d50d53a63917a35aa74293",
+        "independent_unseen_frame_indices": [
+          80,
+          85,
+          100,
+          127,
+          143
+        ],
+        "prediction_scope": "empirically_heldout_not_universal_future_proof",
+        "raw_training_and_holdout_bytes": 81920,
+        "route": [
+          "interpret-span",
+          "navigate-affine",
+          "materialize-span",
+          "digest-realization"
+        ],
+        "schema": "vl64.compressive-ground-experiment.v1",
+        "short_horizon_speedup": 141.19,
+        "status": "VERIFIED_ON_OBSERVED_AND_UNSEEN_SAMPLES",
+        "train_frames": 32,
+        "training_ms": 3.1392,
+        "trillion_step_navigation_ms": 0.1334
+      },
+      "job_id": 135179795124
+    }
+  ]
+}
