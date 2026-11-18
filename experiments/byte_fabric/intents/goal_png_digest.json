@@ -1,0 +1,12 @@
+{
+  "operation": "bytes.realize",
+  "target": "https://raw.githubusercontent.com/github/explore/main/topics/python/python.png",
+  "output": "json",
+  "options": {
+    "max_bytes": 16384,
+    "byte_range": true,
+    "goal": {
+      "kind": "digest.sha256"
+    }
+  }
+}
