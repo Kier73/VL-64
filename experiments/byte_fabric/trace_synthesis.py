@@ -222,9 +222,9 @@ class TraceGroundSynthesizer:
                                 return
                             table[q,action]=(next_state,out)
                             fill(i+1)
-                            if len(candidates)>=limit or truncated:
+                            if len(candidates)>=limit or examined>=self.max_assignments:
                                 break
-                        if len(candidates)>=limit or truncated:
+                        if len(candidates)>=limit or examined>=self.max_assignments:
                             break
                     table.pop((q,action),None)
                 fill(0)
@@ -256,7 +256,7 @@ class TraceGroundSynthesizer:
                     amended[(from_state,action)]=(state,out)
                     assign(i+1,labels+[state],amended,
                            max(used,state+1))
-                    if len(candidates)>=limit or truncated:
+                    if len(candidates)>=limit or examined>=self.max_assignments:
                         return
 
             # BFS/canonical observed-node state assignments give a candidate
