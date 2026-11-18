@@ -119,15 +119,20 @@ def pinned_revision(value):
     return value
 
 
-def read_model_listing(limit=12):
+def read_model_listing(limit=12, library=None):
     if type(limit) is not int or not 1 <= limit <= 20:
         raise ValueError("Catalogue limit must be 1..20")
-    query = urllib.parse.urlencode({
+    if library not in (None, "transformers"):
+        raise ValueError("Unsupported model-library selector")
+    params = {
         "pipeline_tag": "text-generation",
         "sort": "lastModified",
         "direction": "-1",
         "limit": str(limit),
-    })
+    }
+    if library is not None:
+        params["library"] = library
+    query = urllib.parse.urlencode(params)
     return metadata_get("https://huggingface.co/api/models?" + query,
                         MAX_LIST_BYTES)
 
@@ -140,7 +145,9 @@ def choose_model(intention, evidence):
             "selection_scope": "user_supplied_model_identifier",
         }
     limit = intention["options"].get("catalog_limit", 12)
-    record, listing = read_model_listing(limit)
+    library = intention["options"].get("library")
+    record, listing = (read_model_listing(limit, library)
+                       if library is not None else read_model_listing(limit))
     evidence.append(record)
     if not isinstance(listing, list):
         raise ValueError("Model catalogue not available as complete JSON list")
@@ -168,6 +175,7 @@ def choose_model(intention, evidence):
         "eligible_count": len(candidates),
         "candidate_rank": 1,
         "ranking_field": "lastModified",
+        "library_filter": library,
         "candidates_sample": candidates[:12],
     }
 
