@@ -191,3 +191,15 @@ def test_version_space_never_claims_global_uniqueness():
     ledger.query(host,("flip","read"))
     revised=TraceGroundSynthesizer(max_states=2).discover(ledger)
     assert revised["observed_action_edges"]>found["observed_action_edges"]
+
+
+
+def test_ledger_snapshot_remains_identical_after_new_observations():
+    ledger,host=boot()
+    snapshot=ledger.snapshot()
+    old_digest=snapshot["ledger_digest"]
+    ledger.query(host,("flip","read"))
+    assert snapshot["ledger_digest"]==old_digest
+    assert len(snapshot["observations"])==2
+    assert len(ledger.snapshot()["observations"])==3
+    assert TraceLedger.from_snapshot(snapshot).snapshot()==snapshot
