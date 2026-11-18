@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import binascii
 from pathlib import Path
 
 from vld import ObserverIntention, domain_digest
@@ -35,7 +37,9 @@ def arbitrate_orbit(intention, *, root=None, approved_hosts=None):
             "kind","steps","max_work","max_hops","include_data"}:
         return {**base,"status":"REFUSED","reason":"INVALID_GROUND_NAVIGATION_GOAL"}
     goal=opts["goal"]
-    if type(goal.get("steps")) is not int or not isinstance(goal.get("kind"),str):
+    if (type(goal.get("steps")) is not int or
+            not isinstance(goal.get("kind"),str) or
+            type(goal.get("include_data",False)) is not bool):
         return {**base,"status":"REFUSED","reason":"INVALID_GROUND_GOAL_PARAMETERS"}
     try:
         capture=acquire(
@@ -56,11 +60,10 @@ def arbitrate_orbit(intention, *, root=None, approved_hosts=None):
             include_data=goal.get("include_data",False))
         return {**base,"status":result["status"],"navigation":result,
                 "source_ground_digest":descriptor["ground_digest"],
-                "source_description_sha256":capture["transport"].get("prefix_sha256")
-                    if capture["transport"].get("kind")=="local-file" else
-                    capture.get("source"),
+                "source_description_sha256":hashlib.sha256(capture["data"]).hexdigest(),
                 "source_scope":capture["source"]}
-    except (TypeError,ValueError,KeyError,UnicodeError,OSError) as exc:
+    except (TypeError,ValueError,KeyError,UnicodeError,OSError,
+            binascii.Error) as exc:
         return {**base,"status":"UNRESOLVED",
                 "reason":type(exc).__name__,"detail":str(exc)[:160]}
 
