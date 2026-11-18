@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import binascii
 import datetime
 import hashlib
 import ipaddress
@@ -642,14 +643,23 @@ def verify_dataset(result):
         return {"status": "VERIFIED", "packet_replays": verified_packets,
                 "graph_relations": len(graph.edges),
                 "scope": "dataset_integrity_and_retained_protocol_bytes_only"}
-    except (ValueError, KeyError, TypeError, IndexError, UnicodeError) as exc:
+    except (ValueError, KeyError, TypeError, IndexError, UnicodeError,
+            binascii.Error) as exc:
         return {"status": "REJECTED", "reason": str(exc)[:160]}
 
 
 def main():
     parser = argparse.ArgumentParser(description="Observe public internet relations as VL-64 Grounds")
     parser.add_argument("--out", default="internet-ground-dataset.json")
+    parser.add_argument("--verify-file", help="Offline replay of a saved dataset")
     args = parser.parse_args()
+    if args.verify_file:
+        saved = json.loads(Path(args.verify_file).read_text(encoding="utf-8"))
+        verdict = verify_dataset(saved)
+        print("VL64_INTERNET_OFFLINE_VERIFY " + json.dumps(verdict, sort_keys=True))
+        if verdict["status"] != "VERIFIED":
+            raise SystemExit(1)
+        return
     result = run()
     result["dataset_digest"] = domain_digest("vl64.internet-dataset.v1", result)
     check = verify_dataset(result)
