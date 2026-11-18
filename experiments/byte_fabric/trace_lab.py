@@ -235,6 +235,8 @@ def main():
     _save(out/"trace-synthesis-intention.json",intention.to_dict())
     _save(out/"learned-action-navigation-intention.json",jump.to_dict())
     print("VL64_TRACE_REPORT "+json.dumps(experiment["report"],sort_keys=True))
+    print("VL64_TRACE_INITIAL_LEDGER "+json.dumps(
+        experiment["initial_ledger"],sort_keys=True,separators=(",",":")))
     print("VL64_TRACE_GROUND "+json.dumps(experiment["ground"],sort_keys=True,
                                          separators=(",",":")))
     print("VL64_TRACE_LEDGER "+json.dumps(experiment["ledger"],sort_keys=True,
