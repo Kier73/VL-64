@@ -196,6 +196,8 @@ def replay_byte_receipt(receipt, *, capture, decoders=None, executor=None):
             "format_hint", receipt["intention"]["target"]), decoders=decoders)
         if verified["ground_digest"] != ground["ground_digest"]:
             return {"status": "REJECTED", "reason": "GROUND_MISMATCH"}
+        if verified["observation"]["observation_digest"] != ground["observation"]["observation_digest"]:
+            return {"status": "REJECTED", "reason": "OBSERVATION_MISMATCH"}
         operation = receipt.get("execution")
         if operation is not None:
             options = receipt["intention"]["options"]
@@ -204,6 +206,7 @@ def replay_byte_receipt(receipt, *, capture, decoders=None, executor=None):
             if computed != operation:
                 return {"status": "REJECTED", "reason": "EXECUTION_RESULT_MISMATCH"}
         return {"status": "VERIFIED_BYTE_GROUND", "ground_digest": verified["ground_digest"],
+                "observation_digest": verified["observation"]["observation_digest"],
                 "operations_replayed": 1 if operation is not None else 0,
                 "scope": "same-input-and-local-operation-replay-not-external-truth"}
     except (ValueError, KeyError, TypeError, OSError):
