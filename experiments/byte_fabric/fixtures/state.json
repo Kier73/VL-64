@@ -1,0 +1,23 @@
+{
+  "observer": {
+    "intent": "navigate",
+    "outcome": "ground",
+    "constraints": {
+      "format": "json",
+      "verified": true
+    }
+  },
+  "values": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "architecture": {
+    "type": "uncommitted",
+    "fields": [
+      "a",
+      "b"
+    ]
+  }
+}
