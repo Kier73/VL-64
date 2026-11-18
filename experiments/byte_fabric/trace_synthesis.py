@@ -8,6 +8,7 @@ No unknown behavior is certified from an incomplete trace.
 from __future__ import annotations
 
 import hashlib
+from copy import deepcopy
 import itertools
 import json
 import re
@@ -143,7 +144,9 @@ class TraceLedger:
         result={
             "schema":"vl64.action-trace-ledger.v1",
             "actions":list(self.actions),
-            "observations":self.observations,
+            # Snapshot identity must not mutate when later probes append new
+            # evidence to the live ledger.
+            "observations":deepcopy(self.observations),
             "contradiction_count":len(self.contradictions),
             "scope":"resettable_observed_paths_only",
         }
