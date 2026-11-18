@@ -6,7 +6,7 @@ Develop VL-64 as a compact, usable Virtual Layer utility. Each research path sho
 
 This document is for intended work. The [README](../README.md) and [usage guide](USAGE_GUIDE.md) describe the interfaces available in the code today.
 
-The step-by-step programme for connecting physical machine observations, software execution, screen buffers, hardware counters, and communication streams to VL-64 is in the [Machine Observation and Ground Discovery Plan](MACHINE_OBSERVATION_AND_GROUND_DISCOVERY_PLAN.md).
+The step-by-step programme for connecting physical machine observations, software execution, screen buffers, hardware counters, and communication streams to VL-64 is in the [Machine Observation and Ground Discovery Plan](MACHINE_OBSERVATION_AND_GROUND_DISCOVERY_PLAN.md) and the [Virtual Internet Runtime Plan](VIRTUAL_INTERNET_RUNTIME_PLAN.md) (including a proposed separate network-native 64 KiB implementation).
 
 ## Development discipline
 
