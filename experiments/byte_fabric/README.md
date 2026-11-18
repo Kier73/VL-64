@@ -186,6 +186,20 @@ The workflow [generic-byte-fabric.yml](../../.github/workflows/generic-byte-fabr
 - Receipts: bind input Ground, operation and result; local replay recomputes the result when given original bytes. This does not establish external authority, absolute truth or a trusted remote execution.
 - User output: JSON, JSONL and text, with binary results represented as explicit base64; raw binary streaming and arbitrary output schemas remain future adapters.
 
+## Compressive, internally navigable Grounds
+
+The [compressive Ground module](orbit_ground.py) discovers a changing scalar span from byte snapshots, tests candidate endian/decimal interpretations and an affine transition law against independent held-out frames, then retains a **template plus law** rather than all states.
+
+A [four-hop typed path](../../docs/COMPRESSIVE_VIRTUAL_GROUNDS.md) interprets a saved frame, navigates the modeled state using cached powers, reconstructs a requested frame and derives its digest. The saved [Ground](datasets/2026-11-18-compressive-orbit-ground.json) is usable with the observer's own output format:
+
+~~~bash
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/ground_trillion.json \
+  --out result.json
+~~~
+
+The measured fixed-layout experiment encoded 81,920 bytes of training and validation snapshots with a 1,947-byte description (42.075×). A separate challenge API checks new observed frames and returns explicit contradictions without silently rewriting the Ground. This experiment is **a validated state generator for one pattern**, not arbitrary machine emulation.
+
 ## Next frontier
 
 The general observer-to-realizer interface should evolve into an **evidence- and cost-aware typed relation search**:
