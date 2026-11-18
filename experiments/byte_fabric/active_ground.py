@@ -304,7 +304,21 @@ class ActiveGroundSession:
         if domain_digest("vl64.active-ground-probe-plan.v1",{
                 k:v for k,v in plan.items() if k!="plan_digest"})!=digest:
             raise ValueError("Probe plan digest mismatched")
-        word=plan["word"]
+        word=plan.get("word")
+        if (not isinstance(word,list) or not 1<=len(word)<=MAX_WORD or
+                any(action not in self.actions for action in word)):
+            raise ValueError("Plan contains an unqualified action word")
+        groups,gain=_partitions(self.models,word)
+        predicted=[{
+            "outputs_hex":list(signature),
+            "hypothesis_digests":sorted(members),
+        } for signature,members in sorted(groups.items())]
+        if (gain<=1e-12 or predicted!=plan.get("predicted_partitions") or
+                plan.get("declared_cost")!=sum(
+                    self.costs[action] for action in word) or
+                not math.isclose(plan.get("expected_information_bits",-1),
+                                 round(gain,6),abs_tol=1e-8)):
+            raise ValueError("Probe proposal does not match qualified predictions")
         if (not isinstance(observed,(tuple,list)) or len(observed)!=len(word) or
                 any(not isinstance(x,bytes) or len(x)>MAX_OUTPUT for x in observed)):
             raise ValueError("Observation must contain every bounded action output")
