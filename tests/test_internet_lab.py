@@ -2,6 +2,7 @@
 import hashlib
 import json
 import socket
+import struct
 
 import pytest
 
@@ -135,3 +136,41 @@ def test_repository_navigation_refuses_absent_goal_link(monkeypatch):
     assert result == {"status": "UNRESOLVED", "reason": "requested_link_absent"}
     assert len(records) == 3
     assert not g.edges
+
+
+def test_dns_wire_parse_and_negative_controls():
+    question = b"\x07example\x03com\x00" + struct.pack("!HH", 1, 1)
+    head = struct.pack("!HHHHHH", 0, 0x8180, 1, 1, 0, 0)
+    answer = b"\xc0\x0c" + struct.pack("!HHIH", 1, 1, 120, 4)
+    packet = head + question + answer + b"\x5d\xb8\xd7\x0e"
+    output = lab.decode_dns_a(packet)
+    assert output["dns_rcode"] == 0
+    assert output["answer_count"] == 1
+    assert output["ttl_min"] == 120
+    assert output["dns_header_answer_count"] == 1
+    with pytest.raises(ValueError):
+        lab.decode_dns_a(packet[:4])
+    with pytest.raises(ValueError):
+        lab.decode_dns_a(packet[:-1])
+    with pytest.raises(ValueError):
+        lab.decode_dns_a(struct.pack("!HHHHHH", 1, 0x8180, 1, 1, 0, 0) +
+                         packet[12:])
+
+
+def test_git_smart_http_advertisement_includes_service_preamble(monkeypatch):
+    from vld import GitWireV2Parser as Parser
+    payload = (Parser.encode_pkt_line("# service=git-upload-pack\n")
+               + Parser.encode_pkt_line(None)
+               + Parser.encode_pkt_line("version 2\n")
+               + Parser.encode_pkt_line("ls-refs=unborn\n")
+               + Parser.encode_pkt_line("fetch=shallow\n")
+               + Parser.encode_pkt_line(None))
+    def fake_fetch(operation, url, **kwargs):
+        return ({"status": "OBSERVED", "http_status": 200,
+                 "body_sha256": lab.digest(payload)}, payload)
+    monkeypatch.setattr(lab, "fetch", fake_fetch)
+    record = lab.git_advertisement()
+    assert record["interpretation"] == "git-protocol-v2-capability-advertisement"
+    assert record["smart_http_service_preamble"]
+    assert "ls-refs" in record["capabilities"]
+    assert "fetch" in record["capabilities"]
