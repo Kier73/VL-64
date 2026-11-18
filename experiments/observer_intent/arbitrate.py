@@ -401,6 +401,9 @@ def arbitrate(request, *, byte_root=None, approved_hosts=None):
     if request.spec["operation"] in ("bytes.observe", "bytes.execute", "bytes.capabilities", "bytes.realize"):
         from experiments.byte_fabric.router import byte_arbitrate
         return byte_arbitrate(request, root=byte_root, approved_hosts=approved_hosts)
+    if request.spec["operation"] == "ground.navigate":
+        from experiments.byte_fabric.orbit_adapter import arbitrate_orbit
+        return arbitrate_orbit(request, root=byte_root, approved_hosts=approved_hosts)
     plan = compile_intention(request)
     if plan["status"] != "ADMITTED_READ_ONLY_PLAN":
         return {"schema": SCHEMA, "status": "UNRESOLVED",
@@ -428,6 +431,9 @@ def render_result(receipt, output):
     if receipt.get("schema") == "vl64.byte-observer-receipt.v1":
         from experiments.byte_fabric.router import render_byte_receipt
         return render_byte_receipt(receipt, output)
+    if receipt.get("schema") == "vl64.compressed-ground-observer-receipt.v1":
+        from experiments.byte_fabric.orbit_adapter import render_orbit_receipt
+        return render_orbit_receipt(receipt, output)
     if output == "json":
         return json.dumps(receipt, sort_keys=True, indent=2, allow_nan=False) + "\n"
     if output == "jsonl":
@@ -500,7 +506,7 @@ def main():
             "OBSERVED_MODEL_STRUCTURE", "PARTIAL_MODEL_STRUCTURE",
             "OBSERVED_DESCRIPTION_PATH", "OBSERVED_BYTE_GROUND",
             "PARTIAL_BYTE_GROUND", "EXECUTED_LOCAL",
-            "OBSERVED_CAPABILITY_CATALOGUE"):
+            "OBSERVED_CAPABILITY_CATALOGUE", "OBSERVED_GROUND_NAVIGATION"):
         raise SystemExit("Observer intention could not be realized")
 
 
