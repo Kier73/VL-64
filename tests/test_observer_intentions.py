@@ -105,6 +105,10 @@ def test_model_ground_from_mocked_metadata(monkeypatch):
     assert ground["architecture"]["n_layer"] == 12
     assert "untrusted_extra" not in ground["architecture"]
     assert ground["weight_file_count"] == 2
+    assert any(node["id"] == "config_field:n_layer" for node in ground["graph"]["nodes"])
+    assert any(edge["relation"] == "declares_field" for edge in ground["graph"]["edges"])
+    assert ground["family_operator_hints"]["decoder_blocks"] == 12
+    assert ground["family_operator_hints"]["scope"] == "unverified_family_template_not_actual_inference"
     assert ground["claims"]["model_weight_payload_bytes_read"] == 0
     assert not ground["claims"]["inference_executed"]
     assert ground["revision"] == sha
