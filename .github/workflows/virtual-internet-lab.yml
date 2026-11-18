@@ -27,7 +27,7 @@ jobs:
           python -m experiments.internet_lab.virtual_net --verify-file experiments/internet_lab/datasets/2026-11-18-github-run-44371133726.json
       - name: Run bounded public Internet and loopback experiments
         run: |
-          python -m experiments.internet_lab.virtual_net --out artifacts/internet-ground-observation.json
+          python -m experiments.internet_lab.virtual_net --require-github-navigation --out artifacts/internet-ground-observation.json
       - name: Upload witnessed dataset
         if: always()
         uses: actions/upload-artifact@v4

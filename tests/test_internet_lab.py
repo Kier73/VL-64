@@ -88,8 +88,8 @@ def test_github_navigation_with_pinned_mocked_observations(monkeypatch):
         called.append((operation, url))
         if operation == "github_repository_metadata":
             payload = {"full_name": "Kier73/VL-64", "default_branch": "main"}
-        elif operation == "github_commit_metadata":
-            payload = {"sha": revision}
+        elif operation == "github_branch_reference":
+            payload = {"ref": "refs/heads/main", "object": {"sha": revision}}
         elif operation == "github_pinned_readme":
             payload = b"# VL-64\n\n[Research goals](docs/RESEARCH_GOALS.md)\n"
         elif operation == "github_pinned_research_goals":
@@ -99,7 +99,8 @@ def test_github_navigation_with_pinned_mocked_observations(monkeypatch):
         body = payload if isinstance(payload, bytes) else json.dumps(payload).encode("utf8")
         record = {
             "operation": operation, "status": "OBSERVED",
-            "http_status": 200, "body_sha256": hashlib.sha256(body).hexdigest(),
+            "http_status": 200, "truncated": False,
+            "body_sha256": hashlib.sha256(body).hexdigest(),
         }
         return record, body
 
@@ -111,6 +112,7 @@ def test_github_navigation_with_pinned_mocked_observations(monkeypatch):
     assert result["goal_heading_valid"]
     assert result["commit"] == revision
     assert len(receipts) == 4
+    assert called[1][1].endswith("/git/ref/heads/main")
     assert called[-2][1].endswith(f"/{revision}/README.md")
     assert called[-1][1].endswith(
         f"/{revision}/docs/RESEARCH_GOALS.md")
@@ -123,13 +125,13 @@ def test_repository_navigation_refuses_absent_goal_link(monkeypatch):
         values = {
             "github_repository_metadata": {"full_name": "Kier73/VL-64",
                                            "default_branch": "main"},
-            "github_commit_metadata": {"sha": revision},
+            "github_branch_reference": {"ref": "refs/heads/main", "object": {"sha": revision}},
             "github_pinned_readme": b"# No explicit target document\n",
         }
         source = values[operation]
         body = source if isinstance(source, bytes) else json.dumps(source).encode()
         return ({"status": "OBSERVED", "http_status": 200,
-                 "body_sha256": lab.digest(body)}, body)
+                 "truncated": False, "body_sha256": lab.digest(body)}, body)
 
     monkeypatch.setattr(lab, "fetch", fake_fetch)
     g = lab.InternetGround()

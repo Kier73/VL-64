@@ -474,18 +474,25 @@ def github_readme_to_goals(graph: InternetGround):
             raise ValueError("Unsafe branch name")
     except (ValueError, KeyError, TypeError) as exc:
         return records, refusal("github_repo_parse", exc), None
-    commit_url = ("https://api.github.com/repos/Kier73/VL-64/commits/" +
-                  urllib.parse.quote(branch, safe=""))
-    commit_rec, raw_commit = fetch("github_commit_metadata", commit_url)
-    records.append(commit_rec)
-    if commit_rec["status"] != "OBSERVED" or commit_rec["http_status"] != 200:
-        return records, {"status": "UNRESOLVED", "reason": "commit"}, None
+    # A reference object is the minimal sufficient description of branch
+    # identity. The commit-details endpoint includes unneeded patch bodies
+    # and may exceed a bounded observer's response budget.
+    ref_url = ("https://api.github.com/repos/Kier73/VL-64/git/ref/heads/" +
+               urllib.parse.quote(branch, safe="/"))
+    ref_rec, raw_ref = fetch("github_branch_reference", ref_url)
+    records.append(ref_rec)
+    if (ref_rec["status"] != "OBSERVED" or ref_rec["http_status"] != 200
+            or ref_rec["truncated"]):
+        return records, {"status": "UNRESOLVED", "reason": "branch_reference"}, None
     try:
-        rev = json.loads(raw_commit)["sha"]
+        reference = json.loads(raw_ref)
+        rev = reference["object"]["sha"]
+        if reference.get("ref") != "refs/heads/" + branch:
+            raise ValueError("Git reference identity mismatch")
         if not HEX40.fullmatch(rev):
-            raise ValueError("Commit not SHA-1 object ID")
+            raise ValueError("Reference not a SHA-1 commit identity")
     except (ValueError, KeyError, TypeError) as exc:
-        return records, refusal("github_commit_parse", exc), None
+        return records, refusal("github_reference_parse", exc), None
 
     base = "https://raw.githubusercontent.com/Kier73/VL-64/" + rev + "/"
     readme, raw = fetch("github_pinned_readme", base + "README.md")
@@ -520,7 +527,7 @@ def github_readme_to_goals(graph: InternetGround):
     b = graph.node("git-commit:" + rev, "git_commit")
     c = graph.node("readme:" + digest(raw), "github_raw_document")
     d = graph.node("research-goals:" + digest(content), "github_raw_document")
-    graph.link(a, b, "resolve_default_branch_commit", commit_rec["body_sha256"])
+    graph.link(a, b, "resolve_default_branch_commit", ref_rec["body_sha256"])
     graph.link(b, c, "read_pinned_readme", readme["body_sha256"])
     graph.link(c, d, "navigate_markdown_link", goals["body_sha256"])
     for cached in records:
@@ -587,6 +594,9 @@ def run():
         "nodes": len(graph.nodes), "relations": len(graph.edges),
         "github_navigation": repo_nav.get("status"),
         "github_navigation_hops": repo_nav.get("hops"),
+        "github_navigation_unresolved": repo_nav.get("status") != "OBSERVED_DESCRIPTION_PATH",
+        "truncated_http_observations": sum(
+            x.get("truncated") is True for x in observations),
         "git_wire_rest_head_match": repo_nav.get("git_wire_rest_head_match"),
         "cloudflare_doh": doh.get("status"),
         "cloudflare_dns_wire": wire.get("interpretation", wire.get("status")),
@@ -674,6 +684,8 @@ def main():
     parser = argparse.ArgumentParser(description="Observe public internet relations as VL-64 Grounds")
     parser.add_argument("--out", default="internet-ground-dataset.json")
     parser.add_argument("--verify-file", help="Offline replay of a saved dataset")
+    parser.add_argument("--require-github-navigation", action="store_true",
+                        help="Fail unless remote document route and Git cross-check succeed")
     args = parser.parse_args()
     if args.verify_file:
         saved = json.loads(Path(args.verify_file).read_text(encoding="utf-8"))
@@ -703,6 +715,10 @@ def main():
         raise SystemExit("No observations were acquired")
     if result["summary"]["loopback"] != "VERIFIED":
         raise SystemExit("Independent TCP semantic reference failed")
+    if args.require_github_navigation and (
+            result["summary"]["github_navigation_unresolved"] or
+            result["summary"]["git_wire_rest_head_match"] is not True):
+        raise SystemExit("Required remote GitHub navigation or Git-wire cross-check unresolved")
 
 
 if __name__ == "__main__":
