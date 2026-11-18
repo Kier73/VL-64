@@ -258,7 +258,12 @@ class ActiveGroundSession:
                 if cost>max_cost:
                     continue
                 examined+=1
-                groups,gain=_partitions(self.models,word)
+                current={model.digest for model in self.models}
+        plan_members={d for part in plan["predicted_partitions"]
+                      for d in part["hypothesis_digests"]}
+        if (plan_members!=current or plan["candidate_count"]!=len(current)):
+            raise ValueError("Stale experiment plan cannot update candidate Ground")
+        groups,gain=_partitions(self.models,word)
                 if gain<=1e-12:
                     continue
                 score=gain/cost
@@ -322,11 +327,6 @@ class ActiveGroundSession:
         if (not isinstance(observed,(tuple,list)) or len(observed)!=len(word) or
                 any(not isinstance(x,bytes) or len(x)>MAX_OUTPUT for x in observed)):
             raise ValueError("Observation must contain every bounded action output")
-        current={model.digest for model in self.models}
-        plan_members={d for part in plan["predicted_partitions"]
-                      for d in part["hypothesis_digests"]}
-        if (plan_members!=current or plan["candidate_count"]!=len(current)):
-            raise ValueError("Stale experiment plan cannot update candidate Ground")
         survivors=[m for m in self.models if m.predict(word)==tuple(observed)]
         record={
             "schema":"vl64.active-ground-observation.v1",
