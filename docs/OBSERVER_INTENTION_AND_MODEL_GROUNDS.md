@@ -160,6 +160,8 @@ The November 18 GitHub Actions execution [run 44387089534](https://github.com/Ki
 
 The run passed 57 tests at that point, covering the compact contract, output format, fixed registered operations, target validation, metadata-only refusal, and absence of arbitrary inference execution.
 
+The [second measured session](https://github.com/Kier73/VL-64/actions/runs/44389239409) added an observer constraint requiring architecture metadata from a Transformers-filtered recent catalogue. Its selector attempted several recent models and accepted the fourth, which exposed `model_type`, `vocab_size`, and `head_dim` fields. The evidence and refusal trail are retained as a [research dataset](../experiments/observer_intent/datasets/2026-11-18-run-44389239409-summary.json). The result remained an **incomplete architecture for model inference**, despite meeting the narrower observation predicate.
+
 This is a **live test of observer intention arbitration**, not a complete self-adapting network computation compiler.
 
 ## Next meaningful interfaces
