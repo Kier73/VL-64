@@ -1,0 +1,13 @@
+{
+  "operation": "ground.navigate",
+  "target": "workspace:experiments/byte_fabric/datasets/2026-11-18-compressive-orbit-ground.json",
+  "output": "json",
+  "options": {
+    "goal": {
+      "kind": "digest.sha256",
+      "steps": 1000000000000,
+      "max_work": 5,
+      "max_hops": 4
+    }
+  }
+}
