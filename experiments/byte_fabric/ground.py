@@ -168,7 +168,7 @@ def describe(data: bytes, *, hint: str = "") -> dict:
                         "link_count_observed": len(parser.links),
                         "link_sample": parser.links[:64],
                         "scope": "syntactic-links-untrusted"}
-                elif all((ord(x) >= 32 or x in "\n\r\t") for x in text[:1024]):
+                elif text and all((ord(x) >= 32 or x in "\n\r\t") for x in text[:1024]):
                     kind, structure = "utf8-text", {
                         "characters": len(text), "line_count": len(text.splitlines()),
                         "prefix": text[:160]}
