@@ -15,6 +15,7 @@ from pathlib import Path
 
 from vld import ObserverIntention
 from .ground_families import GroundFamilies
+from .quotient_ground import compile_observable_quotient
 
 
 def sequence(count=192,template=None):
@@ -111,6 +112,58 @@ def experiment():
     }
 
 
+
+def quotient_experiment():
+    """Independent observer asks for a coarser future-stable output state."""
+    template=(b"Internet byte observation/recognition/"*20)[:512]
+    offset=171
+    template=template[:offset]+b"\0"+template[offset+1:]
+    tokens=[bytes([50+i]) for i in range(12)]
+    frames=[
+        template[:offset]+tokens[i%12]+template[offset+1:]
+        for i in range(96)
+    ]
+    source=GroundFamilies().discover(frames[:38],frames[38:70])
+    driver=GroundFamilies().open(source["ground"])
+    if source["selection"]["chosen_family"]!="closed-finite-cycle":
+        raise RuntimeError("Expected non-affine finite reference")
+    labels={token.hex():("A" if i%3 in (0,1) else "B")
+            for i,token in enumerate(driver.tokens)}
+    quotient=compile_observable_quotient(driver,labels)
+    model=GroundFamilies().open(quotient["ground"])
+    distant=model.realize(10**12,"state.observable")
+    expected=labels[tokens[(10**12)%12].hex()]
+    if distant["result"]["value"]!=expected:
+        raise RuntimeError("Quotient-model navigation disagrees with reference")
+    for i in range(70,96):
+        if model.realize(i,"state.observable")["result"]["value"] != labels[
+                tokens[i%12].hex()]:
+            raise RuntimeError("Unseen observable continuation disagrees")
+    good=model.test_new_observations([(72,labels[tokens[72%12].hex()])])
+    bad=model.test_new_observations([(72,"CONTRADICTION")])
+    if good["status"]!="CONSISTENT_ON_NEW_OBSERVATIONS" or bad[
+            "status"]!="CONTRADICTED":
+        raise RuntimeError("Observable quotient challenge policy failed")
+    return {
+        "ground":quotient["ground"],
+        "report":{
+            "schema":"vl64.observation-quotient-experiment.v1",
+            "status":"OBSERVABLE_FUTURES_PRESERVED_IN_DECLARED_MODEL",
+            "source_states":quotient["measurement"]["source_states"],
+            "quotient_states":quotient["measurement"]["quotient_states"],
+            "erasure_entropy_bits":quotient["measurement"]["erasure_entropy_bits"],
+            "original_observed_snapshot_bytes":70*len(frames[0]),
+            "quotient_description_bytes":quotient["measurement"]["description_bytes"],
+            "fresh_observable_continuations_checked":26,
+            "horizon":10**12,
+            "horizon_observed_value":distant["result"]["value"],
+            "exact_source_bytes_reconstructible":False,
+            "matched_challenge":good["status"],
+            "contradictory_challenge":bad["status"],
+            "meaning":"observer-output-equivalence-not-full-byte-reconstruction",
+        }
+    }
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--out",default="artifacts")
@@ -118,6 +171,22 @@ def main():
     output=Path(args.out)
     output.mkdir(parents=True,exist_ok=True)
     result=experiment()
+    q=quotient_experiment()
+    (output/"learned-observable-quotient-ground.json").write_text(
+        json.dumps(q["ground"],sort_keys=True,indent=2)+"
+")
+    (output/"observable-quotient-measurements.json").write_text(
+        json.dumps(q["report"],sort_keys=True,indent=2)+"
+")
+    quotient_request=ObserverIntention(
+        "ground.navigate",
+        "workspace:"+(output/"learned-observable-quotient-ground.json").as_posix(),
+        output="json",
+        options={"goal":{"kind":"state.observable","steps":10**12,
+                         "max_work":2,"max_hops":2}})
+    (output/"observable-quotient-intention.json").write_text(
+        json.dumps(quotient_request.to_dict(),sort_keys=True,indent=2)+"
+")
     ground_path=output/"learned-discrete-ground.json"
     ground_path.write_text(json.dumps(result["ground"],sort_keys=True,indent=2)+"\n")
     request=ObserverIntention(
@@ -133,6 +202,9 @@ def main():
     print("VL64_NONAFFINE_REPORT "+json.dumps(result["report"],sort_keys=True))
     print("VL64_NONAFFINE_GROUND "+json.dumps(result["ground"],sort_keys=True,
                                            separators=(",",":")))
+    print("VL64_QUOTIENT_REPORT "+json.dumps(q["report"],sort_keys=True))
+    print("VL64_QUOTIENT_GROUND "+json.dumps(q["ground"],sort_keys=True,
+                                         separators=(",",":")))
 
 
 if __name__=="__main__":
