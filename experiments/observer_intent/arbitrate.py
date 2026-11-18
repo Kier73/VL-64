@@ -168,7 +168,7 @@ def choose_model(intention, evidence):
         "eligible_count": len(candidates),
         "candidate_rank": 1,
         "ranking_field": "lastModified",
-        "candidates_sample": candidates[:5],
+        "candidates_sample": candidates[:12],
     }
 
 
@@ -184,6 +184,41 @@ def make_hf_structure(intention):
     if intention["options"].get("metadata_only", True) is not True:
         return {"status": "REFUSED",
                 "reason": "Only metadata-only observations are admitted"}
+    if (intention["target"] == "latest:text-generation" and
+            intention["options"].get("require_architecture") is True):
+        max_candidates = intention["options"].get("max_candidates", 6)
+        if type(max_candidates) is not int or not 1 <= max_candidates <= 10:
+            raise ValueError("max_candidates must be an integer 1..10")
+        observed = []
+        _, selection = choose_model(intention, observed)
+        attempts = []
+        for rank, candidate in enumerate(
+                selection["candidates_sample"][:max_candidates], 1):
+            probe = dict(intention, target=candidate["id"],
+                         options={"metadata_only": True})
+            candidate_result = make_hf_structure(probe)
+            observed.extend(candidate_result.get("evidence", []))
+            attempts.append({
+                "rank": rank, "model_id": candidate["id"],
+                "status": candidate_result["status"],
+                "configuration_status": candidate_result.get(
+                    "ground", {}).get("configuration_status"),
+            })
+            if candidate_result["status"] == "OBSERVED_MODEL_STRUCTURE":
+                candidate_result["selection"] = {
+                    **selection, "candidate_rank": rank,
+                    "selection_scope": "first_config_inspectable_in_bounded_catalogue",
+                    "require_architecture": True, "attempts": attempts}
+                candidate_result["evidence"] = observed
+                candidate_result["total_metadata_bytes_read"] = sum(
+                    item.get("observed_bytes", 0) for item in observed)
+                return candidate_result
+        return {
+            "status": "UNRESOLVED",
+            "reason": "NO_CANDIDATE_MET_ARCHITECTURE_REQUIREMENT",
+            "selection": {**selection, "require_architecture": True,
+                          "attempts": attempts},
+            "evidence": observed, "weight_payload_bytes_read": 0}
     evidence = []
     model_id, selection = choose_model(intention, evidence)
     name = model_identifier(model_id)
