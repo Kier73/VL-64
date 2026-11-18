@@ -63,6 +63,15 @@ def experiment():
     shortcut_ms=(time.perf_counter_ns()-start)/1000000
     if direct!=shortcut["result"]["value"]:
         raise RuntimeError("Navigation did not reproduce the iterative machine")
+    consistent=machine.test_new_observations(
+        [(i,observed[i]) for i in tested])
+    if consistent["status"]!="CONSISTENT_ON_NEW_OBSERVATIONS":
+        raise RuntimeError("Independent later observations contradict Ground")
+    altered=bytearray(observed[100])
+    altered[20] ^= 1
+    contradiction=machine.test_new_observations([(100,bytes(altered))])
+    if contradiction["status"]!="CONTRADICTED":
+        raise RuntimeError("Failed to detect a changed independent observation")
     horizon=10**12
     start=time.perf_counter_ns()
     distant=machine.realize(horizon,"digest.sha256")
@@ -99,6 +108,9 @@ def experiment():
             "compressed_jump_ms":round(shortcut_ms,4),
             "short_horizon_speedup":round(direct_ms/max(shortcut_ms,0.000001),2),
             "basis_entries_cached":len(machine._powers),
+            "new_observation_challenge_status":consistent["status"],
+            "tampered_observation_status":contradiction["status"],
+            "tampered_observation_evidence_digest":contradiction["observation_evidence_digest"],
             "core_source_modified":False,
         },
     }
