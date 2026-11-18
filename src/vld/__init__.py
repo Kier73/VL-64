@@ -31,7 +31,7 @@ from .micro_control import (
     NavigationCostVector, IntentExpr, IntentionSpec,
     EffectLedger, IntentionCompiler, QuorumAuthority,
     meta_arbitrator_utility, AutopoieticDiscoveryLoop,
-    verify_bundle_standalone, run_self_verification
+    verify_bundle_standalone, run_self_verification, GroundRegistry
 )
 
 __version__ = "0.7.0"
@@ -49,5 +49,5 @@ __all__ = [
     "topk_moe_routing", "StreamPathMachine",
     "NavigationCostVector", "IntentExpr", "IntentionSpec", "EffectLedger",
     "IntentionCompiler", "QuorumAuthority", "meta_arbitrator_utility",
-    "AutopoieticDiscoveryLoop", "verify_bundle_standalone", "run_self_verification"
+    "AutopoieticDiscoveryLoop", "verify_bundle_standalone", "run_self_verification", "GroundRegistry"
 ]

@@ -21,6 +21,25 @@ from .micro_kernel import (
 )
 from .micro_operators import StructuralLinearOperator
 
+# --- Extensible Ground & Rewrite Registry (Open for Iterative Extension) ---
+class GroundRegistry:
+    """Extensible registry for Virtual Grounds, lenses, and rewrite rules."""
+    _default: Optional[GroundRegistry] = None
+
+    def __init__(self):
+        self.grounds: Dict[str, Any] = {}
+        self.lenses: Dict[str, Any] = {}
+        self.rules: List[Tuple[str, Callable]] = []
+
+    @classmethod
+    def default(cls) -> GroundRegistry:
+        if cls._default is None: cls._default = GroundRegistry()
+        return cls._default
+
+    def register_ground(self, name: str, spec: Any): self.grounds[name] = spec
+    def register_lens(self, name: str, lens: Any): self.lenses[name] = lens
+    def register_rule(self, name: str, rule_fn: Callable): self.rules.append((name, rule_fn))
+
 # --- Cost Vector & Componentwise Feasibility (Fixes Defect 3) ---
 @dataclass(frozen=True)
 class NavigationCostVector:

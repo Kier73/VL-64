@@ -293,7 +293,15 @@ def test_autopoietic_discovery_and_lora():
     delta_y = lora.contract([1.0, 1.0]) # B^T x = 2.0; (alpha/r) * 2.0 = 4.0; A * 4.0 = [4.0, 8.0]
     assert delta_y == [4.0, 8.0]
 
-# --- 18. Unified CLI Verify Integration ---
+# --- 18. Extensible Ground & Rewrite Registry (Open for Iteration) ---
+def test_ground_registry_extensibility():
+    reg = vld.GroundRegistry.default()
+    reg.register_ground("custom_domain", {"modulus": 1024, "type": "cyclic"})
+    assert "custom_domain" in reg.grounds
+    reg.register_rule("affine_id", lambda term: None)
+    assert len(reg.rules) >= 1
+
+# --- 19. Unified CLI Verify Integration ---
 def test_unified_cli_verify_all_pass():
     res = run_self_verification()
     assert res["status"] == "PASS"
