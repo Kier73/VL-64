@@ -1,7 +1,7 @@
 # Observer Intention → Qualified Ground → Result
 
 **Status:** Initial implementation and research direction, November 18, 2026.  
-**Implementation:** \`vld.ObserverIntention\`, plus the [external observer-intention lab](../experiments/observer_intent/README.md).  
+**Implementation:** `vld.ObserverIntention`, plus the [external observer-intention lab](../experiments/observer_intent/README.md).  
 **Core source budget:** 65,536 bytes for the VL-64 package. Acquisition and integration remain external.
 
 ## Purpose
@@ -42,9 +42,9 @@ The compact core **does not automatically execute URLs or external code**. Its r
 }
 ~~~
 
-This queries a bounded catalogue ordered by \`lastModified\`, chooses the first public eligible entry and returns its metadata Ground. It does **not** mean the newest foundational model, latest newly published architecture, best model, or most recently trained weights. The returned model identity, revision and captured time identify precisely what was observed.
+This queries a bounded catalogue ordered by `lastModified`, chooses the first public eligible entry and returns its metadata Ground. It does **not** mean the newest foundational model, latest newly published architecture, best model, or most recently trained weights. The returned model identity, revision and captured time identify precisely what was observed.
 
-An entry consisting of checkpoint artifacts with no accessible architecture config is correctly a \`PARTIAL_MODEL_STRUCTURE\`. In a November 18 live run, a recently modified training-state repository fell into that category.
+An entry consisting of checkpoint artifacts with no accessible architecture config is correctly a `PARTIAL_MODEL_STRUCTURE`. In a November 18 live run, a recently modified training-state repository fell into that category.
 
 ### Require a usable architecture, not merely a recent listing
 
@@ -62,7 +62,9 @@ An entry consisting of checkpoint artifacts with no accessible architecture conf
 }
 ~~~
 
-The arbitrator inspects the top bounded candidates in order. It selects the first candidate with successfully observed architecture fields and reports the selected rank, all attempted candidates and their refusal/partial reasons. If none qualifies, it returns \`UNRESOLVED\` rather than lowering the requested criterion without permission.
+The arbitrator inspects the top bounded candidates in order. It selects the first candidate with successfully observed architecture fields and reports the selected rank, all attempted candidates and their refusal/partial reasons. If none qualifies, it returns `UNRESOLVED` rather than lowering the requested criterion without permission.
+
+The experimental request can also specify `library=transformers`, narrowing the catalogue to candidates that advertise that library. A successful November 18 run selected the fourth candidate that exposed configuration fields. That remains an observed partial architectural description, not a qualified inference realizer.
 
 This is a useful property of an intention-aware system: **different observer requirements result in different resource navigation**, even when both requests begin with the same external catalogue.
 
@@ -77,9 +79,9 @@ This is a useful property of an intention-aware system: **different observer req
 }
 ~~~
 
-The live reference result is grounded to revision \`607a30d783dfa663caf39e06633721c8d4cfcd7e\`. Its declared configuration includes \`model_type=gpt2\`, \`n_embd=768\`, \`n_layer=12\`, \`n_head=12\` and \`vocab_size=50257\`. These are configuration facts, not proof that trained weights were acquired or executed.
+The live reference result is grounded to revision `607a30d783dfa663caf39e06633721c8d4cfcd7e`. Its declared configuration includes `model_type=gpt2`, `n_embd=768`, `n_layer=12`, `n_head=12` and `vocab_size=50257`. These are configuration facts, not proof that trained weights were acquired or executed.
 
-The same request can select \`json\` or \`jsonl\`; the requested representation is not silently chosen by the adapter.
+The same request can select `json` or `jsonl`; the requested representation is not silently chosen by the adapter.
 
 ## Protocol contracts
 
@@ -89,16 +91,16 @@ The same request can select \`json\` or \`jsonl\`; the requested representation 
 I=(o,\tau,F,\kappa)
 \]
 
-- \`o\`: registered operation (e.g. \`hf.model.describe\`);
-- \`\tau\`: target or explicit selector (e.g. repository identifier or bounded recent-catalogue query);
-- \`F\`: required output format;
-- \`\kappa\`: options and acceptance constraints (metadata-only, bounded search, architecture required).
+- `o`: registered operation (e.g. `hf.model.describe`);
+- `\tau`: target or explicit selector (e.g. repository identifier or bounded recent-catalogue query);
+- `F`: required output format;
+- `\kappa`: options and acceptance constraints (metadata-only, bounded search, architecture required).
 
-The request is validated and content-addressed as \`vl64.observer-intention.v1\`. Unknown operators are unresolved. Options are bounded and cannot themselves act as code. An intention digest binds the exact request, but **does not authorize a remote action**.
+The request is validated and content-addressed as `vl64.observer-intention.v1`. Unknown operators are unresolved. Options are bounded and cannot themselves act as code. An intention digest binds the exact request, but **does not authorize a remote action**.
 
 ### Plan
 
-The adapter constructs \`ADMITTED_READ_ONLY_PLAN\` plus a digest-bound sequence such as:
+The adapter constructs `ADMITTED_READ_ONLY_PLAN` plus a digest-bound sequence such as:
 
 ~~~text
 query_catalogue_latest_modified
@@ -108,7 +110,7 @@ query_catalogue_latest_modified
  → format_observation_receipt
 ~~~
 
-The current planner is deterministic and operation-specific, not yet a general multi-provider optimizer. The term \`ADMITTED_READ_ONLY_PLAN\` describes this local fixed policy, not a proof of a model's validity or remote service authority.
+The current planner is deterministic and operation-specific, not yet a general multi-provider optimizer. The term `ADMITTED_READ_ONLY_PLAN` describes this local fixed policy, not a proof of a model's validity or remote service authority.
 
 ### Ground and observation receipt
 
@@ -121,7 +123,7 @@ The Hugging Face model Ground contains:
 - content digests of the raw metadata response and explicitly scoped source URLs;
 - the operation's unobserved aspects, including no model inference and no weight payload.
 
-The external result includes observed response metadata and the selected output format. Responses are structured as \`OBSERVED_MODEL_STRUCTURE\`, \`PARTIAL_MODEL_STRUCTURE\`, \`UNRESOLVED\`, or \`REFUSED\`. These statuses are not interchangeable.
+The external result includes observed response metadata and the selected output format. Responses are structured as `OBSERVED_MODEL_STRUCTURE`, `PARTIAL_MODEL_STRUCTURE`, `UNRESOLVED`, or `REFUSED`. These statuses are not interchangeable.
 
 ### Observer-selected return
 
@@ -149,7 +151,7 @@ An external inference provider could hold the weights on its own hardware while 
 
 ## What the implementation already proves
 
-The November 18 GitHub Actions execution [run 44387089534](https://github.com/Kier73/VL-64/actions/runs/44387089534) successfully processed observer-selected \`json\`, \`text\`, and \`jsonl\` requests. In that run:
+The November 18 GitHub Actions execution [run 44387089534](https://github.com/Kier73/VL-64/actions/runs/44387089534) successfully processed observer-selected `json`, `text`, and `jsonl` requests. In that run:
 
 - a current recent-catalogue selector returned a partial Ground for a repository without usable architecture;
 - the pinned GPT-2 model returned actual declared config in human-readable form;
@@ -162,11 +164,11 @@ This is a **live test of observer intention arbitration**, not a complete self-a
 
 ## Next meaningful interfaces
 
-1. **Typed outcome predicates.** Beyond requiring an observed config, support \`must_include\`, acceptable model family, revision age, max transfer bytes, and a target observable.
+1. **Typed outcome predicates.** Beyond requiring an observed config, support `must_include`, acceptable model family, revision age, max transfer bytes, and a target observable.
 2. **General Ground route catalogue.** Let adapters advertise typed operations as source/target representation relations with declared side effects, freshness, cost and verifying witnesses.
 3. **Independent planning and execution.** Separate what the observer wants from service selection, realizer admission, data acquisition, and result checking. Plans must fail closed on stale evidence or incompatible representations.
 4. **Model structure descriptors.** Build versioned typed operator DAGs for supported model families from config and tensor-header metadata. Use bounded range reads where justified, without downloading tensor values; preserve the file/offset evidence and incomplete shapes.
-5. **Remote model execution as a distinct operation.** After explicit user authorization and an available provider, build a safe \`hf.model.infer\` with actual inference receipts, input/output validation, strict cost and token controls, and pinned model identity. Do not call inference when the request only asks for a structure.
+5. **Remote model execution as a distinct operation.** After explicit user authorization and an available provider, build a safe `hf.model.infer` with actual inference receipts, input/output validation, strict cost and token controls, and pinned model identity. Do not call inference when the request only asks for a structure.
 6. **Feedback and adaptation.** Compare failed requests, new candidate Grounds, completed observations, and measured costs. Discover a better representation or path only after it improves the validated objective.
 7. **Portable communication.** Export typed intentions, Grounds and receipts as small canonical packets usable across host processes and network paths. Preserve what evidence was produced locally versus what remote sources actually supplied.
 
