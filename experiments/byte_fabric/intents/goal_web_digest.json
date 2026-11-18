@@ -1,0 +1,13 @@
+{
+  "operation": "bytes.realize",
+  "target": "https://example.com/",
+  "output": "json",
+  "options": {
+    "max_bytes": 16384,
+    "goal": {
+      "kind": "digest.sha256",
+      "parameters": {},
+      "max_work": 5
+    }
+  }
+}
