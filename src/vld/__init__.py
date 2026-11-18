@@ -1,8 +1,4 @@
-"""μVLD-64: Consolidated 64 KiB Universal Virtual Layer Dynamics Runtime.
-
-This package fits the complete mathematical, cryptographic, substrate, and neural capabilities
-of Virtual Layer Dynamics into an exact <= 64 KiB code budget.
-"""
+"""VL-64: compact state, navigation, and verification utilities."""
 from .micro_kernel import (
     canonical_bytes, domain_digest,
     ed25519_keypair_from_seed, ed25519_sign, ed25519_verify,
@@ -27,6 +23,8 @@ from .micro_substrates import (
     topk_moe_routing, StreamPathMachine
 )
 
+from .micro_translation import ObservedGround
+
 from .micro_control import (
     NavigationCostVector, IntentExpr, IntentionSpec,
     EffectLedger, IntentionCompiler, QuorumAuthority,
@@ -47,7 +45,7 @@ __all__ = [
     "compile_polyhedral_hinge_1d", "eval_polyhedral_hinge_1d", "LoRAMorphism",
     "ByteLens", "PageSpace", "GitWireV2Parser", "HeadlessOS", "SafetensorsGlance",
     "topk_moe_routing", "StreamPathMachine",
-    "NavigationCostVector", "IntentExpr", "IntentionSpec", "EffectLedger",
+    "ObservedGround", "NavigationCostVector", "IntentExpr", "IntentionSpec", "EffectLedger",
     "IntentionCompiler", "QuorumAuthority", "meta_arbitrator_utility",
     "AutopoieticDiscoveryLoop", "verify_bundle_standalone", "run_self_verification", "GroundRegistry"
 ]
