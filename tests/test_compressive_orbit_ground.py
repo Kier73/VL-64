@@ -8,7 +8,7 @@ import json
 import pytest
 from vld import domain_digest, affine_navigate
 from experiments.byte_fabric.orbit_ground import (
-    SpanInterpreter, infer_ground, ComposedGroundNavigator,
+    SpanInterpreter, infer_ground, discover_ground, ComposedGroundNavigator,
 )
 
 
@@ -169,3 +169,31 @@ def test_exact_trace_reconstruction_does_not_prove_unobserved_future():
     outcome=ComposedGroundNavigator(desc["ground"]).realize(10**12)
     assert outcome["interpretation_scope"] == (
         "witnessed_rule_projection_not_proven_future_system_behavior")
+
+
+def test_discover_endian_and_span_without_prior_byte_offset():
+    samples, states, interpreter=frames(80)
+    observed=discover_ground(samples[:30],samples[30:65])
+    chosen=observed["discovery"]["selected"]
+    assert chosen==interpreter.to_dict()
+    assert observed["discovery"]["status"]=="UNIQUE_OBSERVED_CODEC_HYPOTHESIS"
+    assert chosen["offset"]==319
+    assert len(observed["discovery"]["changing_positions"])==4
+    assert any(x["encoding"]=="u-be" for x in
+               observed["discovery"]["rejected_candidates"])
+    nav=ComposedGroundNavigator(observed["ground"])
+    assert nav.realize(64,"bytes.snapshot")["result"]["sha256"]==hashlib.sha256(samples[64]).hexdigest()
+
+
+def test_discovery_refuses_independent_moving_fields_and_ambiguous_views():
+    samples, _, codec=frames(25)
+    two_fields=[]
+    for i,frame in enumerate(samples):
+        row=bytearray(frame)
+        row[600]=i
+        two_fields.append(bytes(row))
+    with pytest.raises(ValueError,match="changing fields"):
+        discover_ground(two_fields[:15],two_fields[15:22])
+    stationary=[b"same-data"*15]*9
+    with pytest.raises(ValueError,match="No witnessed changing"):
+        discover_ground(stationary[:5],stationary[5:9])
