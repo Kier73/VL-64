@@ -1,0 +1,77 @@
+name: VL-64 compressive multi-hop Ground
+
+on:
+  push:
+    branches:
+      - main
+      - feature/compressive-ground-multihop-20261118
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compressive-ground:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - name: Install VL-64 test dependencies
+        run: python -m pip install -e ".[dev]"
+      - name: Check all byte, observer and compressed Ground contracts
+        run: python -m pytest -q tests/
+      - name: Learn Ground from observations and navigate trillion-step orbit
+        run: |
+          python -m experiments.byte_fabric.orbit_lab --out artifacts
+          python -m experiments.observer_intent.arbitrate \
+            --intent artifacts/trillion-step-intention.json \
+            --out artifacts/trillion-navigation.json
+      - name: Verify path, evidence, compression, output and core ceiling
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from vld import affine_navigate
+          from experiments.byte_fabric.orbit_ground import ComposedGroundNavigator
+          report=json.loads(Path("artifacts/compressed-ground-report.json").read_text())
+          descriptor=json.loads(Path("artifacts/learned-orbit-ground.json").read_text())
+          result=json.loads(Path("artifacts/trillion-navigation.json").read_text())
+          assert report["compressed_ratio"] > 20, report
+          assert report["heldout_frames"]==48
+          assert len(report["independent_unseen_frame_indices"])==5
+          assert result["status"]=="OBSERVED_GROUND_NAVIGATION", result
+          navigation=result["navigation"]
+          assert navigation["result"]["value"]==report["horizon_output_digest"]
+          assert navigation["route"]["estimated_work"]==5
+          assert len(navigation["stage_receipts"])==4
+          assert len({x["relation"] for x in navigation["stage_receipts"]})==4
+          interpreter=ComposedGroundNavigator(descriptor)
+          assert interpreter.check_against_core(10**12)
+          source=sum(p.stat().st_size for p in Path("src/vld").glob("*.py"))
+          assert source<=65536, source
+          print("VL64_GROUND_RUNTIME_BYTES", source)
+          print("VL64_COMPRESSED_REPLAY",json.dumps({
+              "status":result["status"],
+              "ground_bytes":report["ground_description_bytes"],
+              "raw_snapshot_bytes":report["raw_training_and_holdout_bytes"],
+              "ratio":report["compressed_ratio"],
+              "horizon":navigation["horizon"],
+              "hops":[x["relation"] for x in navigation["stage_receipts"]],
+              "core_source_bytes":source
+          },sort_keys=True))
+          PY
+      - name: Preserve observed Ground, request and replayable result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compressive-ground-python-${{ matrix.python-version }}
+          path: artifacts/*
+          if-no-files-found: warn
+          retention-days: 30

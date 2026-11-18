@@ -159,9 +159,24 @@ python -m pytest tests/ -v
 
 The tests exercise the Python API and check the source package against the 64 KiB budget.
 
+## Navigate a learned, compressed Ground
+
+The [Compressive Virtual Ground experiment](docs/COMPRESSIVE_VIRTUAL_GROUNDS.md) discovers a scalar interpreter from changing byte snapshots, validates a small transition law against held-out observations, and retains one byte template plus its navigation rule instead of every frame.
+
+The resulting Ground can answer a distant observer intention through **interpret → navigate → reconstruct → verify**, without replaying intermediate frames. For example:
+
+~~~bash
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/ground_trillion.json \
+  --out result.json
+~~~
+
+This sample navigates a saved fixed-layout, modular-affine Ground across one trillion *modeled* transitions. The measured description reduced 81,920 bytes of observed frames to 1,947 bytes. Its future behavior is a validated hypothesis rather than a guarantee about every possible machine.
+
 ## Documentation
 
 - [Usage guide](docs/USAGE_GUIDE.md) — commands, API examples, and extension points.
 - [Research goals](docs/RESEARCH_GOALS.md) — the functional experiments and verification criteria guiding further development.
 - [Observer intention and model Grounds](docs/OBSERVER_INTENTION_AND_MODEL_GROUNDS.md) — the typed input contract, evidence, and remote-operation research path.
 - [Generic byte fabric](experiments/byte_fabric/README.md) — architecture-independent byte observation, decoder plug-ins, and qualified execution.
+- [Compressive Virtual Grounds](docs/COMPRESSIVE_VIRTUAL_GROUNDS.md) — discover a predictive byte interpreter, compress observed state histories, and compose distant-state navigation.
