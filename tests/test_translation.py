@@ -114,6 +114,22 @@ def test_fingerprint_tracks_observed_evidence():
     ).fingerprint()
 
 
+def test_automatic_view_discovery():
+    training, validation = cycle_samples()
+    model, ranking = ObservedGround.discover(
+        training, validation, max_positions=2, max_fields=2
+    )
+    assert ranking[0]["view"] == "byte_0"
+    assert ranking[0]["score"] == 4.0
+    assert next(item for item in ranking if item["view"] == "bytes")["coverage"] == 0
+    nav = model.navigate(bytes((5, 250)), 10**12, "byte_0")
+    assert nav["terminal_state"] == f"{(5 + 10**12) % 16:02x}"
+    with pytest.raises(ValueError):
+        ObservedGround.discover([], validation)
+    with pytest.raises(ValueError):
+        ObservedGround.discover(training, validation, max_positions=0)
+
+
 def test_byte_budget_including_translation():
     src = Path(vld.__file__).resolve().parent
     package_bytes = sum(f.stat().st_size for f in src.glob("*.py"))
