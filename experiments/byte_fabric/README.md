@@ -17,6 +17,18 @@ external observer intent (operation, target, options, output format)
 
 This works whether the source is a local file, an approved HTTPS page, an inline byte sequence, or a host-installed sensor/process/screen/stream adapter. A binary that has never been encountered is still valid input.
 
+## Ask a host what it can do
+
+The observer can query the host's installed capabilities **without knowing its architecture**:
+
+```bash
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/host_capabilities.json \
+  --out available-capabilities.json
+```
+
+The returned catalogue lists byte sources, built-in and registered decoders, typed local operators, input/completeness requirements and permitted HTTPS hosts. A new observer-host can advertise its own sources or operators without changing the compact VL-64 core.
+
 ## General callable operations
 
 | Observer operation | Result | Requirements |
@@ -145,6 +157,10 @@ A `QualifiedByteExecutor` can likewise register a new pure local operator under 
 On a real GitHub Actions Linux runner, the lab observed an ordinary public webpage (577 bytes), the pinned VL-64 README (7,832 bytes), an explicitly incomplete 512-byte web prefix, arbitrary binary input, a local JSON structure, and an HTML fixture. It executed JSON-pointer extraction, HTML link extraction and SHA-256 over a complete acquired web response. Both Python 3.11 and 3.13 passed the initial 95-test suite.
 
 The tests additionally supply synthetic byte headers for ELF, WASM, PDF, PNG, GIF, ZIP, JPEG and Safetensors, confirming that the same Ground API accommodates architecture-specific views and an opaque fallback. The synthetic files validate recognition behavior, not the validity of a full execution architecture.
+
+The laboratory also acquired an **actual 8,991-byte PNG** from a public GitHub repository through the same generic HTTPS source as HTML, text and JSON. The recognised PNG Ground exposes declared dimensions without decoding the image or executing embedded data.
+
+The [versioned public observation dataset](datasets/2026-11-18-run-44397602865-summary.json) preserves nine source/interpretation/execution summaries and independently recorded **matching structural Ground digests across Python 3.11 and 3.13**. These are execution logs and content-derived identifiers, not external attestations.
 
 The workflow [generic-byte-fabric.yml](../../.github/workflows/generic-byte-fabric.yml) saves complete result receipts for inspection. More recent runs may have additional tests.
 
