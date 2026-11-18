@@ -1,0 +1,274 @@
+{
+  "schema": "vl64.observer-intention-log-summary.v1",
+  "source_run": "https://github.com/Kier73/VL-64/actions/runs/44389239409",
+  "source_job": 135102029719,
+  "evidence_scope": "public observer-output summaries reconstructed from successful GitHub Actions logs; full receipts remain in workflow artifacts",
+  "model_weight_payload_bytes_read": 0,
+  "outputs": [
+    {
+      "evidence_statuses": [
+        {
+          "http_status": 200,
+          "operation_url": "https://huggingface.co/api/models?pipeline_tag=text-generation&sort=lastModified&direction=-1&limit=12",
+          "redirect_host": null,
+          "truncated": false
+        },
+        {
+          "http_status": 200,
+          "operation_url": "https://huggingface.co/api/models/smart-force/xandra-training-state",
+          "redirect_host": null,
+          "truncated": false
+        }
+      ],
+      "format": "json",
+      "intention_digest": "798d6d5f15595f478458df3f02765e4a60977cfe23a7e0548dba0dd5ca6bc333",
+      "model_id": "smart-force/xandra-training-state",
+      "output_bytes": 6725,
+      "output_sha256": "6d93ff273f4b428e7403b8dc8d95a240f249edf11c30062ab14390c13f4f748a",
+      "plan_status": "ADMITTED_READ_ONLY_PLAN",
+      "reason": null,
+      "revision": "53d1c422e5b7e56cea2159508be59f72bb8c802f",
+      "status": "PARTIAL_MODEL_STRUCTURE",
+      "weight_payload_bytes_read": 0
+    },
+    {
+      "evidence_statuses": [
+        {
+          "http_status": 200,
+          "operation_url": "https://huggingface.co/api/models?pipeline_tag=text-generation&sort=lastModified&direction=-1&limit=20&library=transformers",
+          "redirect_host": null,
+          "truncated": false
+        },
+        {
+          "http_status": 200,
+          "operation_url": "https://huggingface.co/api/models/smart-force/xandra-training-state",
+          "redirect_host": null,
+          "truncated": false
+        },
+        {
+          "http_status": 200,
+          "operation_url": "https://huggingface.co/api/models/emory-dsci340/mr-chatterbox-b",
+          "redirect_host": null,
+          "truncated": false
+        },
+        {
+          "http_status": 200,
+          "operation_url": "https://huggingface.co/api/models/meihant/AnonymousModel-mht",
+          "redirect_host": null,
+          "truncated": true
+        },
+        {
+          "http_status": 200,
+          "operation_url": "https://huggingface.co/api/models/shreyansh-programmer/Intelligence_OS_1p5B",
+          "redirect_host": null,
+          "truncated": false
+        },
+        {
+          "http_status": 200,
+          "operation_url": "https://huggingface.co/shreyansh-programmer/Intelligence_OS_1p5B/resolve/801fe90bf18f2023e27d93a958d4469c41d89af6/config.json",
+          "redirect_host": null,
+          "truncated": false
+        }
+      ],
+      "format": "json",
+      "intention_digest": "5d29d7d975b7da36acf1ef197bfb88020a8fafd3b49a5207f8ea1c7dba21a3d3",
+      "model_id": "shreyansh-programmer/Intelligence_OS_1p5B",
+      "output_bytes": 10869,
+      "output_sha256": "41ae37556a42f346b253ad80ecc4c5a36907367b6481f017bdb9b4bedaa5c66d",
+      "plan_status": "ADMITTED_READ_ONLY_PLAN",
+      "reason": null,
+      "revision": "801fe90bf18f2023e27d93a958d4469c41d89af6",
+      "status": "OBSERVED_MODEL_STRUCTURE",
+      "weight_payload_bytes_read": 0
+    },
+    {
+      "evidence_statuses": [
+        {
+          "http_status": 200,
+          "operation_url": "https://huggingface.co/api/models/openai-community/gpt2",
+          "redirect_host": null,
+          "truncated": false
+        },
+        {
+          "http_status": 200,
+          "operation_url": "https://huggingface.co/openai-community/gpt2/resolve/607a30d783dfa663caf39e06633721c8d4cfcd7e/config.json",
+          "redirect_host": null,
+          "truncated": false
+        }
+      ],
+      "format": "text",
+      "intention_digest": "f392561ba422110cfc229cd79850ccde5a3fd6c439b05ffd2066c7eda5495a24",
+      "model_id": "openai-community/gpt2",
+      "output_bytes": 498,
+      "output_sha256": "78a6e16c49a6bcb3a5fd3fd06041c0a29d5fa052fd2fe3190d601b4c010d8112",
+      "plan_status": "ADMITTED_READ_ONLY_PLAN",
+      "reason": null,
+      "revision": "607a30d783dfa663caf39e06633721c8d4cfcd7e",
+      "status": "OBSERVED_MODEL_STRUCTURE",
+      "weight_payload_bytes_read": 0
+    },
+    {
+      "evidence_statuses": [
+        {
+          "http_status": 200,
+          "operation_url": "https://api.github.com/repos/Kier73/VL-64",
+          "redirect_host": null,
+          "truncated": false
+        },
+        {
+          "http_status": 200,
+          "operation_url": "https://api.github.com/repos/Kier73/VL-64/git/ref/heads/main",
+          "redirect_host": null,
+          "truncated": false
+        },
+        {
+          "http_status": 200,
+          "operation_url": "https://raw.githubusercontent.com/Kier73/VL-64/b5136e6a1944c32ed80c96d8010e77e3e7be53fc/README.md",
+          "redirect_host": null,
+          "truncated": false
+        },
+        {
+          "http_status": 304,
+          "operation_url": "https://raw.githubusercontent.com/Kier73/VL-64/b5136e6a1944c32ed80c96d8010e77e3e7be53fc/README.md",
+          "redirect_host": null,
+          "truncated": false
+        },
+        {
+          "http_status": 200,
+          "operation_url": "https://raw.githubusercontent.com/Kier73/VL-64/b5136e6a1944c32ed80c96d8010e77e3e7be53fc/docs/RESEARCH_GOALS.md",
+          "redirect_host": null,
+          "truncated": false
+        }
+      ],
+      "format": "jsonl",
+      "intention_digest": "d285726cc65c1b5277d6a42fba9fab4b12dc5ea18023accf0ec1a7b1ee0efa4c",
+      "model_id": null,
+      "output_bytes": 6708,
+      "output_sha256": "c0aa5629595913f3dfb9516620cb0055a713f2045c3a90f518910275c549cb4c",
+      "plan_status": "ADMITTED_READ_ONLY_PLAN",
+      "reason": null,
+      "revision": null,
+      "status": "OBSERVED_DESCRIPTION_PATH",
+      "weight_payload_bytes_read": null
+    }
+  ],
+  "latest_catalogue": {
+    "architecture": {},
+    "config": "NOT_LISTED",
+    "ground_digest": "23b6f8c88ea0b496ae830ce3d6ac196d0f6d6cd5ff5da2634dbc90f55b9bbec8",
+    "listed_weight_files": 6,
+    "metadata_bytes": 7874,
+    "model": "smart-force/xandra-training-state",
+    "revision": "53d1c422e5b7e56cea2159508be59f72bb8c802f",
+    "status": "PARTIAL_MODEL_STRUCTURE"
+  },
+  "constrained_architecture_selection": {
+    "architecture": {
+      "head_dim": 128,
+      "model_type": "decoder-only sparse transformer",
+      "vocab_size": 49152
+    },
+    "model_id": "shreyansh-programmer/Intelligence_OS_1p5B",
+    "reason": null,
+    "revision": "801fe90bf18f2023e27d93a958d4469c41d89af6",
+    "selection": {
+      "attempts": [
+        {
+          "configuration_status": "NOT_LISTED",
+          "model_id": "smart-force/xandra-training-state",
+          "rank": 1,
+          "status": "PARTIAL_MODEL_STRUCTURE"
+        },
+        {
+          "configuration_status": "NOT_LISTED",
+          "model_id": "emory-dsci340/mr-chatterbox-b",
+          "rank": 2,
+          "status": "PARTIAL_MODEL_STRUCTURE"
+        },
+        {
+          "configuration_status": null,
+          "model_id": "meihant/AnonymousModel-mht",
+          "rank": 3,
+          "status": "UNRESOLVED"
+        },
+        {
+          "configuration_status": "OBSERVED",
+          "model_id": "shreyansh-programmer/Intelligence_OS_1p5B",
+          "rank": 4,
+          "status": "OBSERVED_MODEL_STRUCTURE"
+        }
+      ],
+      "candidate_rank": 4,
+      "candidates_sample": [
+        {
+          "id": "smart-force/xandra-training-state",
+          "last_modified": "2026-11-18T20:16:13.000Z",
+          "pipeline_tag": "text-generation"
+        },
+        {
+          "id": "emory-dsci340/mr-chatterbox-b",
+          "last_modified": "2026-11-18T20:14:25.000Z",
+          "pipeline_tag": "text-generation"
+        },
+        {
+          "id": "meihant/AnonymousModel-mht",
+          "last_modified": "2026-11-18T20:14:20.000Z",
+          "pipeline_tag": "text-generation"
+        },
+        {
+          "id": "shreyansh-programmer/Intelligence_OS_1p5B",
+          "last_modified": "2026-11-18T20:14:04.000Z",
+          "pipeline_tag": "text-generation"
+        },
+        {
+          "id": "sautilm/SautiLM-Jua-Agri",
+          "last_modified": "2026-11-18T20:12:16.000Z",
+          "pipeline_tag": "text-generation"
+        },
+        {
+          "id": "sautilm/SautiLM-Jua-Med",
+          "last_modified": "2026-11-18T20:11:34.000Z",
+          "pipeline_tag": "text-generation"
+        },
+        {
+          "id": "AuroraAI-Research/Aurora2-400M-A20M",
+          "last_modified": "2026-11-18T20:11:10.000Z",
+          "pipeline_tag": "text-generation"
+        },
+        {
+          "id": "qda-lab/QDA-Qwen3.8-27B-Q6-GGUF",
+          "last_modified": "2026-11-18T20:10:28.000Z",
+          "pipeline_tag": "text-generation"
+        },
+        {
+          "id": "qda-lab/QDA-Qwen3.8-27B-Q4-GGUF",
+          "last_modified": "2026-11-18T20:10:25.000Z",
+          "pipeline_tag": "text-generation"
+        },
+        {
+          "id": "qda-lab/QDA-Qwen3.6-35B-A3B-Q4-GGUF",
+          "last_modified": "2026-11-18T20:10:09.000Z",
+          "pipeline_tag": "text-generation"
+        },
+        {
+          "id": "qda-lab/QDA-Qwen3-Coder-30B-A3B-W4A16",
+          "last_modified": "2026-11-18T20:09:59.000Z",
+          "pipeline_tag": "text-generation"
+        },
+        {
+          "id": "qda-lab/QDA-Nemotron-3-Nano-30B-A3B-W4A16",
+          "last_modified": "2026-11-18T20:09:58.000Z",
+          "pipeline_tag": "text-generation"
+        }
+      ],
+      "catalogue_count": 20,
+      "eligible_count": 20,
+      "library_filter": "transformers",
+      "ranking_field": "lastModified",
+      "require_architecture": true,
+      "selection_scope": "first_config_inspectable_in_bounded_catalogue",
+      "selector": "bounded-most-recently-modified"
+    },
+    "status": "OBSERVED_MODEL_STRUCTURE"
+  }
+}
