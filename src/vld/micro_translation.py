@@ -226,3 +226,35 @@ class ObservedGround:
             "skipped_steps": steps_skipped,
             "cycle_length": cycle,
         }
+
+class ObserverIntention:
+    """Bounded external request; adapters decide execution and evidence."""
+
+    def __init__(self, operation, target, output="json", options=None):
+        if not isinstance(operation, str) or not 0 < len(operation) <= 64 or any(
+                c not in "abcdefghijklmnopqrstuvwxyz0123456789._-" for c in operation):
+            raise ValueError("Invalid operation")
+        if not isinstance(target, str) or not 0 < len(target) <= 256:
+            raise ValueError("Invalid target")
+        if output not in ("json", "jsonl", "text"):
+            raise ValueError("Invalid output format")
+        import json
+        raw = json.dumps(options if options is not None else {},
+                         sort_keys=True, allow_nan=False)
+        if len(raw) > 4096 or not isinstance(json.loads(raw), dict):
+            raise ValueError("Invalid options")
+        self.spec = {"operation": operation, "target": target,
+                     "output": output, "options": json.loads(raw)}
+        self.digest = domain_digest("vl64.observer-intention.v1", self.spec)
+
+    @classmethod
+    def from_dict(cls, item):
+        if not isinstance(item, dict) or set(item) - {
+                "operation", "target", "output", "options"}:
+            raise ValueError("Unexpected intention fields")
+        return cls(item["operation"], item["target"], item.get("output", "json"),
+                   item.get("options"))
+
+    def to_dict(self):
+        import json
+        return json.loads(json.dumps(self.spec))
