@@ -29,7 +29,7 @@ The lab ran a fixed, read-only experiment on a GitHub-hosted Ubuntu runner. Pyth
 | TLS \`example.com:443\` | TLS 1.3 negotiation, certificate digest | Hostname → session/security properties |
 | Git v2 capability discovery | 9 pkt-line frames with capabilities | Git service → advertised protocol operators |
 | Git v2 \`ls-refs\` | Bounded POST to upload-pack, HEAD commit | Git command → repository identity at a time |
-| GitHub REST | Repo metadata and commit query | Repository description → resolved commit |
+| GitHub REST | Repo metadata and compact branch-reference query | Repository description → minimal ref-to-commit resolution |
 | Pinned raw GitHub content | README and linked research-goals document | Revision + path → stable content digest |
 | HTTP conditional GET | \`304 Not Modified\`, zero document bytes | Cached content identity + server validator → reuse without 6,745-byte retransmission |
 | TCP loopback | 1,024 bytes sent, 32-byte result checked | Client → kernel transport → endpoint's SHA-256 operator |
@@ -40,6 +40,10 @@ The experiment produced **16 observed operations, 14 Ground nodes, 9 recorded ed
 A graph route through \`repository → pinned commit → README → research goals\` was found as three observations, and its evidence digests were checked. The HTTP validator example reused prior knowledge to avoid payload transfer; no data was created ex nihilo and no path-native hash computation was claimed.
 
 A second run can produce different DNS TTLs, ref heads or body/cache metadata. Each Ground is explicitly scoped to the relevant observation time and source.
+
+### Adaptive representation selection observed after the first merge
+
+When the lab itself was merged, GitHub's full commit-details API returned a large diff-bearing JSON response. The bounded reader truncated it; interpretation correctly refused rather than fabricating a commit. The experiment was revised to request the compact `git/ref/heads/main` representation instead, because the intention only requires the commit SHA. This is an initial practical example of **selecting a smaller sufficient description** to fit a computational resource budget.
 
 ## 3. Architectural adjustment to VL-64
 
