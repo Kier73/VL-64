@@ -67,6 +67,17 @@ assert ranking[0]["accuracy"] == 1.0
 print(ranking)
 ```
 
+Alternatively, generate candidate views automatically from the observed byte positions:
+
+```python
+model, discovered = ObservedGround.discover(
+    training, heldout, max_positions=2, max_fields=2
+)
+assert discovered[0]["view"] == "byte_0"
+```
+
+The bounded search considers whole snapshots and byte-offset combinations. The result is a measured candidate model, not an inference of the source machine's complete instruction set.
+
 ### Navigate a learned state transition
 
 ```python
