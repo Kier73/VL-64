@@ -25,6 +25,12 @@ jobs:
       - name: Replay committed Internet evidence without network access
         run: |
           python -m experiments.internet_lab.virtual_net --verify-file experiments/internet_lab/datasets/2026-11-18-github-run-44371133726.json
+      - name: Compare two saved Internet state observations
+        run: |
+          python -m experiments.internet_lab.compare_ground \
+            experiments/internet_lab/datasets/2026-11-18-github-run-44371133726.json \
+            experiments/internet_lab/datasets/2026-11-18-github-run-44372989749.json \
+            --out artifacts/internet-ground-temporal-comparison.json
       - name: Run bounded public Internet and loopback experiments
         run: |
           python -m experiments.internet_lab.virtual_net --require-github-navigation --out artifacts/internet-ground-observation.json
@@ -33,6 +39,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: internet-ground-observation
-          path: artifacts/internet-ground-observation.json
+          path: artifacts/*.json
           if-no-files-found: warn
           retention-days: 30
