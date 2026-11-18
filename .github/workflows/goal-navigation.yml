@@ -1,0 +1,93 @@
+name: VL-64 goal-directed observation and realization
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  goal-navigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test environment
+        run: python -m pip install -e '.[dev]'
+      - name: Verify goal contracts and existing runtime
+        run: python -m pytest -q tests/
+      - name: Execute local observer goals without selecting an operator
+        run: |
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/goal_json_value.json \
+            --out artifacts/json-goal.jsonl
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/goal_unknown_slice.json \
+            --out artifacts/unknown-byte-goal.txt
+      - name: Execute live public page and PNG observation goals
+        run: |
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/goal_web_digest.json \
+            --out artifacts/web-goal.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/goal_png_digest.json \
+            --out artifacts/png-goal.json
+      - name: Additional Hugging Face JSON intention (provider-dependent)
+        continue-on-error: true
+        run: |
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/byte_fabric/intents/goal_model_id.json \
+            --out artifacts/hf-field-goal.json
+      - name: Independently check admitted result route and realized bytes
+        run: |
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          data=lambda f:json.loads((Path("artifacts")/f).read_text())
+          observed=data("json-goal.jsonl")
+          assert observed["status"]=="EXECUTED_LOCAL"
+          assert observed["execution"]["result"]=={"value":True,"value_type":"bool"}
+          assert observed["goal_navigation"]["selected"]["relation"]=="json-field"
+          assert observed["intention"]["operation"]=="bytes.realize"
+          for name, expected in (("web-goal.json","html"),("png-goal.json","png")):
+              receipt=data(name)
+              assert receipt["status"]=="EXECUTED_LOCAL",receipt
+              assert receipt["ground"]["view"]["kind"]==expected
+              assert receipt["goal_navigation"]["selected"]["relation"]=="digest-from-bytes"
+              assert receipt["execution"]["result"]["sha256"]==receipt["ground"]["observation"]["content_sha256"]
+              print("VL64_GOAL_REALIZED",json.dumps({
+                  "case":name,
+                  "goal":receipt["goal_navigation"]["goal"]["kind"],
+                  "selected":receipt["goal_navigation"]["selected"]["relation"],
+                  "status":receipt["status"],
+                  "bytes":receipt["ground"]["observation"]["captured_bytes"],
+                  "digest":receipt["ground"]["ground_digest"],
+                  "estimated_work":receipt["goal_navigation"]["selected"]["cost_estimate_units"],
+              },sort_keys=True))
+          hf=Path("artifacts/hf-field-goal.json")
+          if hf.exists():
+              receipt=json.loads(hf.read_text())
+              print("VL64_HF_GOAL",json.dumps({
+                  "status":receipt["status"],
+                  "reason":receipt.get("reason"),
+                  "result":(receipt.get("execution") or {}).get("result"),
+              },sort_keys=True))
+          PY
+      - name: Preserve typed observer request and selected-path receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-goal-navigation-${{ matrix.python-version }}
+          path: artifacts/*
+          if-no-files-found: warn
+          retention-days: 30
