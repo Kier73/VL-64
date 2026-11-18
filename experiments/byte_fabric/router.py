@@ -16,7 +16,7 @@ from .ground import QualifiedByteExecutor, ground_for_capture
 from .sources import DEFAULT_HOSTS, acquire
 
 
-SUPPORTED = frozenset({"bytes.observe", "bytes.execute"})
+SUPPORTED = frozenset({"bytes.observe", "bytes.execute", "bytes.capabilities"})
 
 
 def compile_byte_plan(request, *, sources=None, executor=None):
@@ -27,6 +27,14 @@ def compile_byte_plan(request, *, sources=None, executor=None):
     if spec["operation"] not in SUPPORTED:
         return {"status": "UNRESOLVED", "reason": "UNKNOWN_BYTE_INTENTION",
                 "intention_digest": request.digest}
+    if spec["operation"] == "bytes.capabilities":
+        plan = {"status": "ADMITTED_CAPABILITY_QUERY",
+                "kind": "CAPABILITY_INSPECTION",
+                "intention_digest": request.digest,
+                "steps": ["inspect_installed_capabilities"],
+                "output": spec["output"]}
+        plan["plan_digest"] = domain_digest("vl64.byte-intention-plan.v1", plan)
+        return plan
     target = spec["target"]
     if not (target.startswith(("workspace:", "inline:b64,", "https://")) or
             (sources is not None and any(
@@ -67,6 +75,31 @@ def byte_arbitrate(request, *, root=None, approved_hosts=None, executor=None,
         "plan": plan,
         "verification_scope": "bytes_and_selected_syntax_not_unobserved_machine_semantics",
     }
+    if plan["status"] == "ADMITTED_CAPABILITY_QUERY":
+        capabilities = {
+            "source_adapters": (["workspace:", "inline:b64,", "https://"] +
+                sorted(sources.adapters) if sources is not None else
+                ["workspace:", "inline:b64,", "https://"]),
+            "registered_decoders": (
+                sorted(decoders.decoders) if decoders is not None else []),
+            "builtin_recognizers": [
+                "bytes", "utf8", "json", "html", "png", "gif",
+                "jpeg", "pdf", "zip", "elf", "wasm", "dos-pe-candidate",
+                "safetensors-header"],
+            "execution_capabilities": {
+                name: {"input_kind": cap.input_kind,
+                       "requires_complete": cap.requires_complete,
+                       "max_input_bytes": cap.max_input, "policy": cap.policy}
+                for name,(cap,_) in sorted(executor.registry.items())},
+            "allowed_https_hosts": sorted(
+                approved_hosts if approved_hosts is not None else DEFAULT_HOSTS),
+        }
+        ground = {"schema": "vl64.byte-capability-ground.v1",
+                  "catalogue": capabilities}
+        ground["ground_digest"] = domain_digest(
+            "vl64.byte-capability-ground.v1", ground)
+        return {**base, "status": "OBSERVED_CAPABILITY_CATALOGUE",
+                "ground": ground, "execution": None}
     if plan["status"] != "ADMITTED_SUBJECT_TO_SOURCE_AND_CAPABILITY":
         return {**base, "status": plan["status"], "reason": plan.get("reason")}
     opts = spec["options"]
