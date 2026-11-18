@@ -19,6 +19,21 @@ A proposed capability enters the runtime only when it has:
 
 Preserve compatibility of established interfaces where possible. Keep transport adapters and large experiment harnesses separate from the small algebraic core. Report measured results distinctly from mathematical expectations.
 
+## Translation research: from observed machines to predictive Grounds
+
+The first callable translation path is `ObservedGround`: exact byte observation, declared byte projections, empirical transitions, held-out view comparison, information profiles, and cycle navigation with a Ground digest. This provides a measurable starting point for lifting software or hardware observations into virtual state.
+
+The next research target is **description discovery**, not merely accepting declared offsets:
+
+- **Acquire:** external, permissioned adapters produce raw snapshots and transition traces from files, processes, hardware registers, network responses, or computer-vision frame buffers. The 64 KiB core accepts bytes; source-specific capture belongs in adapters.
+- **Describe:** discover candidate typed fields, operations, dependency relations, encodings, and predictive quotients from sampled transitions. Preserve the raw-byte mapping and representation identity.
+- **Evaluate:** distinguish number of distinguishable states, reachable states, predictive coverage on unseen transitions, branching uncertainty, and cost of navigation. Maximize *validated, useful predictive states*, not the sheer number of possible byte strings.
+- **Account for information:** measure empirical source/target entropy, conditional uncertainty and information gained or lost under an observation or projection. Test when a rule is reversible, many-to-one, or stochastic. Avoid conflating observed entropy changes with physical information creation.
+- **Navigate and refine:** retain verified transition relationships, select reusable composed paths, compare outcomes with independent observations, and admit new descriptions only when they improve held-out prediction or measured realization cost.
+- **Reconstruct:** require explicit data and verified inverse maps to reconstruct full original states; never fill unobserved fields by guessing. Compare multiple descriptions that preserve the same relevant observable.
+
+**Acceptance:** one captured system supplies byte traces; two or more candidate representations are evaluated on held-out transitions; the chosen Ground predicts and navigates new supported states, preserves a checkable observation mapping, and demonstrably improves either prediction coverage or measured cost over its raw-byte baseline.
+
 ## Research tracks
 
 ### 1. General state-space navigation
