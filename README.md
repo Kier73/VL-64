@@ -53,6 +53,8 @@ assert result["terminal_state"] == "02"
 print(ground.profile("counter"))
 ```
 
+To discover candidate byte fields automatically, call `model, ranking = ObservedGround.discover(training_pairs, heldout_pairs)`. The search tests bounded single-byte and multi-byte views, then ranks them using held-out predictions.
+
 A view may describe the entire snapshot or select byte offsets corresponding to a variable, register, field, or observable. `evaluate` compares candidate views against held-out transitions and ranks them by observed predictive score. Information profiles report state diversity, branching uncertainty, and changes in empirical state entropy. Navigation returns the projected virtual state and the digest of its observed Ground.
 
 ### Navigate a modular state
