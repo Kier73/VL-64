@@ -1,0 +1,32 @@
+{
+  "actions": [
+    "flip",
+    "read"
+  ],
+  "ground_digest": "a9a882493f19e9b7b65d8ad5790a587dd0a2653cdb1388f82adefa4d9e9a568e",
+  "initial_state": 0,
+  "schema": "vl64.action-conditioned-ground.v1",
+  "scope": "host-declared-complete-finite-deterministic-candidate",
+  "states": [
+    {
+      "flip": {
+        "next": 1,
+        "output_hex": "6f6b"
+      },
+      "read": {
+        "next": 0,
+        "output_hex": "7a65726f"
+      }
+    },
+    {
+      "flip": {
+        "next": 0,
+        "output_hex": "6f6b"
+      },
+      "read": {
+        "next": 1,
+        "output_hex": "6f6e65"
+      }
+    }
+  ]
+}
