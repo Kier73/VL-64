@@ -20,6 +20,8 @@ The implemented [Non-Affine and Observable Grounds](NONAFFINE_AND_OBSERVABLE_GRO
 
 [Active Action-Conditioned Grounds](ACTIVE_ACTION_GROUNDS.md) now examines the next research step: plan qualified observation sequences that distinguish competing finite state hypotheses, update the candidate set using actual byte evidence, preserve counterexamples and navigate the surviving modeled transition without iterative actuation. This first version-space prototype is explicitly not general L* learning.
 
+[Trace-Derived Action Grounds](TRACE_DERIVED_ACTION_GROUNDS.md) extends active observation from testing host-provided candidates to **synthesizing the candidates directly from action/output bytes**, preserving unknown transitions as hypotheses, refusing inconsistent repeated observations, and resynthesizing from newly observed counterexamples. The experiment is completely external to the 64 KiB core.
+
 ## Development discipline
 
 A proposed capability enters the runtime only when it has:

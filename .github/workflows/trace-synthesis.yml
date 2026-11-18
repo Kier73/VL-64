@@ -1,0 +1,106 @@
+name: VL-64 trace-derived action Ground synthesis
+
+on:
+  push:
+    branches:
+      - main
+      - feature/trace-derived-action-grounds-20261118
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trace-synthesis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11","3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - name: Install repository tests
+        run: python -m pip install -e ".[dev]"
+      - name: Run all tests, including trace synthesizer
+        run: python -m pytest -q tests/
+      - name: Observe, synthesize, challenge and navigate an independently checked machine
+        run: |
+          python -m experiments.byte_fabric.trace_lab --out artifacts
+          python -m experiments.observer_intent.arbitrate \
+            --intent artifacts/trace-synthesis-intention.json \
+            --out artifacts/observer-suggested-action.json || {
+              cat artifacts/observer-suggested-action.json
+              exit 1
+            }
+          python -m experiments.observer_intent.arbitrate \
+            --intent artifacts/learned-action-navigation-intention.json \
+            --out artifacts/observer-modeled-jump.json
+      - name: Independently verify learned state description and heldout observations
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from experiments.byte_fabric.trace_synthesis import TraceLedger,TraceGroundSynthesizer
+          from experiments.byte_fabric.active_ground import ActionGroundNavigator
+          p=Path("artifacts")
+          load=lambda name:json.loads((p/name).read_text())
+          report=load("trace-derived-report.json")
+          model=load("learned-action-ground.json")
+          ledger=TraceLedger.from_snapshot(load("observed-trace-ledger.json"))
+          original=TraceLedger.from_snapshot(load("initial-trace-ledger.json"))
+          suggest=load("observer-suggested-action.json")
+          jump=load("observer-modeled-jump.json")
+          assert report["status"]=="HELDOUT_VALIDATED_TRACE_DERIVED_GROUND"
+          assert report["initial_candidate_count"]>=2
+          assert report["heldout_query_words_checked"]==62
+          assert report["heldout_mismatches"]==[]
+          assert report["selected_state_count"]==2
+          assert report["selected_hypothetical_edges"]==0
+          assert len(original.traces())==2
+          assert len(ledger.traces())>=6
+          assert suggest["status"]=="QUALIFIED_INFORMATIVE_PROBE"
+          assert jump["status"]=="MODELED_ACTION_NAVIGATION"
+          assert jump["result"]["terminal_state"]==0
+          assert jump["result"]["steps"]==10**12
+          assert jump["result"]["ground_digest"]==model["ground_digest"]
+          assert ActionGroundNavigator(model).repeat("flip",10**12)[
+              "terminal_state"]==0
+          derived=TraceGroundSynthesizer(max_states=2).discover(ledger)
+          assert any(x["ground_digest"]==model["ground_digest"]
+                     for x in derived["candidates"])
+          print("VL64_TRACE_LEARNING_VERIFIED",json.dumps({
+             "seed_candidates":report["initial_candidate_count"],
+             "active_rounds":report["active_discriminating_rounds"],
+             "trace_count":report["observed_trace_count"],
+             "heldout_words":report["heldout_query_words_checked"],
+             "ground_digest":model["ground_digest"],
+             "repeat_steps":jump["result"]["steps"],
+             "source_bytes":report["reference_returned_output_bytes"],
+          },sort_keys=True))
+          PY
+      - name: Optional live synthesis from actual read-only GitHub bytes
+        continue-on-error: true
+        run: |
+          python -m experiments.byte_fabric.trace_lab \
+            --out artifacts --live-only
+      - name: Preserve training, measurements, observer recommendations and external byte evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-trace-synthesis-__PYTHON_VERSION__
+          path: artifacts/*
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Verify compact-core source byte budget
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          n=sum(p.stat().st_size for p in Path("src/vld").glob("*.py"))
+          assert n<=65536,n
+          print("VL64_TRACE_CORE_BYTES",n)
+          PY

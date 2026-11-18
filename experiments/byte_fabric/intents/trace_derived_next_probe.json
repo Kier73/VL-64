@@ -1,0 +1,11 @@
+{
+  "operation": "ground.traces.plan",
+  "target": "workspace:experiments/byte_fabric/datasets/2026-11-18-initial-trace-ledger.json",
+  "output": "json",
+  "options": {
+    "max_states": 2,
+    "max_candidates": 24,
+    "max_depth": 3,
+    "max_words": 64
+  }
+}

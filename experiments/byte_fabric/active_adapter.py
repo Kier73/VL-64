@@ -15,11 +15,12 @@ from .active_ground import (
     ActiveGroundSession,ActionGroundNavigator,
 )
 from .sources import acquire,DEFAULT_HOSTS
+from .ground import _json_no_duplicates
 
 
 def arbitrate_active(request,*,root=None,approved_hosts=None):
     if not isinstance(request,ObserverIntention) or request.spec["operation"] not in (
-            "ground.active.plan","ground.action.navigate"):
+            "ground.active.plan","ground.action.navigate","ground.traces.plan"):
         raise TypeError("Expected typed action Ground intention")
     req=request.to_dict()
     op=req["operation"]
@@ -27,7 +28,8 @@ def arbitrate_active(request,*,root=None,approved_hosts=None):
         "status":"ADMITTED_DESCRIPTION_ONLY",
         "intention_digest":request.digest,
         "steps":["acquire_bounded_description","verify_ground_or_catalogue",
-                 "plan_qualified_action_experiment" if op=="ground.active.plan"
+                 "synthesize_ground_from_evidenced_traces" if op=="ground.traces.plan"
+                 else "plan_qualified_action_experiment" if op=="ground.active.plan"
                  else "navigate_declared_action_model"],
         "execution_authority":"no_host_actions_performed_by_this_observer_route",
     }
@@ -41,6 +43,9 @@ def arbitrate_active(request,*,root=None,approved_hosts=None):
         "verification_scope":"description_only_not_an_executed_remote_probe",
     }
     opts=req["options"]
+    if op=="ground.traces.plan" and set(opts)-{
+            "max_states","max_candidates","max_depth","max_words","max_cost"}:
+        return {**base,"status":"REFUSED","reason":"INVALID_TRACE_SYNTHESIS_OPTIONS"}
     try:
         capture=acquire(
             req["target"],
@@ -50,8 +55,35 @@ def arbitrate_active(request,*,root=None,approved_hosts=None):
         )
         if not capture["complete"]:
             return {**base,"reason":"COMPLETE_DESCRIPTION_REQUIRED"}
-        data=json.loads(capture["data"].decode("utf-8"))
-        if op=="ground.active.plan":
+        data=_json_no_duplicates(capture["data"].decode("utf-8"))
+        if op=="ground.traces.plan":
+            from .trace_synthesis import TraceLedger,TraceGroundSynthesizer
+            ledger=TraceLedger.from_snapshot(data)
+            proposal=TraceGroundSynthesizer(
+                max_states=opts.get("max_states",2),
+                max_candidates=opts.get("max_candidates",24)).discover(ledger)
+            if proposal["status"]=="SYNTHESIZED_BOUNDED_CANDIDATES" and (
+                    proposal["candidate_count"]>=2):
+                recommended=ActiveGroundSession(proposal["candidates"]).plan(
+                    max_depth=opts.get("max_depth",3),
+                    max_words=opts.get("max_words",128),
+                    max_cost=opts.get("max_cost",12))
+                status=recommended["status"]
+            else:
+                recommended={"status":"UNRESOLVED",
+                             "reason":"NO_DISTINGUISHABLE_SYNTHESIZED_CANDIDATES"}
+                status="UNRESOLVED"
+            selected={
+                "synthesis":{
+                    k:v for k,v in proposal.items() if k!="candidates"
+                },
+                "recommendation":recommended,
+                "candidate_ground_digests":[
+                    g["ground_digest"] for g in proposal.get("candidates",[])
+                ],
+                "scope":"trace_derived_candidates_and_proposed_experiment_only",
+            }
+        elif op=="ground.active.plan":
             if (not isinstance(data,dict) or set(data)!={
                     "schema","candidates","costs"} or
                     data["schema"]!="vl64.action-candidate-catalogue.v1"):
@@ -91,7 +123,8 @@ def render_active_receipt(receipt,output):
             "VL-64 action Ground",
             "Status: "+receipt["status"],
             "Intention: "+receipt["intention_digest"],
-            "Recommended actions: "+str(value.get("word",[])),
+            "Recommended actions: "+str(
+                (value.get("recommendation") or value).get("word",[])),
             "Modeled terminal state: "+str(value.get("terminal_state")),
             "Evidence: "+receipt["verification_scope"],
         ])+"\n"
