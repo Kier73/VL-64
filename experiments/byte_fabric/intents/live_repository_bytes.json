@@ -1,0 +1,9 @@
+{
+  "operation": "bytes.observe",
+  "target": "https://raw.githubusercontent.com/Kier73/VL-64/febca2be79e30efa3121edfb743e6470091dfe57/README.md",
+  "output": "json",
+  "options": {
+    "max_bytes": 8192,
+    "byte_range": true
+  }
+}
