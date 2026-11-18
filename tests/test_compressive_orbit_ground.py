@@ -197,3 +197,33 @@ def test_discovery_refuses_independent_moving_fields_and_ambiguous_views():
     stationary=[b"same-data"*15]*9
     with pytest.raises(ValueError,match="No witnessed changing"):
         discover_ground(stationary[:5],stationary[5:9])
+
+
+def test_new_observer_can_challenge_predicted_ground_and_preserve_disagreement():
+    fitted,frameset,states=observed_ground()
+    navigator=ComposedGroundNavigator(fitted["ground"])
+    matched=navigator.test_new_observations([(90,frameset[90]),(120,frameset[120])])
+    assert matched["status"]=="CONSISTENT_ON_NEW_OBSERVATIONS"
+    assert matched["agreements"]==2
+    assert matched["contradictions"]==[]
+    edited=bytearray(frameset[120])
+    edited[19] ^= 1
+    mismatched=navigator.test_new_observations(
+        [(90,frameset[90]),(120,bytes(edited))])
+    assert mismatched["status"]=="CONTRADICTED"
+    assert mismatched["agreements"]==1
+    assert len(mismatched["contradictions"])==1
+    assert mismatched["contradictions"][0]["index"]==120
+    assert matched["observation_evidence_digest"]!=mismatched["observation_evidence_digest"]
+    assert fitted["ground"]["ground_digest"]==navigator.ground["ground_digest"]
+
+
+def test_ground_challenge_rejects_invalid_observation_indices():
+    fitted,frameset,_=observed_ground()
+    nav=ComposedGroundNavigator(fitted["ground"])
+    with pytest.raises(ValueError):
+        nav.test_new_observations([])
+    with pytest.raises(ValueError):
+        nav.test_new_observations([(-1,frameset[0])])
+    with pytest.raises(ValueError):
+        nav.test_new_observations([(10,b"short")])
