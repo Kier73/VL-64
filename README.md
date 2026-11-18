@@ -57,6 +57,24 @@ To discover candidate byte fields automatically, call `model, ranking = Observed
 
 A view may describe the entire snapshot or select byte offsets corresponding to a variable, register, field, or observable. `evaluate` compares candidate views against held-out transitions and ranks them by observed predictive score. Information profiles report state diversity, branching uncertainty, and changes in empirical state entropy. Navigation returns the projected virtual state and the digest of its observed Ground.
 
+### Describe an observer intention
+
+\`ObserverIntention\` turns a bounded, structured request into a content-addressed contract. The core stores the observer's requested operation, target, output format, and options; external adapters decide how to realize it.
+
+~~~python
+from vld import ObserverIntention
+
+request = ObserverIntention(
+    "hf.model.describe",
+    "openai-community/gpt2",
+    output="json",
+    options={"metadata_only": True},
+)
+print(request.digest)
+~~~
+
+A working read-only adapter in the [observer intention lab](experiments/observer_intent/README.md) accepts JSON intention files, inspects Hugging Face model metadata or navigates a GitHub document, and returns JSON, JSONL or text without downloading model weights. This is structural inspection, not execution of the trained model.
+
 ### Navigate a modular state
 
 ```python
@@ -116,6 +134,7 @@ print(child.commit_manifest()["digest"])
 | Area | Python interfaces | Function |
 | --- | --- | --- |
 | Translation | `ObservedGround` | Lift byte snapshots, compare predictive views, profile uncertainty, and navigate observed transitions |
+| Observer input | `ObserverIntention` | Describe a target operation and output format with a stable request digest |
 | Representation | `ByteLens`, `LENS_RAW`, `LENS_UTF8`, `LENS_U32LE` | Lift and lower byte representations; check round trips |
 | State and time | `PageSpace`, `HashChainedJournal`, `ScopedVectorClock` | Copy-on-write pages, event digests, and scoped event ordering |
 | Navigation | `monoid_power`, `affine_navigate`, `certify_modular_progression`, `myhill_nerode_quotient` | Compose transitions and analyze finite-state behavior |
