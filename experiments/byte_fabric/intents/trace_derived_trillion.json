@@ -1,0 +1,9 @@
+{
+  "operation": "ground.action.navigate",
+  "target": "workspace:experiments/byte_fabric/datasets/2026-11-18-trace-derived-action-ground.json",
+  "output": "json",
+  "options": {
+    "action": "flip",
+    "steps": 1000000000000
+  }
+}
