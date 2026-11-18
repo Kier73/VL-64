@@ -258,12 +258,7 @@ class ActiveGroundSession:
                 if cost>max_cost:
                     continue
                 examined+=1
-                current={model.digest for model in self.models}
-        plan_members={d for part in plan["predicted_partitions"]
-                      for d in part["hypothesis_digests"]}
-        if (plan_members!=current or plan["candidate_count"]!=len(current)):
-            raise ValueError("Stale experiment plan cannot update candidate Ground")
-        groups,gain=_partitions(self.models,word)
+                groups,gain=_partitions(self.models,word)
                 if gain<=1e-12:
                     continue
                 score=gain/cost
@@ -313,6 +308,11 @@ class ActiveGroundSession:
         if (not isinstance(word,list) or not 1<=len(word)<=MAX_WORD or
                 any(action not in self.actions for action in word)):
             raise ValueError("Plan contains an unqualified action word")
+        current={model.digest for model in self.models}
+        plan_members={d for part in plan["predicted_partitions"]
+                      for d in part["hypothesis_digests"]}
+        if (plan_members!=current or plan["candidate_count"]!=len(current)):
+            raise ValueError("Stale experiment plan cannot update candidate Ground")
         groups,gain=_partitions(self.models,word)
         predicted=[{
             "outputs_hex":list(signature),
