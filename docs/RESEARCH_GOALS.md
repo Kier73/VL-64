@@ -8,6 +8,8 @@ This document is for intended work. The [README](../README.md) and [usage guide]
 
 The step-by-step programme for connecting physical machine observations, software execution, screen buffers, hardware counters, and communication streams to VL-64 is in the [Machine Observation and Ground Discovery Plan](MACHINE_OBSERVATION_AND_GROUND_DISCOVERY_PLAN.md) and the [Virtual Internet Runtime Plan](VIRTUAL_INTERNET_RUNTIME_PLAN.md) (including a proposed separate network-native 64 KiB implementation).
 
+The observer-facing input language, metadata-only model discovery experiment, output-format selection and next steps toward qualified remote execution are documented in [Observer Intention and Model Grounds](OBSERVER_INTENTION_AND_MODEL_GROUNDS.md).
+
 ## Development discipline
 
 A proposed capability enters the runtime only when it has:

@@ -1,0 +1,9 @@
+{
+  "operation": "hf.model.describe",
+  "target": "latest:text-generation",
+  "output": "json",
+  "options": {
+    "catalog_limit": 12,
+    "metadata_only": true
+  }
+}

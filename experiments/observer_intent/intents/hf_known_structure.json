@@ -1,0 +1,8 @@
+{
+  "operation": "hf.model.describe",
+  "target": "openai-community/gpt2",
+  "output": "text",
+  "options": {
+    "metadata_only": true
+  }
+}

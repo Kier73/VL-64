@@ -1,0 +1,93 @@
+name: VL-64 observer-intention arbitration
+
+on:
+  push:
+    branches:
+      - main
+      - feature/observer-intention-hf-ground-20261118
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  observer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install unchanged dependencies
+        run: python -m pip install -e ".[dev]"
+      - name: All VL-64 tests including observer-intention contract
+        run: python -m pytest -q tests/
+      - name: Live latest public text-generation model structure
+        run: |
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/observer_intent/intents/hf_latest_structure.json \
+            --out artifacts/hf-latest-structure.json
+      - name: Latest inspectable architecture, observer constraint
+        continue-on-error: true
+        run: |
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/observer_intent/intents/hf_recent_inspectable.json \
+            --out artifacts/hf-latest-inspectable.json
+      - name: Pinned control model, observer-selected text format
+        if: always()
+        run: |
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/observer_intent/intents/hf_known_structure.json \
+            --out artifacts/hf-control-structure.txt
+      - name: Independent GitHub document intention, observer-selected JSONL
+        if: always()
+        run: |
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/observer_intent/intents/github_research_goals.json \
+            --out artifacts/github-document-ground.jsonl
+      - name: Output contract and weight-free checks
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          file = Path("artifacts/hf-latest-structure.json")
+          if file.exists():
+              result = json.loads(file.read_text())
+              ground = result["outcome"].get("ground") or {}
+              assert ground.get("claims", {}).get("model_weight_payload_bytes_read") == 0
+              assert ground["claims"]["inference_executed"] is False
+              print("VL64_HF_LATEST_GROUND", json.dumps({
+                  "status": result["status"], "model": ground.get("model_id"),
+                  "revision": ground.get("revision"),
+                  "config": ground.get("configuration_status"),
+                  "architecture": ground.get("architecture"),
+                  "listed_weight_files": ground.get("weight_file_count"),
+                  "metadata_bytes": result["outcome"].get("total_metadata_bytes_read"),
+                  "ground_digest": ground.get("ground_digest"),
+              }, sort_keys=True))
+          inspectable = Path("artifacts/hf-latest-inspectable.json")
+          if inspectable.exists():
+              candidate = json.loads(inspectable.read_text())
+              outcome = candidate.get("outcome") or {}
+              ground = outcome.get("ground") or {}
+              assert ground.get("claims", {}).get("model_weight_payload_bytes_read", 0) == 0
+              print("VL64_HF_INSPECTABLE_GROUND", json.dumps({
+                  "status": candidate["status"],
+                  "model_id": ground.get("model_id"),
+                  "revision": ground.get("revision"),
+                  "architecture": ground.get("architecture"),
+                  "selection": outcome.get("selection"),
+                  "reason": outcome.get("reason"),
+              }, sort_keys=True))
+          PY
+      - name: Preserve observer-format outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-observer-intention-results
+          path: artifacts/*
+          if-no-files-found: warn
+          retention-days: 30
