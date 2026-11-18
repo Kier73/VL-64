@@ -1,0 +1,129 @@
+{
+  "schema": "vl64.trace-derived-action-measurement.v1",
+  "experiment_run": "https://github.com/Kier73/VL-64/actions/runs/44423271415",
+  "controlled": {
+    "active_discriminating_rounds": 3,
+    "active_probes": [
+      [
+        "read",
+        "flip",
+        "read"
+      ],
+      [
+        "flip",
+        "flip",
+        "read"
+      ],
+      [
+        "flip",
+        "read",
+        "read"
+      ]
+    ],
+    "core_modified": false,
+    "final_candidate_count": 1,
+    "final_observed_output_alphabet_hex": [
+      "6f6b",
+      "6f6e65",
+      "7a65726f"
+    ],
+    "first_observed_output_alphabet_hex": [
+      "6f6b",
+      "7a65726f"
+    ],
+    "global_equivalence_proven": false,
+    "heldout_mismatches": [],
+    "heldout_query_words_checked": 62,
+    "initial_candidate_count": 14,
+    "initial_observed_words": [
+      [
+        "read"
+      ],
+      [
+        "flip"
+      ]
+    ],
+    "measured_discovery_ms_one_run": 5.3781,
+    "model_scope": "bounded_two_state_deterministic_mealy_hypothesis",
+    "modeled_horizon": 1000000000000,
+    "modeled_terminal_state": 0,
+    "observed_trace_count": 10,
+    "power_compositions": 53,
+    "reference_action_steps": 25,
+    "reference_probe_calls": 10,
+    "reference_returned_output_bytes": 68,
+    "schema": "vl64.trace-derived-active-learning-lab.v1",
+    "selected_ground_digest": "a9a882493f19e9b7b65d8ad5790a587dd0a2653cdb1388f82adefa4d9e9a568e",
+    "selected_hypothetical_edges": 0,
+    "selected_state_count": 2,
+    "status": "HELDOUT_VALIDATED_TRACE_DERIVED_GROUND",
+    "training_source": "independent-controlled-resettable-byte-machine"
+  },
+  "cross_runtime": {
+    "python_jobs": [
+      "trace-synthesis (3.13)",
+      "trace-synthesis (3.11)"
+    ],
+    "total_tests_passed_each": 190,
+    "selected_ground_digest_identical": true,
+    "initial_ledger_digest_identical": true,
+    "final_ledger_digest_identical": true,
+    "pinned_web_response_digests_identical": true,
+    "compact_core_bytes": 65093,
+    "run_times_ms": [
+      {
+        "job": "trace-synthesis (3.13)",
+        "value": 5.3781
+      },
+      {
+        "job": "trace-synthesis (3.11)",
+        "value": 9.2966
+      }
+    ]
+  },
+  "real_network": {
+    "status": "OBSERVED_REAL_PUBLIC_NETWORK_BYTES",
+    "revision": "d1291a08a3f2b073da6e5b2eef1f8e2211e74a36",
+    "read_evidence": [
+      {
+        "source": "https://raw.githubusercontent.com/Kier73/VL-64/d1291a08a3f2b073da6e5b2eef1f8e2211e74a36/docs/RESEARCH_GOALS.md",
+        "bytes_received": 13245,
+        "sha256": "be1e8e3e046e5f653ed4a2e79b2eacab7f36593fb0f46ce1cadd2977d8ec43eb",
+        "transport_kind": "https",
+        "http_status": 200,
+        "elapsed_ms": 18.469
+      },
+      {
+        "source": "https://raw.githubusercontent.com/Kier73/VL-64/d1291a08a3f2b073da6e5b2eef1f8e2211e74a36/README.md",
+        "bytes_received": 12232,
+        "sha256": "7f942da7009ed972cd27a6fb904008e4090d59c2528045c1913a33dd760e418e",
+        "transport_kind": "https",
+        "http_status": 200,
+        "elapsed_ms": 18.503
+      },
+      {
+        "source": "https://raw.githubusercontent.com/Kier73/VL-64/d1291a08a3f2b073da6e5b2eef1f8e2211e74a36/README.md",
+        "bytes_received": 12232,
+        "sha256": "7f942da7009ed972cd27a6fb904008e4090d59c2528045c1913a33dd760e418e",
+        "transport_kind": "https",
+        "http_status": 200,
+        "elapsed_ms": 15.524
+      },
+      {
+        "source": "https://raw.githubusercontent.com/Kier73/VL-64/d1291a08a3f2b073da6e5b2eef1f8e2211e74a36/docs/RESEARCH_GOALS.md",
+        "bytes_received": 13245,
+        "sha256": "be1e8e3e046e5f653ed4a2e79b2eacab7f36593fb0f46ce1cadd2977d8ec43eb",
+        "transport_kind": "https",
+        "http_status": 200,
+        "elapsed_ms": 25.879
+      }
+    ],
+    "observed_action_word": [
+      "read_readme",
+      "read_goals"
+    ],
+    "active_round_status": "RESYNTHESIZED_FROM_NEW_EVIDENCE",
+    "scope": "stateless_read_only_resource_observations_not_remote_state_machine"
+  },
+  "limitations": "Finite bounded model hypotheses, not global equivalence; read-only pinned HTTP resources are not a stateful remote oracle"
+}
