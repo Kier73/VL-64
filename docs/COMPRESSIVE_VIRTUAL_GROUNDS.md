@@ -121,6 +121,15 @@ and \(T^t\) is computed with reusable powers of \(T\) in \(O(\log t)\), not by r
 
 This gives the Ground an intrinsic *navigation operation*: the interpreter describes the state, and the state-space description itself provides the transition mechanism.
 
+## Independent challenges after learning
+
+After a Ground has been saved and shared, \`ComposedGroundNavigator.test_new_observations([(time_index, raw_frame), ...])\` lets another observer compare freshly acquired bytes against the Ground's predicted frame. It emits a digest-bound result:
+
+- \`CONSISTENT_ON_NEW_OBSERVATIONS\` if every challenged frame agrees;
+- \`CONTRADICTED\` with the first sixteen mismatching indices and both observed/predicted content digests if new evidence disagrees.
+
+It never changes or silently repairs the original Ground. A contradiction is evidence that the current description is insufficient for that sample, and can seed a later refinement.
+
 ## Research progression
 
 1. **Multiple variable regions.** Learn relational or dependency-preserving projections instead of assuming one changing scalar field; allow independently validated cross-field transitions and exact typed reconstruction.
@@ -129,6 +138,6 @@ This gives the Ground an intrinsic *navigation operation*: the interpreter descr
 4. **General interpreter catalogue.** Host-installed decoders should advertise which byte representations, variable relationships and state laws they support; a Ground search should select the smallest sufficient *qualified* model.
 5. **End-to-end cost.** Include acquisition, interpretation discovery, validation, storage, repeated queries, recovery and independent verification; an apparently smaller Ground is not automatically the cheaper overall computation.
 6. **Independent observer-hosts.** Send the same saved Ground to a different host and compare modeled outputs to independently acquired source states. Keep source authenticity separate from mathematical agreement.
-7. **Learning from contradiction.** When a new observation falsifies an assumed transition, mark the Ground invalid for that interval, retain the contradiction and search for a refined description—never silently overwrite evidence.
+7. **Learning from contradiction.** Detect contradictory later observations using the implemented challenge receipt, then refine with a new versioned hypothesis while preserving the previous Ground and its supporting evidence. Automatic refitting is a future research step, not a current capability.
 
 The long-term objective is an interpreter whose valid descriptions make new computational relationships navigable **without hardcoding each original architecture**. The immediate version demonstrates this under a precisely declared empirical model and retains the 64 KiB core.
