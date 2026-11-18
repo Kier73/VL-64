@@ -58,7 +58,7 @@ def compile_observable_quotient(discrete, labels):
             "vl64.observer-state-label-contract.v1",sorted(labels.items())),
         "reconstruction_claim":{
             "requested_observables_preserved_within_declared_model":True,
-            "erased_exact_source_bytes_recoverable":block_count==total,
+            "exact_source_bytes_recoverable_from_quotient_alone":False,
             "unlisted_external_states_proven":False,
         },
     }
@@ -71,7 +71,7 @@ def compile_observable_quotient(discrete, labels):
             "states_merged":total-block_count,
             "erasure_entropy_bits":round(erasure,6),
             "preservation":"observation-and-successor-congruence-on-declared-model",
-            "byte_reconstruction_qualified":block_count==total,
+            "byte_reconstruction_qualified":False,
             "description_bytes":len(json.dumps(
                 descriptor,sort_keys=True,separators=(",",":")).encode()),
         },
