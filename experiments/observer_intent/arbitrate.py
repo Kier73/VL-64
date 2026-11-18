@@ -380,6 +380,9 @@ def compile_intention(request):
     elif operation == "github.document.describe":
         steps = ["resolve_git_revision", "fetch_pinned_readme",
                  "follow_declared_link", "verify_content_digests"]
+    elif operation in ("bytes.observe", "bytes.execute"):
+        from experiments.byte_fabric.router import compile_byte_plan
+        return compile_byte_plan(request)
     else:
         return {"status": "UNRESOLVED", "reason": "NO_REGISTERED_OPERATOR",
                 "intention_digest": request.digest}
@@ -393,8 +396,11 @@ def compile_intention(request):
     return plan
 
 
-def arbitrate(request):
-    """Resolve observer intent through a registered network metadata operator."""
+def arbitrate(request, *, byte_root=None, approved_hosts=None):
+    """Resolve observer intent through qualified metadata or byte operators."""
+    if request.spec["operation"] in ("bytes.observe", "bytes.execute"):
+        from experiments.byte_fabric.router import byte_arbitrate
+        return byte_arbitrate(request, root=byte_root, approved_hosts=approved_hosts)
     plan = compile_intention(request)
     if plan["status"] != "ADMITTED_READ_ONLY_PLAN":
         return {"schema": SCHEMA, "status": "UNRESOLVED",
@@ -419,6 +425,9 @@ def arbitrate(request):
 
 
 def render_result(receipt, output):
+    if receipt.get("schema") == "vl64.byte-observer-receipt.v1":
+        from experiments.byte_fabric.router import render_byte_receipt
+        return render_byte_receipt(receipt, output)
     if output == "json":
         return json.dumps(receipt, sort_keys=True, indent=2, allow_nan=False) + "\n"
     if output == "jsonl":
@@ -451,10 +460,16 @@ def main():
     parser = argparse.ArgumentParser(description="VL-64 structured observer arbitration")
     parser.add_argument("--intent", required=True, help="JSON observer intention")
     parser.add_argument("--out", required=True, help="Requested-format result path")
+    parser.add_argument("--byte-root", default=".",
+                        help="Explicit local workspace root for byte operations")
+    parser.add_argument("--allow-host", action="append", default=[],
+                        help="Additional explicitly trusted public HTTPS host")
     args = parser.parse_args()
     request = ObserverIntention.from_dict(
         json.loads(Path(args.intent).read_text(encoding="utf-8")))
-    receipt = arbitrate(request)
+    from experiments.byte_fabric.sources import DEFAULT_HOSTS
+    receipt = arbitrate(request, byte_root=args.byte_root,
+                        approved_hosts=DEFAULT_HOSTS | set(args.allow_host))
     output = render_result(receipt, request.spec["output"])
     dest = Path(args.out)
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -470,7 +485,10 @@ def main():
         "revision": (receipt.get("outcome") or {}).get("ground", {}).get("revision"),
         "weight_payload_bytes_read": (receipt.get("outcome") or {})
             .get("ground", {}).get("claims", {}).get("model_weight_payload_bytes_read"),
-        "reason": (receipt.get("outcome") or {}).get("reason"),
+        "reason": receipt.get("reason") or (receipt.get("outcome") or {}).get("reason"),
+        "byte_kind": (receipt.get("ground") or {}).get("view", {}).get("kind"),
+        "byte_ground_digest": (receipt.get("ground") or {}).get("ground_digest"),
+        "byte_count": (receipt.get("ground") or {}).get("observation", {}).get("captured_bytes"),
         "evidence_statuses": [
             {"http_status": x.get("http_status"), "operation_url": x.get("url"),
              "redirect_host": x.get("redirect_host"), "truncated": x.get("truncated")}
@@ -480,7 +498,8 @@ def main():
     print("VL64_OBSERVER_RESULT " + json.dumps(summary, sort_keys=True))
     if receipt["status"] not in (
             "OBSERVED_MODEL_STRUCTURE", "PARTIAL_MODEL_STRUCTURE",
-            "OBSERVED_DESCRIPTION_PATH"):
+            "OBSERVED_DESCRIPTION_PATH", "OBSERVED_BYTE_GROUND",
+            "PARTIAL_BYTE_GROUND", "EXECUTED_LOCAL"):
         raise SystemExit("Observer intention could not be realized")
 
 
