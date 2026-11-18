@@ -33,7 +33,10 @@ jobs:
           python -m experiments.byte_fabric.trace_lab --out artifacts
           python -m experiments.observer_intent.arbitrate \
             --intent artifacts/trace-synthesis-intention.json \
-            --out artifacts/observer-suggested-action.json
+            --out artifacts/observer-suggested-action.json || {
+              cat artifacts/observer-suggested-action.json
+              exit 1
+            }
           python -m experiments.observer_intent.arbitrate \
             --intent artifacts/learned-action-navigation-intention.json \
             --out artifacts/observer-modeled-jump.json
