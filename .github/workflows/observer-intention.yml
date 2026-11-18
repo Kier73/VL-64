@@ -29,6 +29,12 @@ jobs:
           python -m experiments.observer_intent.arbitrate \
             --intent experiments/observer_intent/intents/hf_latest_structure.json \
             --out artifacts/hf-latest-structure.json
+      - name: Latest inspectable architecture, observer constraint
+        continue-on-error: true
+        run: |
+          python -m experiments.observer_intent.arbitrate \
+            --intent experiments/observer_intent/intents/hf_recent_inspectable.json \
+            --out artifacts/hf-latest-inspectable.json
       - name: Pinned control model, observer-selected text format
         if: always()
         run: |
@@ -61,6 +67,20 @@ jobs:
                   "listed_weight_files": ground.get("weight_file_count"),
                   "metadata_bytes": result["outcome"].get("total_metadata_bytes_read"),
                   "ground_digest": ground.get("ground_digest"),
+              }, sort_keys=True))
+          inspectable = Path("artifacts/hf-latest-inspectable.json")
+          if inspectable.exists():
+              candidate = json.loads(inspectable.read_text())
+              outcome = candidate.get("outcome") or {}
+              ground = outcome.get("ground") or {}
+              assert ground.get("claims", {}).get("model_weight_payload_bytes_read", 0) == 0
+              print("VL64_HF_INSPECTABLE_GROUND", json.dumps({
+                  "status": candidate["status"],
+                  "model_id": ground.get("model_id"),
+                  "revision": ground.get("revision"),
+                  "architecture": ground.get("architecture"),
+                  "selection": outcome.get("selection"),
+                  "reason": outcome.get("reason"),
               }, sort_keys=True))
           PY
       - name: Preserve observer-format outputs
