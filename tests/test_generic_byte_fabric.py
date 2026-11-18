@@ -326,3 +326,23 @@ def test_mutated_capture_timing_detected_by_observation_replay():
     rejected = replay_byte_receipt(receipt, capture=capture)
     assert rejected["status"] == "REJECTED"
     assert rejected["reason"] == "OBSERVATION_MISMATCH"
+
+
+def test_nonfinite_json_numeric_state_not_admitted_as_json():
+    raw = b'{"state":1e999}'
+    assert describe(raw)["kind"] != "json"
+    target = "inline:b64," + base64.b64encode(raw).decode()
+    result = byte_arbitrate(request("bytes.execute",target,
+                operator="json.pointer",parameters={"pointer":"/state"}))
+    assert result["status"] == "UNRESOLVED"
+    assert result["execution"]["reason"] == "REQUIRED_TYPED_VIEW_ABSENT"
+
+
+def test_plugin_returning_unrepresentable_bytes_cannot_publish_receipt():
+    cap = capture_bytes(b"ok")
+    ground = ground_for_capture(cap)
+    registry = QualifiedByteExecutor()
+    registry.register(OperationCapability("bad-result"),
+                      lambda data,opts: {"unserializable": {1,2}})
+    result = registry.execute(cap, ground, "bad-result")
+    assert result == {"status": "UNRESOLVED", "reason": "INVALID_OPERATOR_RESULT"}
