@@ -12,6 +12,8 @@ The observer-facing input language, metadata-only model discovery experiment, ou
 
 For the implemented architecture-independent byte observer, extensible source and decoder registries, and the separation between observation and qualified execution, see [Universal Byte Ground and Execution](UNIVERSAL_BYTE_GROUND_AND_EXECUTION.md). The generic byte-fabric experiments live outside the 64 KiB core.
 
+The first observer-specified result selector is implemented in [Goal-Directed Byte Navigation](GOAL_DIRECTED_BYTE_NAVIGATION.md). A typed goal is matched to admitted source/decoder/realizer relations rather than a fixed operator name.
+
 ## Development discipline
 
 A proposed capability enters the runtime only when it has:

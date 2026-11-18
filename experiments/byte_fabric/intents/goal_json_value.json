@@ -1,0 +1,17 @@
+{
+  "operation": "bytes.realize",
+  "target": "workspace:experiments/byte_fabric/fixtures/state.json",
+  "output": "jsonl",
+  "options": {
+    "goal": {
+      "kind": "value.json",
+      "parameters": {
+        "path": "/observer/constraints/verified"
+      },
+      "expected_result": {
+        "value": true,
+        "value_type": "bool"
+      }
+    }
+  }
+}

@@ -29,6 +29,18 @@ python -m experiments.observer_intent.arbitrate \
 
 The returned catalogue lists byte sources, built-in and registered decoders, typed local operators, input/completeness requirements and permitted HTTPS hosts. A new observer-host can advertise its own sources or operators without changing the compact VL-64 core.
 
+## Describe the result you want, not its implementation
+
+The `bytes.realize` intention asks for a **result kind** (such as `value.json`, `digest.sha256`, `links.html`, or a host-defined kind) rather than a named operator. A [GoalNavigator](navigator.py) chooses among installed relations, checks source completeness and typed-view requirements, and returns a replayable path-and-execution receipt. The host can register new relations without modifying the compact VL-64 core.
+
+```bash
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/goal_json_value.json \
+  --out selected-result.jsonl
+```
+
+See the [goal-directed navigation design](../../docs/GOAL_DIRECTED_BYTE_NAVIGATION.md) and the live [goal-navigation workflow](../../.github/workflows/goal-navigation.yml).
+
 ## General callable operations
 
 | Observer operation | Result | Requirements |

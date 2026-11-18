@@ -75,6 +75,8 @@ print(request.digest)
 
 The [generic byte-fabric lab](experiments/byte_fabric/README.md) takes this request to a qualified file, byte stream or HTTPS source, builds an exact byte Ground, and optionally attaches typed views. `bytes.execute` can request registered, bounded operations such as SHA-256, byte slicing or JSON-pointer extraction, with an execution receipt. Unknown formats remain valid byte Grounds, and host-installed plug-ins can recognize additional architectures without changing the core.
 
+To describe **the result rather than the operator**, use `bytes.realize` with a typed goal, such as `value.json` or `digest.sha256`. The host selects a qualified relation and produces a replayable execution receipt. See [Goal-directed byte navigation](docs/GOAL_DIRECTED_BYTE_NAVIGATION.md).
+
 For example, run `python -m experiments.observer_intent.arbitrate --intent experiments/byte_fabric/intents/host_capabilities.json --out capabilities.json` to ask an observer-host what sources, decoders and operators it supports. Specialized providers, including the earlier [model-inspection lab](experiments/observer_intent/README.md), use the same intention contract.
 
 ### Navigate a modular state
