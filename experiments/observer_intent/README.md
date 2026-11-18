@@ -79,6 +79,8 @@ On November 18, 2026, the [GitHub Actions run](https://github.com/Kier73/VL-64/a
 - The GitHub document operator navigated the repository's pinned document link and emitted `jsonl`.
 - **57 tests passed** before subsequent additional security tests.
 
+The [versioned observer session summary](datasets/2026-11-18-run-44389239409-summary.json) preserves four real external requests, output receipts, and the record of a constrained architecture-selection run. The [successful execution](https://github.com/Kier73/VL-64/actions/runs/44389239409) captured complete response artifacts for later examination.
+
 The workflow attaches the generated outputs as artifacts for independent inspection.
 
 ## What this enables, and what comes next
