@@ -219,6 +219,19 @@ python -m experiments.observer_intent.arbitrate \
 
 See the [evidence and methodology](../../docs/NONAFFINE_AND_OBSERVABLE_GROUNDS.md), [saved non-affine Ground](datasets/2026-11-18-nonaffine-ground.json), [saved quotient](datasets/2026-11-18-observable-quotient-ground.json) and [controlled measurements](datasets/2026-11-18-nonaffine-and-observable-measurements.json). These experiments change no source bytes in the compact runtime.
 
+## Active Ground experiments
+
+The [active Ground navigator](active_ground.py) and [host-facing experiment](active_lab.py) extend static state inference into **intention-driven observation**. Candidate finite action models predict exact byte-output traces. A bounded planner selects the most informative affordable action word; a separately admitted resettable host probe supplies real outputs, and the observations eliminate inconsistent descriptions. The candidate set is never silently replaced when every model is contradicted.
+
+```bash
+python -m experiments.byte_fabric.active_lab --out artifacts
+python -m experiments.observer_intent.arbitrate \
+  --intent artifacts/active-next-probe-intent.json \
+  --out artifacts/suggested-experiment.json
+```
+
+A separate optional `--live-only` experiment uses **actual read-only public GitHub bytes** for a resource-identity discrimination task, not a remote stateful model. See [Active Action-Conditioned Grounds](../../docs/ACTIVE_ACTION_GROUNDS.md) for its authority and evidence contracts.
+
 ## Next frontier
 
 The general observer-to-realizer interface should evolve into an **evidence- and cost-aware typed relation search**:

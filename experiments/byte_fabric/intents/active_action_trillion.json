@@ -1,0 +1,9 @@
+{
+  "operation": "ground.action.navigate",
+  "target": "workspace:experiments/byte_fabric/datasets/2026-11-18-active-selected-ground.json",
+  "output": "json",
+  "options": {
+    "action": "advance",
+    "steps": 1000000000000
+  }
+}

@@ -187,6 +187,19 @@ python -m experiments.observer_intent.arbitrate \
 
 For an observation-only result, use `observable_quotient_trillion.json`. That smaller Ground can answer the observer's future-state question but **cannot reconstruct discarded internal bytes**. See [Non-Affine and Observable Grounds](docs/NONAFFINE_AND_OBSERVABLE_GROUNDS.md) for exact validation and limits.
 
+## Ask the Virtual Layer what to observe next
+
+VL-64's [active action-conditioned Ground experiment](docs/ACTIVE_ACTION_GROUNDS.md) can compare several declared finite-state descriptions, select a short permitted action sequence that best distinguishes them, and use the **actual observed output bytes** to eliminate inconsistent candidates. A contradiction is retained rather than misreported as a successful Ground.
+
+```bash
+python -m experiments.byte_fabric.active_lab --out artifacts
+python -m experiments.observer_intent.arbitrate \
+  --intent artifacts/active-next-probe-intent.json \
+  --out artifacts/recommended-probe.json
+```
+
+The observer-facing `ground.active.plan` request recommends an informative experiment without executing it. Actual action execution requires a separately installed qualified host. The `ground.action.navigate` request can later navigate a saved model through a trillion **modeled** repeated transitions without sending those actions to an external service.
+
 ## Documentation
 
 - [Usage guide](docs/USAGE_GUIDE.md) — commands, API examples, and extension points.
@@ -195,3 +208,4 @@ For an observation-only result, use `observable_quotient_trillion.json`. That sm
 - [Generic byte fabric](experiments/byte_fabric/README.md) — architecture-independent byte observation, decoder plug-ins, and qualified execution.
 - [Compressive Virtual Grounds](docs/COMPRESSIVE_VIRTUAL_GROUNDS.md) — discover a predictive byte interpreter, compress observed state histories, and compose distant-state navigation.
 - [Non-Affine and Observable Grounds](docs/NONAFFINE_AND_OBSERVABLE_GROUNDS.md) — discover finite-state transitions and compress according to future-stable observer equivalence.
+- [Active Action-Conditioned Grounds](docs/ACTIVE_ACTION_GROUNDS.md) — select informative host-qualified observations, refine finite hypotheses, and navigate retained models.

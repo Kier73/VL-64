@@ -1,0 +1,126 @@
+{
+  "schema": "vl64.active-ground-experiment-evidence.v1",
+  "source_run": "https://github.com/Kier73/VL-64/actions/runs/44419367534",
+  "methodology": "Two controlled independently resettable probes discriminate four externally declared candidates; separate stateless read-only resource identity test with actual GitHub bytes",
+  "controlled": {
+    "action_words": [
+      [
+        "advance",
+        "inspect"
+      ],
+      [
+        "switch",
+        "inspect"
+      ]
+    ],
+    "candidate_count_final": 1,
+    "candidate_count_initial": 4,
+    "core_source_modified": false,
+    "future_external_state_proven": false,
+    "information_gain_per_round_bits": [
+      1,
+      1
+    ],
+    "modeled_repeated_action_horizon": 1000000000000,
+    "modeled_terminal_state": 1,
+    "power_compositions": 53,
+    "resettable_probe_rounds": 2,
+    "schema": "vl64.active-action-ground-lab.v1",
+    "scope": "controlled-independent-resettable-synthetic-machine",
+    "selected_ground_digest": "145faa86e5ff3b026d44f2df7b0135b4eb74456aa18c2aaf5b56e50144835ec2",
+    "status": "ONE_HYPOTHESIS_REMAINS",
+    "total_observed_action_outputs": 4,
+    "training_ms_one_run": 0.3755
+  },
+  "real_readonly_web": {
+    "evidence": {
+      "initial_ground_digests": [
+        "c34e22c8be9900bcfea0777b3ce5aa0ac4a5c62d68c8bf2f86a9b6a185a6e714",
+        "0857f1ce15db276cc4f058ccae4c88e0016680d06615daf44c9b1280a8cc08e1"
+      ],
+      "observations": [
+        {
+          "action_word": [
+            "read_readme"
+          ],
+          "after_hypothesis_digests": [
+            "c34e22c8be9900bcfea0777b3ce5aa0ac4a5c62d68c8bf2f86a9b6a185a6e714"
+          ],
+          "before_hypothesis_digests": [
+            "0857f1ce15db276cc4f058ccae4c88e0016680d06615daf44c9b1280a8cc08e1",
+            "c34e22c8be9900bcfea0777b3ce5aa0ac4a5c62d68c8bf2f86a9b6a185a6e714"
+          ],
+          "eliminated_hypothesis_digests": [
+            "0857f1ce15db276cc4f058ccae4c88e0016680d06615daf44c9b1280a8cc08e1"
+          ],
+          "observation_digest": "a8c843c387f3c550fd8e85cf2b1ee71545c69f1f2a6a1c0dbe124460b9cb18be",
+          "observed_output_digests": [
+            "7cf94caa9d8a61b9e2bd63cca513b970c10bebe39a2d2ef5160cd8420a3696f7"
+          ],
+          "observed_outputs_hex": [
+            "240522af502670830df33f1385bc782c443103b25224b201242cf816a80f18cd"
+          ],
+          "observer_authority": "read-only-remote",
+          "observer_source": "pinned-public-github-raw-read-only",
+          "plan_digest": "4d3b9d00c0ff245d60cf81e095d955ad96b934f205cf4c64356d23deb07b5534",
+          "schema": "vl64.active-ground-observation.v1",
+          "scope": "qualified-recorded-output-not-physical-equivalence-proof",
+          "status": "ONE_HYPOTHESIS_REMAINS"
+        }
+      ],
+      "remaining_ground_digests": [
+        "c34e22c8be9900bcfea0777b3ce5aa0ac4a5c62d68c8bf2f86a9b6a185a6e714"
+      ],
+      "schema": "vl64.active-ground-session.v1",
+      "scope": "finite-candidate-elimination-not-general-model-learning",
+      "session_digest": "7355b2d67eaf0541c63c891c89dc5beff681a800fb75063c90ff54d305a9b8fb",
+      "status": "ONE_HYPOTHESIS_REMAINS"
+    },
+    "host_policy": "read-only-remote",
+    "initial_byte_observations": [
+      {
+        "capture_status": "COMPLETE",
+        "observed_bytes": 12829,
+        "observed_sha256": "22c85d02b03148db03af55225dc6034b097c7dd42c1978a2f9f5f503920431da",
+        "source_scope": "public-pinned-revision-read-only",
+        "url": "https://raw.githubusercontent.com/Kier73/VL-64/e0cb4d5dfd21c018a00e9f0c95f5d73263472955/docs/RESEARCH_GOALS.md"
+      },
+      {
+        "capture_status": "COMPLETE",
+        "observed_bytes": 11061,
+        "observed_sha256": "240522af502670830df33f1385bc782c443103b25224b201242cf816a80f18cd",
+        "source_scope": "public-pinned-revision-read-only",
+        "url": "https://raw.githubusercontent.com/Kier73/VL-64/e0cb4d5dfd21c018a00e9f0c95f5d73263472955/README.md"
+      }
+    ],
+    "model_consistency_digests": [
+      "c34e22c8be9900bcfea0777b3ce5aa0ac4a5c62d68c8bf2f86a9b6a185a6e714"
+    ],
+    "schema": "vl64.active-web-byte-observation.v1",
+    "scope": "read-only-resource-identity-discrimination-not-remote-stateful-automata-learning",
+    "selected_actions": [
+      "read_readme"
+    ],
+    "selected_byte_observations": [
+      {
+        "capture_status": "COMPLETE",
+        "observed_bytes": 11061,
+        "observed_sha256": "240522af502670830df33f1385bc782c443103b25224b201242cf816a80f18cd",
+        "source_scope": "public-pinned-revision-read-only",
+        "url": "https://raw.githubusercontent.com/Kier73/VL-64/e0cb4d5dfd21c018a00e9f0c95f5d73263472955/README.md"
+      }
+    ],
+    "source_revision": "e0cb4d5dfd21c018a00e9f0c95f5d73263472955",
+    "status": "ONE_HYPOTHESIS_REMAINS"
+  },
+  "cross_runtime": {
+    "Python_3_11_job": 135207967312,
+    "Python_3_13_job": 135207967629,
+    "selected_model_digest_equal": true,
+    "session_digest_equal": true,
+    "remote_bytes_sha256_equal": true,
+    "compact_core_source_bytes": 65093,
+    "test_suite_passed_each": 172
+  },
+  "limitation": "Finite candidate elimination; not autonomous model invention, remote stateful learning, or proof of physical machine behavior"
+}

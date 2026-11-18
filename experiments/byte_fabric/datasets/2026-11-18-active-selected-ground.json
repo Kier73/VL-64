@@ -1,0 +1,55 @@
+{
+  "actions": [
+    "advance",
+    "inspect",
+    "switch"
+  ],
+  "ground_digest": "145faa86e5ff3b026d44f2df7b0135b4eb74456aa18c2aaf5b56e50144835ec2",
+  "initial_state": 0,
+  "schema": "vl64.action-conditioned-ground.v1",
+  "scope": "host-declared-complete-finite-deterministic-candidate",
+  "states": [
+    {
+      "advance": {
+        "next": 1,
+        "output_hex": "7469636b"
+      },
+      "inspect": {
+        "next": 0,
+        "output_hex": "7265616479"
+      },
+      "switch": {
+        "next": 2,
+        "output_hex": "7469636b"
+      }
+    },
+    {
+      "advance": {
+        "next": 1,
+        "output_hex": "7469636b"
+      },
+      "inspect": {
+        "next": 1,
+        "output_hex": "79"
+      },
+      "switch": {
+        "next": 1,
+        "output_hex": "7469636b"
+      }
+    },
+    {
+      "advance": {
+        "next": 2,
+        "output_hex": "7469636b"
+      },
+      "inspect": {
+        "next": 2,
+        "output_hex": "6c656674"
+      },
+      "switch": {
+        "next": 2,
+        "output_hex": "7469636b"
+      }
+    }
+  ]
+}

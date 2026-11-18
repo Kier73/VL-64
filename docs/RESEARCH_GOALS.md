@@ -18,6 +18,8 @@ The first observer-specified result selector is implemented in [Goal-Directed By
 
 The implemented [Non-Affine and Observable Grounds](NONAFFINE_AND_OBSERVABLE_GROUNDS.md) compare validated algebraic and finite-state descriptions, discover a closed non-affine state graph from bytes and refine the finite model into a smaller future-equivalent observer-specific quotient. They retain counterexample receipts while leaving the 64 KiB core unchanged.
 
+[Active Action-Conditioned Grounds](ACTIVE_ACTION_GROUNDS.md) now examines the next research step: plan qualified observation sequences that distinguish competing finite state hypotheses, update the candidate set using actual byte evidence, preserve counterexamples and navigate the surviving modeled transition without iterative actuation. This first version-space prototype is explicitly not general L* learning.
+
 ## Development discipline
 
 A proposed capability enters the runtime only when it has:

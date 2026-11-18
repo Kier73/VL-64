@@ -1,0 +1,230 @@
+{
+  "candidates": [
+    {
+      "actions": [
+        "advance",
+        "inspect",
+        "switch"
+      ],
+      "ground_digest": "03e2b32f2f9e6e3fd442115313c08640e5cc23d8911ed3acf8ecdf42e086b7a4",
+      "initial_state": 0,
+      "schema": "vl64.action-conditioned-ground.v1",
+      "scope": "host-declared-complete-finite-deterministic-candidate",
+      "states": [
+        {
+          "advance": {
+            "next": 1,
+            "output_hex": "7469636b"
+          },
+          "inspect": {
+            "next": 0,
+            "output_hex": "7265616479"
+          },
+          "switch": {
+            "next": 2,
+            "output_hex": "7469636b"
+          }
+        },
+        {
+          "advance": {
+            "next": 1,
+            "output_hex": "7469636b"
+          },
+          "inspect": {
+            "next": 1,
+            "output_hex": "78"
+          },
+          "switch": {
+            "next": 1,
+            "output_hex": "7469636b"
+          }
+        },
+        {
+          "advance": {
+            "next": 2,
+            "output_hex": "7469636b"
+          },
+          "inspect": {
+            "next": 2,
+            "output_hex": "6c656674"
+          },
+          "switch": {
+            "next": 2,
+            "output_hex": "7469636b"
+          }
+        }
+      ]
+    },
+    {
+      "actions": [
+        "advance",
+        "inspect",
+        "switch"
+      ],
+      "ground_digest": "52cdc32adeedd6a69161dfa99e05785a08326c978bdc5118e7c48795e18411eb",
+      "initial_state": 0,
+      "schema": "vl64.action-conditioned-ground.v1",
+      "scope": "host-declared-complete-finite-deterministic-candidate",
+      "states": [
+        {
+          "advance": {
+            "next": 1,
+            "output_hex": "7469636b"
+          },
+          "inspect": {
+            "next": 0,
+            "output_hex": "7265616479"
+          },
+          "switch": {
+            "next": 2,
+            "output_hex": "7469636b"
+          }
+        },
+        {
+          "advance": {
+            "next": 1,
+            "output_hex": "7469636b"
+          },
+          "inspect": {
+            "next": 1,
+            "output_hex": "78"
+          },
+          "switch": {
+            "next": 1,
+            "output_hex": "7469636b"
+          }
+        },
+        {
+          "advance": {
+            "next": 2,
+            "output_hex": "7469636b"
+          },
+          "inspect": {
+            "next": 2,
+            "output_hex": "7269676874"
+          },
+          "switch": {
+            "next": 2,
+            "output_hex": "7469636b"
+          }
+        }
+      ]
+    },
+    {
+      "actions": [
+        "advance",
+        "inspect",
+        "switch"
+      ],
+      "ground_digest": "145faa86e5ff3b026d44f2df7b0135b4eb74456aa18c2aaf5b56e50144835ec2",
+      "initial_state": 0,
+      "schema": "vl64.action-conditioned-ground.v1",
+      "scope": "host-declared-complete-finite-deterministic-candidate",
+      "states": [
+        {
+          "advance": {
+            "next": 1,
+            "output_hex": "7469636b"
+          },
+          "inspect": {
+            "next": 0,
+            "output_hex": "7265616479"
+          },
+          "switch": {
+            "next": 2,
+            "output_hex": "7469636b"
+          }
+        },
+        {
+          "advance": {
+            "next": 1,
+            "output_hex": "7469636b"
+          },
+          "inspect": {
+            "next": 1,
+            "output_hex": "79"
+          },
+          "switch": {
+            "next": 1,
+            "output_hex": "7469636b"
+          }
+        },
+        {
+          "advance": {
+            "next": 2,
+            "output_hex": "7469636b"
+          },
+          "inspect": {
+            "next": 2,
+            "output_hex": "6c656674"
+          },
+          "switch": {
+            "next": 2,
+            "output_hex": "7469636b"
+          }
+        }
+      ]
+    },
+    {
+      "actions": [
+        "advance",
+        "inspect",
+        "switch"
+      ],
+      "ground_digest": "011e03bd665af9d7db8cd3bd4e152c8b66c8370081b118b2f2145ea3788eeb2a",
+      "initial_state": 0,
+      "schema": "vl64.action-conditioned-ground.v1",
+      "scope": "host-declared-complete-finite-deterministic-candidate",
+      "states": [
+        {
+          "advance": {
+            "next": 1,
+            "output_hex": "7469636b"
+          },
+          "inspect": {
+            "next": 0,
+            "output_hex": "7265616479"
+          },
+          "switch": {
+            "next": 2,
+            "output_hex": "7469636b"
+          }
+        },
+        {
+          "advance": {
+            "next": 1,
+            "output_hex": "7469636b"
+          },
+          "inspect": {
+            "next": 1,
+            "output_hex": "79"
+          },
+          "switch": {
+            "next": 1,
+            "output_hex": "7469636b"
+          }
+        },
+        {
+          "advance": {
+            "next": 2,
+            "output_hex": "7469636b"
+          },
+          "inspect": {
+            "next": 2,
+            "output_hex": "7269676874"
+          },
+          "switch": {
+            "next": 2,
+            "output_hex": "7469636b"
+          }
+        }
+      ]
+    }
+  ],
+  "costs": {
+    "advance": 1,
+    "inspect": 1,
+    "switch": 1
+  },
+  "schema": "vl64.action-candidate-catalogue.v1"
+}

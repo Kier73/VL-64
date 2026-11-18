@@ -1,0 +1,9 @@
+{
+  "operation": "ground.active.plan",
+  "target": "workspace:experiments/byte_fabric/datasets/2026-11-18-active-candidates.json",
+  "output": "json",
+  "options": {
+    "max_depth": 2,
+    "max_words": 32
+  }
+}

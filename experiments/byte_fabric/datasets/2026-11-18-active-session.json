@@ -1,0 +1,83 @@
+{
+  "initial_ground_digests": [
+    "03e2b32f2f9e6e3fd442115313c08640e5cc23d8911ed3acf8ecdf42e086b7a4",
+    "52cdc32adeedd6a69161dfa99e05785a08326c978bdc5118e7c48795e18411eb",
+    "145faa86e5ff3b026d44f2df7b0135b4eb74456aa18c2aaf5b56e50144835ec2",
+    "011e03bd665af9d7db8cd3bd4e152c8b66c8370081b118b2f2145ea3788eeb2a"
+  ],
+  "observations": [
+    {
+      "action_word": [
+        "advance",
+        "inspect"
+      ],
+      "after_hypothesis_digests": [
+        "011e03bd665af9d7db8cd3bd4e152c8b66c8370081b118b2f2145ea3788eeb2a",
+        "145faa86e5ff3b026d44f2df7b0135b4eb74456aa18c2aaf5b56e50144835ec2"
+      ],
+      "before_hypothesis_digests": [
+        "011e03bd665af9d7db8cd3bd4e152c8b66c8370081b118b2f2145ea3788eeb2a",
+        "03e2b32f2f9e6e3fd442115313c08640e5cc23d8911ed3acf8ecdf42e086b7a4",
+        "145faa86e5ff3b026d44f2df7b0135b4eb74456aa18c2aaf5b56e50144835ec2",
+        "52cdc32adeedd6a69161dfa99e05785a08326c978bdc5118e7c48795e18411eb"
+      ],
+      "eliminated_hypothesis_digests": [
+        "03e2b32f2f9e6e3fd442115313c08640e5cc23d8911ed3acf8ecdf42e086b7a4",
+        "52cdc32adeedd6a69161dfa99e05785a08326c978bdc5118e7c48795e18411eb"
+      ],
+      "observation_digest": "06304b02048d8764b27462f4c5ff4a1bbcb9609f1e8a7b91203ab625d7694b0e",
+      "observed_output_digests": [
+        "55a4bc5be68ea5c30cbe4d07e3bf951163b5a207dfd628ea53a2eb21072a9f3b",
+        "a1fce4363854ff888cff4b8e7875d600c2682390412a8cf79b37d0b11148b0fa"
+      ],
+      "observed_outputs_hex": [
+        "7469636b",
+        "79"
+      ],
+      "observer_authority": "local-simulated",
+      "observer_source": "controlled-resettable-oracle",
+      "plan_digest": "c96ab6921dea6ed4b3645a7d2db584b4fa228bf0a63d7b33cf834d1df29ba0b3",
+      "schema": "vl64.active-ground-observation.v1",
+      "scope": "qualified-recorded-output-not-physical-equivalence-proof",
+      "status": "HYPOTHESES_REFINED"
+    },
+    {
+      "action_word": [
+        "switch",
+        "inspect"
+      ],
+      "after_hypothesis_digests": [
+        "145faa86e5ff3b026d44f2df7b0135b4eb74456aa18c2aaf5b56e50144835ec2"
+      ],
+      "before_hypothesis_digests": [
+        "011e03bd665af9d7db8cd3bd4e152c8b66c8370081b118b2f2145ea3788eeb2a",
+        "145faa86e5ff3b026d44f2df7b0135b4eb74456aa18c2aaf5b56e50144835ec2"
+      ],
+      "eliminated_hypothesis_digests": [
+        "011e03bd665af9d7db8cd3bd4e152c8b66c8370081b118b2f2145ea3788eeb2a"
+      ],
+      "observation_digest": "6a492393126550b6d47a20aee6cf5b114062aa5d02af7c8dc31741cc00d942ed",
+      "observed_output_digests": [
+        "55a4bc5be68ea5c30cbe4d07e3bf951163b5a207dfd628ea53a2eb21072a9f3b",
+        "360f84035942243c6a36537ae2f8673485e6c04455a0a85a0db19690f2541480"
+      ],
+      "observed_outputs_hex": [
+        "7469636b",
+        "6c656674"
+      ],
+      "observer_authority": "local-simulated",
+      "observer_source": "controlled-resettable-oracle",
+      "plan_digest": "0d4798157eded4b7d614342476181afa20cc02afbac87c793e583d52c7d645fe",
+      "schema": "vl64.active-ground-observation.v1",
+      "scope": "qualified-recorded-output-not-physical-equivalence-proof",
+      "status": "ONE_HYPOTHESIS_REMAINS"
+    }
+  ],
+  "remaining_ground_digests": [
+    "145faa86e5ff3b026d44f2df7b0135b4eb74456aa18c2aaf5b56e50144835ec2"
+  ],
+  "schema": "vl64.active-ground-session.v1",
+  "scope": "finite-candidate-elimination-not-general-model-learning",
+  "session_digest": "a0c9a049b73268f081f1a491bdefd781c834b573180ca1de58eb15ade08ecb2b",
+  "status": "ONE_HYPOTHESIS_REMAINS"
+}
