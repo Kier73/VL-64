@@ -229,6 +229,7 @@ def doh_wire_cloudflare():
         return rec
     try:
         rec.update(decode_dns_a(raw))
+        rec["raw_packet_b64"] = base64.b64encode(raw).decode("ascii")
         rec["interpretation"] = "dns-wire-response-a"
         rec["scope"] = "verified_dns_wire_decode_of_https_response_not_dnssec"
     except (ValueError, struct.error) as exc:
@@ -279,6 +280,7 @@ def git_advertisement():
         capabilities = sorted({item.split("=")[0] for item in caps})
         rec.update({
             "interpretation": "git-protocol-v2-capability-advertisement",
+            "raw_packet_b64": base64.b64encode(raw).decode("ascii"),
             "frames": len(frames),
             "smart_http_service_preamble": any(
                 frame.startswith(b"# service=git-upload-pack") for frame in frames),
@@ -320,6 +322,7 @@ def git_read_only_ls_refs():
         sha = head[:40].decode("ascii")
         rec.update({
             "interpretation": "git-v2-ls-refs",
+            "raw_packet_b64": base64.b64encode(raw).decode("ascii"),
             "head_commit": sha, "response_frames": len(frames),
             "scope": "read_only_git_protocol_response_not_host_authority",
         })
@@ -592,11 +595,66 @@ def run():
     }
 
 
+def verify_dataset(result):
+    """Replay retained protocol packets and relation evidence without Internet."""
+    try:
+        claimed_digest = result["dataset_digest"]
+        unsigned = {k: v for k, v in result.items() if k != "dataset_digest"}
+        if domain_digest("vl64.internet-dataset.v1", unsigned) != claimed_digest:
+            raise ValueError("Dataset content digest mismatch")
+        graph = InternetGround()
+        for name, kind in result["graph"]["nodes"].items():
+            graph.node(name, kind)
+        for edge in result["graph"]["edges"]:
+            graph.link(edge["from"], edge["to"], edge["relation"],
+                       edge["witness_sha256"])
+        if graph.fingerprint() != result["graph"]["fingerprint"]:
+            raise ValueError("Graph fingerprint mismatch")
+        verified_packets = 0
+        for item in result["observations"]:
+            if "raw_packet_b64" not in item:
+                continue
+            raw = base64.b64decode(item["raw_packet_b64"], validate=True)
+            if digest(raw) != item["body_sha256"]:
+                raise ValueError("Raw protocol packet digest mismatch")
+            if item["operation"] == "cloudflare_doh_wire_A_example.com":
+                if decode_dns_a(raw)["answer_set_sha256"] != item["answer_set_sha256"]:
+                    raise ValueError("DNS answer interpretation mismatch")
+            elif item["operation"] == "git_v2_capabilities":
+                frames = GitWireV2Parser.parse_pkt_lines(raw)
+                if not any(line.strip() == b"version 2" for line in frames):
+                    raise ValueError("Git v2 capability interpretation mismatch")
+            elif item["operation"] == "git_v2_ls_refs":
+                frames = GitWireV2Parser.parse_pkt_lines(raw)
+                if not any(line.startswith(item["head_commit"].encode() + b" HEAD")
+                           for line in frames):
+                    raise ValueError("Git head interpretation mismatch")
+            else:
+                raise ValueError("Unexpected retained packet operation")
+            verified_packets += 1
+        nav = result.get("navigation", {})
+        if nav.get("status") == "OBSERVED_DESCRIPTION_PATH":
+            repo = "repo:Kier73/VL-64"
+            goal = "research-goals:" + nav["goals_sha256"]
+            candidate = graph.navigate(repo, goal)
+            if candidate["path"] != nav["path"]:
+                raise ValueError("Recorded navigation path mismatch")
+        return {"status": "VERIFIED", "packet_replays": verified_packets,
+                "graph_relations": len(graph.edges),
+                "scope": "dataset_integrity_and_retained_protocol_bytes_only"}
+    except (ValueError, KeyError, TypeError, IndexError, UnicodeError) as exc:
+        return {"status": "REJECTED", "reason": str(exc)[:160]}
+
+
 def main():
     parser = argparse.ArgumentParser(description="Observe public internet relations as VL-64 Grounds")
     parser.add_argument("--out", default="internet-ground-dataset.json")
     args = parser.parse_args()
     result = run()
+    result["dataset_digest"] = domain_digest("vl64.internet-dataset.v1", result)
+    check = verify_dataset(result)
+    if check["status"] != "VERIFIED":
+        raise SystemExit("Failed to independently replay captured packet evidence")
     serialized = json.dumps(result, sort_keys=True, indent=2, allow_nan=False) + "\n"
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(serialized, encoding="utf-8")
@@ -604,6 +662,8 @@ def main():
     print("VL64_INTERNET_NAVIGATION " + json.dumps(result["navigation"], sort_keys=True))
     print("VL64_INTERNET_RECORDS " + json.dumps(result["observations"], sort_keys=True))
     print("VL64_INTERNET_GROUND_SHA256 " + result["graph"]["fingerprint"])
+    print("VL64_INTERNET_DATASET_SHA256 " + result["dataset_digest"])
+    print("VL64_INTERNET_OFFLINE_VERIFY " + json.dumps(check, sort_keys=True))
     # A successful lab run includes honest unresolved probes. Fail only on loss
     # of all observation capability or failure of the independent TCP reference.
     if not result["summary"]["successful_observations"]:
