@@ -4,8 +4,9 @@
   "output": "json",
   "options": {
     "metadata_only": true,
-    "catalog_limit": 12,
+    "catalog_limit": 20,
     "require_architecture": true,
-    "max_candidates": 6
+    "max_candidates": 8,
+    "library": "transformers"
   }
 }
