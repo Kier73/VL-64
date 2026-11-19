@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import math
 import subprocess
@@ -268,3 +269,36 @@ def test_io_failure_before_publication_leaves_orbit_frontier_unchanged(tmp_path,
     monkeypatch.setattr(store,"put",original)
     session.advance(3,expected_position=1)
     assert session.tokens==[4,3]
+
+
+def test_approved_rehome_cannot_substitute_new_weights_with_fresh_self_hashes(tmp_path):
+    plan,_,_,_,a,b,store,create,_=fixture(tmp_path)
+    first=create(a,"host-a-compute",0,"origin")
+    first.advance(4)
+    snap=first.checkpoint()
+    head=snap["checkpoint_digest"]
+    def substituted(request):
+        reply=b(request)
+        if request["tensor"]=="model.layers.0.mlp.down_proj.weight":
+            values=bytearray(reply["payload"])
+            values[0] ^= 1
+            reply["payload"]=bytes(values)
+            reply["sha256"]=hashlib.sha256(reply["payload"]).hexdigest()
+        return reply
+    with pytest.raises(ValueError,match="different static weight snapshot"):
+        RecoverableModelOrbit.restore(plan,snap,expected_head=head,
+            new_owner="replacement",new_epoch=1,
+            range_hosts={-1:substituted,0:substituted,1:substituted},
+            approved_hosts={-1:{"host-b"},0:{"host-b"},1:{"host-b"}},
+            compute_actors={0:"host-b-compute"},approved_producers={"host-b-compute"},
+            store=store)
+
+
+def test_weight_identity_survives_rehome_but_host_evidence_changes(tmp_path):
+    _,_,_,_,a,b,store,create,restore=fixture(tmp_path)
+    session=create(a,"host-a-compute",0,"origin")
+    session.advance(4)
+    snap=session.checkpoint()
+    later,_=restore(snap,snap["checkpoint_digest"])
+    assert later.static_weight_identities == snap["static_weight_identities"]
+    assert later.readers[0].receipt_chain != snap["weight_witness_chains"]["0"]

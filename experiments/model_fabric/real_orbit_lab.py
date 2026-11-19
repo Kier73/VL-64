@@ -75,6 +75,8 @@ def run(*, directory=None, tokens=TOKENS):
         if (new_checkpoint["previous_checkpoint"]!=pinned_head or
                 new_checkpoint["epoch"]!=1 or new_checkpoint["tokens"]!=list(tokens)):
             raise ValueError("Restored model orbit lost causal checkpoint lineage")
+        if checkpoint["static_weight_identities"]!=new_checkpoint["static_weight_identities"]:
+            raise ValueError("Rehomed pinned model changed pretrained layer weights")
         report={
             "schema":"vl64.real-pretrained-recovered-orbit.v1",
             "status":"REAL_BF16_TWO_LAYER_RESTART_CONTINUITY_VERIFIED",
@@ -84,6 +86,7 @@ def run(*, directory=None, tokens=TOKENS):
             "next_checkpoint_head":new_checkpoint["checkpoint_digest"],
             "old_owner":checkpoint["owner"],"new_owner":new_checkpoint["owner"],
             "old_epoch":checkpoint["epoch"],"new_epoch":new_checkpoint["epoch"],
+            "static_weight_identities":new_checkpoint["static_weight_identities"],
             "weight_range_witness_chains_before":checkpoint["weight_witness_chains"],
             "weight_range_witness_chains_after":new_checkpoint["weight_witness_chains"],
             "exact_range_reads_by_assignment":observed_ranges,
