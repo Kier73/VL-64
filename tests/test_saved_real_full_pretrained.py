@@ -86,7 +86,7 @@ def test_pinned_full_pretrained_30_layer_reports_and_checkpoint_are_consistent()
     assert complete['weight_payload_bytes_cumulative']==root['bytes_acquired']==layer_payload+token_rows==212_408_064
     assert complete['weight_bytes_including_logits']==layer_payload+token_rows+final_norm+full_embeddings==269_032_320
     assert complete['range_reads_cumulative']==root['ranges_acquired']==30*113+2==3392
-    assert complete['range_reads_including_logits']==30*113+2+1+math.ceil(full_embeddings/MAX_RANGE)==4271
+    assert complete['range_reads_including_logits']==30*113+2+1+math.ceil(49_152/(MAX_RANGE//(576*2)))==4271
     assert complete['full_vocab_size']==49_152
     assert complete['selected_next_token']==33
     assert complete['independent_logit_max_abs_error']<=2e-4
