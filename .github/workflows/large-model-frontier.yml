@@ -10,6 +10,8 @@ on:
       - "experiments/model_fabric/scaled_model_lab.py"
       - "tests/test_scaled_model_fabric.py"
       - "tests/test_scaled_model_lab.py"
+      - "tests/test_saved_scaled_model_frontier.py"
+      - "experiments/model_fabric/datasets/2026-11-19-large-model-frontier-observations.json"
       - "docs/SCALE_INDEPENDENT_MODEL_GROUNDS.md"
       - ".github/workflows/large-model-frontier.yml"
   pull_request:
@@ -32,7 +34,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install -e ".[dev]"
       - name: Validate model-scale-neutral index, header, network and numeric contracts
-        run: python -m pytest -q tests/test_scaled_model_fabric.py tests/test_scaled_model_lab.py
+        run: python -m pytest -q tests/test_scaled_model_fabric.py tests/test_scaled_model_lab.py tests/test_saved_scaled_model_frontier.py
       - name: Retain sub-64 KiB original VL-64 source
         run: |
           python - <<'PY'
