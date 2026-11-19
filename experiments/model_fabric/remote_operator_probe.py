@@ -98,7 +98,9 @@ def execute_remote_q_slice(*,observed=None,model=MODEL,revision=REVISION):
         raise ValueError("Inadequate actual BF16 tensor bytes")
 
     # Input is a user-independent numerical probe; no token identity claimed.
-    input_vector=[math.sin((i+1)*0.07)*0.25 for i in range(hidden)]
+    input_vector=[
+        struct.unpack("<f",struct.pack("<f",math.sin((i+1)*0.07)*0.25))[0]
+        for i in range(hidden)]
     normalized=rms_norm(input_vector,gamma,eps=float(epsilon))
     operator=StructuralLinearOperator(
         rows=row_count,cols=hidden,
@@ -137,7 +139,7 @@ def execute_remote_q_slice(*,observed=None,model=MODEL,revision=REVISION):
         "actual_remote_weight_bytes_observed":payload,
         "total_remote_weight_payload_bytes":full_payload,
         "fraction_of_weight_payload_observed":round(payload/full_payload,10),
-        "source_sha256":_sha(json.dumps(remote,sort_keys=True).encode()),
+        "manifest_evidence_sha256":_sha(json.dumps(remote,sort_keys=True).encode()),
         "weight_slice_witnesses":[norm_witness,q_witness],
         "input_vector_sha256":_sha(struct.pack(
             "<"+"f"*len(input_vector),*input_vector)),
