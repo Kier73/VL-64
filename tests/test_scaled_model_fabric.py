@@ -176,3 +176,18 @@ def test_probe_accepts_non_llama_normalization_name():
     result=nav.small_numeric_probe()
     assert result['status']=='WEIGHT_BACKED_NORMALIZATION_SLICE_VERIFIED'
     assert result['tensor']==name and result['actual_weight_bytes']==len(raw)
+
+
+def test_packed_fp4_and_fp6_safetensors_are_structurally_navigable():
+    # Structural admission accepts documented packed dtypes without
+    # hallucinating their dequantized values or incompatible element slices.
+    nav,reqs,_,_=setup({'quant.safetensors':{
+        'expert.fp4':([5],'F4',bytes([1,2,3])),
+        'expert.fp6':([4],'F6_E2M3',bytes([4,5,6])),
+    }})
+    assert nav.locate('expert.fp4')['dtype']=='F4'
+    assert nav.get_raw('expert.fp4')[0]==bytes([1,2,3])
+    assert nav.get_raw('expert.fp6')[0]==bytes([4,5,6])
+    with pytest.raises(ValueError,match='byte alignment'):
+        nav.get_raw('expert.fp4',flat_start=1,count=2)
+    assert nav.small_numeric_probe()['status'].startswith('UNRESOLVED_')
