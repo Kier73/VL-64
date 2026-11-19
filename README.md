@@ -292,3 +292,7 @@ See [Language Models, Pretrained Tensor Navigation and the Model Seed](docs/MODE
 - [Trace-Derived Action Grounds](docs/TRACE_DERIVED_ACTION_GROUNDS.md) — synthesize competing finite action models from byte traces, actively distinguish them, and test modeled navigation.
 - [Monolithic Seed and Self-Grounds](docs/MONOLITHIC_SEED_AND_SELF_GROUNDS.md) — derive a single executable seed and verifiable Ground of the runtime's own modules and source relations.
 - [Multi-Field and Partial-Observation Grounds](docs/MULTIFIELD_PARTIAL_GROUNDS.md) — discover interacting byte regions, represent missing transitions, and request only informative bytes.
+
+### Recoverable pretrained model orbit
+
+The [recoverable pretrained model orbit](docs/PRETRAINED_ORBIT_RECOVERY.md) uses SHA-256-addressed, 64-KiB-or-smaller KV pages and externally pinned checkpoints to resume the verified two-layer pretrained transformer across a new observer-host assignment without replaying accepted tokens. The independent fixture suite tests a fresh Python process, stale/altered evidence rejection, BF16/F32 agreement and rollback. This is local compute with qualified range sources, not an attested remote processor or complete model inference.
