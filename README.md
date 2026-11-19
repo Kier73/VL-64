@@ -276,7 +276,7 @@ python -I artifacts/VL64-ModelSeed.pyz model-verify
 python -I artifacts/VL64-ModelSeed.pyz model-run
 ```
 
-The pretrained example executes first-layer RMS normalization and **four Q-projection rows**, **not full Hugging Face text generation**. Full inference still requires all causally necessary weights, tokenization, architecture semantics and qualified computation hosts. The 65,093-byte compact source is unchanged.
+The portable 38 KiB seed executes first-layer RMS normalization and **four Q-projection rows**. A separate [typed pretrained layer adapter](docs/PRETRAINED_LAYER0_GROUND.md) now executes a **complete first-layer decoder pass** over genuine qualified BF16/F32 weight ranges: token embeddings, RoPE/GQA, attention, SwiGLU and both residuals, with an independent scalar reference and cached weights across positions. The optional pinned-model verification acquires approximately 7.08 MB of first-layer BF16 parameters through bounded HTTPS ranges and refuses to claim success without exact bytes. This still does **not** establish full 30-layer language generation. The 65,093-byte compact source is unchanged.
 
 See [Language Models, Pretrained Tensor Navigation and the Model Seed](docs/MODEL_EXECUTION_GROUNDS.md) for results, evidence and reproducible commands.
 
