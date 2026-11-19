@@ -77,7 +77,8 @@ def test_selected_pretrained_weight_ranges_execute_through_VL64(monkeypatch):
     assert result["normalized_input_dimension"]==576
     assert result["q_projection_output_rows"]==4
     assert result["actual_remote_weight_bytes_observed"]==5760
-    assert result["reference_max_abs_error"]<=1e-7
+    assert result["reference_max_abs_error_quantized_12dp"]<=1e-7
+    assert result["independent_numeric_reference_passed"] is True
     assert result["full_model_text_generated"] is False
     assert result["token_embedding_observed"] is False
     assert captured==[(100,1251),(1252,5859)]
