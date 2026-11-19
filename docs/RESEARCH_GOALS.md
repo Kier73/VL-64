@@ -22,6 +22,8 @@ The implemented [Non-Affine and Observable Grounds](NONAFFINE_AND_OBSERVABLE_GRO
 
 [Trace-Derived Action Grounds](TRACE_DERIVED_ACTION_GROUNDS.md) extends active observation from testing host-provided candidates to **synthesizing the candidates directly from action/output bytes**, preserving unknown transitions as hypotheses, refusing inconsistent repeated observations, and resynthesizing from newly observed counterexamples. The experiment is completely external to the 64 KiB core.
 
+[Monolithic Seed and Self-Grounds](MONOLITHIC_SEED_AND_SELF_GROUNDS.md) now demonstrates an exact, transportable, sub-64 KiB executable Python carrier with a source-derived Ground of Grounds, a verifying bootstrap, typed module import relations and deterministic reconstruction. The code remains outside the 64 KiB runtime. Its execution still requires an admitted Python-capable observer-host.
+
 ## Development discipline
 
 A proposed capability enters the runtime only when it has:
