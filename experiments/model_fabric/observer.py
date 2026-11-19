@@ -1,0 +1,117 @@
+"""External observer intentions execute admitted byte-LM and tiny neural Grounds.
+
+Model data does not install arbitrary Python operators. Supported families
+are fixed host-installed implementations and require actual admitted weights.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+from vld import ObserverIntention,domain_digest
+from experiments.byte_fabric.sources import acquire,DEFAULT_HOSTS
+from experiments.byte_fabric.ground import _json_no_duplicates
+
+from .byte_lm import ByteLanguageGround
+from .tiny_attention import TinyCausalAttentionGround
+
+
+ALLOWED=("model.byte.generate","model.byte.predict","model.neural.generate")
+
+
+def arbitrate_model(request,*,root=None,approved_hosts=None):
+    if (not isinstance(request,ObserverIntention) or
+            request.spec["operation"] not in ALLOWED):
+        raise TypeError("Expected a supported typed language model intention")
+    req=request.to_dict()
+    operation=req["operation"]
+    plan={
+        "status":"ADMITTED_LOCAL_MODEL_OPERATION",
+        "intention_digest":request.digest,
+        "steps":["acquire_whole_bounded_local_artifact",
+                 "validate_model_schema_and_source_fingerprint",
+                 "execute_only_registered_numeric_operator",
+                 "return_scoped_result_and_receipt"],
+        "authority":"read_only_model_evaluation_no_remote_inference_or_code_loading",
+    }
+    plan["plan_digest"]=domain_digest(
+        "vl64.model-execution-observer-plan.v1",plan)
+    base={
+        "schema":"vl64.model-execution-observer-receipt.v1",
+        "status":"UNRESOLVED",
+        "intention":req,
+        "intention_digest":request.digest,
+        "plan":plan,
+        "scope":"locally_admitted_weight_backed_model_not_arbitrary_HF_model",
+    }
+    opts=req["options"]
+    try:
+        if not req["target"].startswith("workspace:"):
+            return {**base,"status":"REFUSED",
+                    "reason":"LOCAL_WEIGHT_ARTIFACT_REQUIRED"}
+        source=acquire(
+            req["target"],root=Path(root) if root else Path.cwd(),
+            approved_hosts=approved_hosts or DEFAULT_HOSTS,max_bytes=65536)
+        if not source["complete"]:
+            return {**base,"reason":"INCOMPLETE_WEIGHT_ARTIFACT"}
+        payload=source["data"]
+        if operation.startswith("model.byte"):
+            ground=ByteLanguageGround(_json_no_duplicates(
+                payload.decode("utf-8")))
+            if operation=="model.byte.generate":
+                if set(opts)!={"prompt_hex","steps"} or (
+                        not isinstance(opts["prompt_hex"],str) or
+                        type(opts["steps"]) is not int):
+                    return {**base,"status":"REFUSED",
+                            "reason":"INVALID_GENERATION_INTENTION"}
+                prompt=bytes.fromhex(opts["prompt_hex"])
+                result=ground.generate(prompt,steps=opts["steps"])
+            else:
+                if set(opts)!={"previous_byte","limit"} or
+                        type(opts["previous_byte"]) is not int or
+                        type(opts["limit"]) is not int:
+                    return {**base,"status":"REFUSED",
+                            "reason":"INVALID_PREDICTION_INTENTION"}
+                result=ground.predict(opts["previous_byte"],limit=opts["limit"])
+            ground_digest=ground.ground["ground_digest"]
+        else:
+            if (set(opts)!={"input_tokens","steps"} or
+                    not isinstance(opts["input_tokens"],list) or
+                    type(opts["steps"]) is not int):
+                return {**base,"status":"REFUSED",
+                        "reason":"INVALID_NEURAL_INTENTION"}
+            neural=TinyCausalAttentionGround(payload)
+            result=neural.generate(opts["input_tokens"],steps=opts["steps"])
+            ground_digest=neural.ground["ground_digest"]
+        return {
+            **base,
+            "status":result["status"],
+            "result":result,
+            "ground_digest":ground_digest,
+            "artifact_sha256":hashlib.sha256(payload).hexdigest(),
+            "artifact_source":source["source"],
+        }
+    except (ValueError,TypeError,KeyError,UnicodeError,OSError) as exc:
+        return {**base,"status":"UNRESOLVED","reason":type(exc).__name__,
+                "detail":str(exc)[:160]}
+
+
+def render_model(receipt,output):
+    if output=="json":
+        return json.dumps(receipt,indent=2,sort_keys=True,
+                          allow_nan=False)+"\n"
+    if output=="jsonl":
+        return json.dumps(receipt,sort_keys=True,separators=(",",":"),
+                          allow_nan=False)+"\n"
+    if output=="text":
+        value=receipt.get("result") or {}
+        return "\n".join((
+            "VL-64 model execution",
+            "Status: "+receipt["status"],
+            "Ground: "+str(receipt.get("ground_digest")),
+            "Generated bytes: "+str(value.get("generated_utf8_replace")),
+            "Generated neural token ids: "+str(value.get("generated_tokens")),
+            "Scope: "+str(value.get("scope")),
+        ))+"\n"
+    raise ValueError("Unsupported model observer output")
