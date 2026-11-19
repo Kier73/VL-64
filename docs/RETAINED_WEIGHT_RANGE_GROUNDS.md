@@ -101,3 +101,9 @@ Native full-attention and mHC/Engram paths still require dedicated adapters.
 ## Live transfer accounting
 
 The pinned live retention probe reports **tensor payload bytes**, **shard header bytes**, and **total remote transfer bytes** separately. The previous first-run report used the confusing field name `remote_weight_bytes_total` for the latter; that field included Safetensors headers. The corrected receipt uses `remote_transfer_bytes_total = first_pass_tensor_bytes + remote_header_bytes`. The independent scalar outputs are unchanged. Previous reports remain historical observations; new archived reports use the clarified naming.
+
+## Archived genuine pretrained reuse observation (run #44579893703)
+
+[Real pinned Qwen/DeepSeek range-retention run](https://github.com/Kier73/VL-64/actions/runs/44579893703) completed successfully. The 27B Qwen trained head used **5,277,188 tensor bytes plus 45,400 header bytes** (100 remote requests); the same-input second evaluation reused **98** already admitted requests and issued **no further network request**. The DeepSeek trained router plus six FP4 expert row slices used **3,973,680 tensor bytes plus 258,144 header bytes** (106 requests); the second evaluation reused **101** range requests without new network transfers. Both independently checked scalar subgraphs reported zero difference at 12-decimal display precision. The reported scope remains *two repeated subgraphs*, not an independently verified full native layer.
+
+The original log data fields and job IDs are archived in [real retained-range observations](../experiments/model_fabric/datasets/2026-11-19-real-retained-pretrained-range-observations.json). `tests/test_saved_real_range_retention.py` checks the revisions, bytes, source job IDs, range reuse, selected expert IDs, and numerical status offline.

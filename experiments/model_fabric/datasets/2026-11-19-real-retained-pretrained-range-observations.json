@@ -1,0 +1,62 @@
+{
+  "schema": "vl64.pinned-weight-range-reuse-observations.v1",
+  "github_actions_run_id": 44579893703,
+  "evidence_source": "successful pinned-subgraph job log reports, not independent whole-checkpoint signatures",
+  "jobs": {
+    "qwen": 135757375622,
+    "deepseek": 135757376153
+  },
+  "qwen": {
+    "first_pass_tensor_bytes": 5277188,
+    "index_ground_digest": "059c388b0818e297d54b9ce322312cb93eab30920f0ba250bcbe46839b6f36f3",
+    "model": "Qwen/Qwen3.8-27B",
+    "original_witness_cache_head": "31ebaad5269383388e38ec62081bad5675db2606fa0e4d09da966655c3432dfa",
+    "range_transcript_digest": "2902191fa33da86d94903552d769b11ba718e644736f3ee0612f3694c0d71237",
+    "remote_header_bytes": 45400,
+    "remote_ranges_after_first": 100,
+    "remote_ranges_after_second": 100,
+    "remote_transfer_bytes_total": 5322588,
+    "repeat_count": 2,
+    "reused_range_requests": 98,
+    "revision": "37561816e66b5b9153b1b64c10968c18c1e6f4a0",
+    "schema": "vl64.real-pretrained-range-retention.v1",
+    "scope": "same-input weight reuse and scalar reference; not independent real full-layer inference or causal text generation",
+    "status": "REAL_PINNED_WEIGHT_REUSE_AND_REFERENCE_VERIFIED",
+    "subgraph": {
+      "head": 0,
+      "numerical_output": -0.003032839242,
+      "reference_error": 0,
+      "scope": "one real trained head, not a complete GDN layer"
+    }
+  },
+  "deepseek": {
+    "first_pass_tensor_bytes": 3973680,
+    "index_ground_digest": "a449b268199162da03bd2d5b8d8471297d630e7f9446864fc8df86257cb5b9ac",
+    "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+    "original_witness_cache_head": "14a883b800cb0cd284302bd0129c0c2d6fc91eae7b28b1cdb13873ce3cae6bf2",
+    "range_transcript_digest": "820008e86c72c4293b0194f916488df62a7fca3a17ffa21fc9bf751996fbc96b",
+    "remote_header_bytes": 258144,
+    "remote_ranges_after_first": 106,
+    "remote_ranges_after_second": 106,
+    "remote_transfer_bytes_total": 4231824,
+    "repeat_count": 2,
+    "reused_range_requests": 101,
+    "revision": "1bae0e1088993b9b82de08f59de5be5a34e42170",
+    "schema": "vl64.real-pretrained-range-retention.v1",
+    "scope": "same-input weight reuse and scalar reference; not independent real full-layer inference or causal text generation",
+    "status": "REAL_PINNED_WEIGHT_REUSE_AND_REFERENCE_VERIFIED",
+    "subgraph": {
+      "reference_error": 0,
+      "scope": "router and six selected expert row fragments, not full MoE",
+      "selected_experts": [
+        240,
+        360,
+        2,
+        34,
+        164,
+        199
+      ],
+      "selected_slice_receipt": "REAL_DEEPSEEK_SELECTED_FP4_SWIGLU_SLICES_VERIFIED"
+    }
+  }
+}
