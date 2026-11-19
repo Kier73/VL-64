@@ -13,7 +13,7 @@ import struct
 
 from vld import StructuralLinearOperator, domain_digest, rms_norm
 
-MAX_RANGE = 16384  # bounded payload per observer-host request, not a model cap
+MAX_RANGE = 65536  # bounded 64-KiB observer message, not model or core size
 DTYPE_SIZE = {"BF16": 2, "F32": 4}
 
 
