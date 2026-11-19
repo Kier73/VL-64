@@ -1,0 +1,8 @@
+# Canonical byte-for-byte Python source for the 64 KiB VL-64 runtime.
+# A Windows CRLF checkout can otherwise exceed the source budget and
+# produce a different software Ground than the exact Git object.
+*.py text eol=lf
+*.toml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
