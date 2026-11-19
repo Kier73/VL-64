@@ -97,3 +97,7 @@ new causal inputs from the same pinned weights using independent scalar/tensor
 references. For DeepSeek, only retain **selected** expert bodies after routing;
 change of selected set should fetch only the newly needed expert ranges.
 Native full-attention and mHC/Engram paths still require dedicated adapters.
+
+## Live transfer accounting
+
+The pinned live retention probe reports **tensor payload bytes**, **shard header bytes**, and **total remote transfer bytes** separately. The previous first-run report used the confusing field name `remote_weight_bytes_total` for the latter; that field included Safetensors headers. The corrected receipt uses `remote_transfer_bytes_total = first_pass_tensor_bytes + remote_header_bytes`. The independent scalar outputs are unchanged. Previous reports remain historical observations; new archived reports use the clarified naming.

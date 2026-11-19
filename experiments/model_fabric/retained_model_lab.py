@@ -56,6 +56,7 @@ def run(model: str, *, cache_dir, budget_bytes=64 * 1024 * 1024):
                 'selected_slice_receipt': slices['status']}
     first = observe()
     at_first = cache.stats()
+    first_pass_tensor_bytes = nav.weight_bytes
     second = observe()
     final = cache.stats()
     if first != second:
@@ -64,6 +65,8 @@ def run(model: str, *, cache_dir, budget_bytes=64 * 1024 * 1024):
         raise ValueError('Repeated pretrained subgraph required additional remote ranges')
     if final['retained_cache_hits'] <= at_first['retained_cache_hits']:
         raise ValueError('No admitted range was reused')
+    if final['qualified_remote_bytes'] < first_pass_tensor_bytes:
+        raise ValueError('Network transfer accounting differs from tensor payload evidence')
     if first['reference_error'] > 2e-5:
         raise ValueError('Pretrained independent scalar reference disagreement')
     head = cache.snapshot()
@@ -74,7 +77,9 @@ def run(model: str, *, cache_dir, budget_bytes=64 * 1024 * 1024):
             'subgraph': first, 'repeat_count': 2,
             'remote_ranges_after_first': at_first['qualified_remote_ranges'],
             'remote_ranges_after_second': final['qualified_remote_ranges'],
-            'remote_weight_bytes_total': final['qualified_remote_bytes'],
+            'remote_transfer_bytes_total': final['qualified_remote_bytes'],
+            'first_pass_tensor_bytes': first_pass_tensor_bytes,
+            'remote_header_bytes': final['qualified_remote_bytes']-first_pass_tensor_bytes,
             'reused_range_requests': (final['retained_cache_hits']-
                                       at_first['retained_cache_hits']),
             'original_witness_cache_head': head,
