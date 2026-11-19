@@ -11,6 +11,7 @@ import json
 import re
 import urllib.parse
 import urllib.request
+import urllib.error
 from pathlib import Path
 
 from .scaled_model_fabric import (
@@ -122,6 +123,8 @@ def main(argv=None):
         report={'status':'UNRESOLVED','model':PINNED[args.model][0],
                 'revision':PINNED[args.model][1],'reason':type(exc).__name__,
                 'full_model_executed':False}
+        if isinstance(exc,urllib.error.HTTPError):
+            report['http_status']=exc.code
     path=Path(args.out);path.parent.mkdir(parents=True,exist_ok=True)
     path.write_text(json.dumps(report,sort_keys=True,indent=2)+'\n',encoding='utf-8')
     print('VL64_LARGE_MODEL_GROUND '+json.dumps(report,sort_keys=True))
