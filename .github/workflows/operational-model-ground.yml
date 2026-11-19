@@ -55,7 +55,7 @@ jobs:
           if-no-files-found: warn
 
   optional-pretrained-transformer:
-    if: github.event_name == 'workflow_dispatch' && inputs.execute_pretrained_transformer
+    if: (github.event_name == 'workflow_dispatch' && inputs.execute_pretrained_transformer) || (github.event_name == 'pull_request' && github.head_ref == 'feat/operational-model-grounds-20261119')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     continue-on-error: true
@@ -64,7 +64,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: python -m pip install -e '.[dev]' 'torch>=2.2' 'transformers>=4.50,<5'
+      - name: Install CPU model-host backend
+        run: |
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e '.[dev]' 'transformers>=4.50,<5'
       - name: Real pinned SmolLM2 model-host next-token test, or explicit unresolved receipt
         run: >-
           python -m experiments.model_fabric.operational_model_lab
