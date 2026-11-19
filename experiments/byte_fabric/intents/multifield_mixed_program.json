@@ -1,0 +1,18 @@
+{
+  "operation": "ground.multifield.navigate",
+  "target": "workspace:experiments/byte_fabric/datasets/2026-11-18-multifield-ground.json",
+  "output": "json",
+  "options": {
+    "goal": {
+      "initial_state_hex": "0000ff",
+      "actions": [
+        "tick",
+        "toggle",
+        "tick",
+        "tick",
+        "toggle"
+      ],
+      "kind": "state.token"
+    }
+  }
+}

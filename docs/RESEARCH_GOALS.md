@@ -24,6 +24,10 @@ The implemented [Non-Affine and Observable Grounds](NONAFFINE_AND_OBSERVABLE_GRO
 
 [Monolithic Seed and Self-Grounds](MONOLITHIC_SEED_AND_SELF_GROUNDS.md) now demonstrates an exact, transportable, sub-64 KiB executable Python carrier with a source-derived Ground of Grounds, a verifying bootstrap, typed module import relations and deterministic reconstruction. The code remains outside the 64 KiB runtime. Its execution still requires an admitted Python-capable observer-host.
 
+[Multi-Field and Partial-Observation Grounds](MULTIFIELD_PARTIAL_GROUNDS.md) extends the byte interpreter to several disjoint changing spans, joint action-conditioned states, known/unknown transitions and information-directed observation of only the missing bytes. It integrates through the external observer protocol without increasing the 64 KiB runtime.
+
+[Multi-Field and Partial-Observation Grounds](MULTIFIELD_PARTIAL_GROUNDS.md) introduce fixed-layout disjoint variable spans, action-conditioned joint state descriptions, partial-byte observation and model-relative information-gain probe recommendations, without expanding the 64 KiB runtime.
+
 ## Development discipline
 
 A proposed capability enters the runtime only when it has:

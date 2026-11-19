@@ -1,0 +1,106 @@
+{
+  "schema": "vl64.multifield-observation-measurement.v1",
+  "source_run": "https://github.com/Kier73/VL-64/actions/runs/44428974630",
+  "reference": "Actual 512-byte VL-64 source excerpt as fixed context, two independently controlled variable spans; synthetic action dynamics",
+  "measurements": [
+    {
+      "job": "multi-field (3.13)",
+      "action_count": 2,
+      "changing_byte_spans": [
+        {
+          "offset": 73,
+          "width": 1
+        },
+        {
+          "offset": 311,
+          "width": 2
+        }
+      ],
+      "compression_ratio": 3.7908,
+      "core_modified": false,
+      "description_bytes": 4322,
+      "discovery_ms_one_run": 2.0658,
+      "expected_information_bits": 2,
+      "frame_bytes": 512,
+      "heldout_edges": 16,
+      "known_transition_edges": 16,
+      "missing_edge_status": "UNRESOLVED",
+      "model_transitions_evaluated": 7,
+      "modeled_cycle_skipped_steps": 999999999996,
+      "modeled_horizon": 1000000000003,
+      "modeled_result_sha256": "b62fc8840d2047c2b36af9c5b01c8c0684a45d57a138d5438557f990ac3f78e8",
+      "partial_compatible_states": 4,
+      "partial_known_byte_count": 17,
+      "raw_transition_frame_bytes": 16384,
+      "recommended_next_byte_interval": [
+        311,
+        313
+      ],
+      "reference_context": "actual_source_bytes_plus_controlled_independent_state_transition",
+      "schema": "vl64.multifield-ground-experiment.v1",
+      "scope": "synthetic_state_machine_with_real_source_template_no_global_equivalence",
+      "source_excerpt_sha256": "73a2e8c2c0a5855ec93cdc91676217194a5ffa257252680c18a321747f958d41",
+      "state_count": 8,
+      "status": "HELDOUT_MULTI_FIELD_GROUND_VALIDATED",
+      "tampered_byte_status": "CONTRADICTED",
+      "training_edges": 16,
+      "unseen_mixed_action_words_checked": 62,
+      "verified_heldout_count": 16,
+      "witnessed_cross_field_dependency": true,
+      "tests": [
+        "2026-11-19T00:26:24.7819044Z 220 passed in 2.29s"
+      ]
+    },
+    {
+      "job": "multi-field (3.11)",
+      "action_count": 2,
+      "changing_byte_spans": [
+        {
+          "offset": 73,
+          "width": 1
+        },
+        {
+          "offset": 311,
+          "width": 2
+        }
+      ],
+      "compression_ratio": 3.7908,
+      "core_modified": false,
+      "description_bytes": 4322,
+      "discovery_ms_one_run": 1.8528,
+      "expected_information_bits": 2,
+      "frame_bytes": 512,
+      "heldout_edges": 16,
+      "known_transition_edges": 16,
+      "missing_edge_status": "UNRESOLVED",
+      "model_transitions_evaluated": 7,
+      "modeled_cycle_skipped_steps": 999999999996,
+      "modeled_horizon": 1000000000003,
+      "modeled_result_sha256": "b62fc8840d2047c2b36af9c5b01c8c0684a45d57a138d5438557f990ac3f78e8",
+      "partial_compatible_states": 4,
+      "partial_known_byte_count": 17,
+      "raw_transition_frame_bytes": 16384,
+      "recommended_next_byte_interval": [
+        311,
+        313
+      ],
+      "reference_context": "actual_source_bytes_plus_controlled_independent_state_transition",
+      "schema": "vl64.multifield-ground-experiment.v1",
+      "scope": "synthetic_state_machine_with_real_source_template_no_global_equivalence",
+      "source_excerpt_sha256": "73a2e8c2c0a5855ec93cdc91676217194a5ffa257252680c18a321747f958d41",
+      "state_count": 8,
+      "status": "HELDOUT_MULTI_FIELD_GROUND_VALIDATED",
+      "tampered_byte_status": "CONTRADICTED",
+      "training_edges": 16,
+      "unseen_mixed_action_words_checked": 62,
+      "verified_heldout_count": 16,
+      "witnessed_cross_field_dependency": true,
+      "tests": [
+        "2026-11-19T00:26:22.8653009Z 220 passed in 2.03s"
+      ]
+    }
+  ],
+  "cross_runtime_ground_equal": true,
+  "ground_digest": "9a3560fb2fcbc1bb00db8ba3d1fb08166ef72aceb4d37c37a1a8d9355febae72",
+  "scope": "finite fixed-width multi-field transition table; partial byte evidence and witnessed sensitivity; not general arbitrary architecture inference"
+}

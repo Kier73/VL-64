@@ -245,6 +245,27 @@ python -m experiments.observer_intent.arbitrate \
 
 The [saved trace ledger](datasets/2026-11-18-initial-trace-ledger.json) reproduces candidate synthesis, and the [saved Ground](datasets/2026-11-18-trace-derived-action-ground.json) navigates the learned state model. See the [method and measured evidence](../../docs/TRACE_DERIVED_ACTION_GROUNDS.md). A separate optional experiment probes pinned GitHub files under read-only authorization; it does not claim those static files form a stateful service.
 
+## Sparse multi-field interpretation and intention-directed observation
+
+The [multi-field Ground](multifield_ground.py) discovers disjoint byte regions from before/action/after observations and retains only witnessed transitions over the combined state. The [observer adapter](multifield_adapter.py) accepts **known intervals with their byte segments only**, allowing a tiny partial request to identify compatible states and recommend the next useful observation.
+
+```bash
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/multifield_recommend_field.json \
+  --out next-field.json
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/multifield_mixed_program.json \
+  --out composed-result.json
+```
+
+See the [executable measurements and limitations](../../docs/MULTIFIELD_PARTIAL_GROUNDS.md), [saved Ground](datasets/2026-11-18-multifield-ground.json) and [cross-runtime validation](datasets/2026-11-18-multifield-measurements.json). All enhancements are outside the compact core.
+
+## Multi-field and partial-observation Ground discovery
+
+[multifield_ground.py](multifield_ground.py) discovers separated byte fields, reconstructs complete frames from a shared template, retains only witnessed joint action edges, and recommends further byte intervals when a partial observation does not distinguish the current modeled states. The observer-facing [adapter](multifield_adapter.py) accepts exact byte segments rather than pretending that unobserved portions are known.
+
+Reproduce the [measured experiment](multifield_lab.py) and its [saved Ground](datasets/2026-11-18-multifield-ground.json), then issue [one-byte observation](intents/multifield_recommend_field.json), [trillion-step navigation](intents/multifield_trillion.json) or [mixed-action program](intents/multifield_mixed_program.json) intentions. See [the complete evidence report](../../docs/MULTIFIELD_PARTIAL_GROUNDS.md) for scope and measured failure cases.
+
 ## Next frontier
 
 The general observer-to-realizer interface should evolve into an **evidence- and cost-aware typed relation search**:
