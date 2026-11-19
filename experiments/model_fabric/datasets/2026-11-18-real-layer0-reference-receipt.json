@@ -1,0 +1,29 @@
+{
+  "dag_digest": "f89cfc3a1db00ec48658327a7c25bddf1998b54d3619838d0193fb94cb5fa1c6",
+  "exact_range_count": 115,
+  "independent_reference_max_abs_error": 0,
+  "last_hidden_first_8": [
+    -0.00034656,
+    1.22291947,
+    1.55508065,
+    -4.18592866,
+    -0.1411358,
+    -0.18874785,
+    -0.63662119,
+    -0.67673943
+  ],
+  "layer": 0,
+  "layer_execution_receipt_digest": "1f499bd01a74c07e27a0c944272fbb3f1bdae34861e1d45c47502ca80fc40fcd",
+  "model": "HuggingFaceTB/SmolLM2-135M",
+  "range_witness_chain_digest": "b943ec1ddafaf1699dae2ba010f4b8961d6318c2d2ff4d72161bf3d416336ead",
+  "reference_tolerance_abs": 0.00002,
+  "revision": "4e53f736cbb20a9a0f56b4c4bf378d9f306ff915",
+  "schema": "vl64.real-pretrained-layer-check.v1",
+  "scope": "one_real_pretrained_layer_only_not_complete_LLM_generation",
+  "status": "REAL_BF16_LAYER0_INDEPENDENTLY_VERIFIED",
+  "tokens": [
+    42,
+    75
+  ],
+  "weight_payload_bytes_acquired": 7082496
+}
