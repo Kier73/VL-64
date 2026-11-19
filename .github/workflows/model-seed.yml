@@ -64,7 +64,7 @@ jobs:
           assert replay==replay_slice_ground(capsule)
           assert replay["actual_model_weight_bytes"]==5760
           assert verified["model_execution_receipt"]==replay["receipt_digest"]
-          assert verified["model_seed_bytes"]==len(raw)
+          assert verified["seed_bytes"]==len(raw)
           assert verified["no_network_required"]
           print("VL64_PRETRAINED_SEED_VERIFIED",json.dumps({
              "seed_sha256":hashlib.sha256(raw).hexdigest(),
