@@ -215,11 +215,16 @@ def verify_seed_bytes(binary):
     if not isinstance(binary,bytes) or len(binary)>SEED_CEILING:
         raise ValueError("Invalid bounded seed bytes")
     with zipfile.ZipFile(io.BytesIO(binary),"r") as archive:
-        names=archive.namelist()
+        entries=archive.infolist()
+        names=[item.filename for item in entries]
         if len(names)!=len(set(names)) or not 4<=len(names)<=16:
             raise ValueError("Invalid seed member count")
         if MANIFEST not in names or GROUND not in names or "__main__.py" not in names:
             raise ValueError("Seed has no verified bootstrap")
+        if any(item.file_size>SEED_CEILING or item.flag_bits&1 or
+               item.filename.endswith("/") or
+               ".." in item.filename.split("/") for item in entries):
+            raise ValueError("Unsafe seed archive member")
         manifest=json.loads(archive.read(MANIFEST))
         ground=json.loads(archive.read(GROUND))
         if manifest.get("schema")!="vl64.monolithic-seed.v1" or (
@@ -227,6 +232,19 @@ def verify_seed_bytes(binary):
             raise ValueError("Unrecognized seed contract")
         files=manifest["source_files"]
         if (not isinstance(files,list) or
+                not 1<=len(files)<=10 or
+                any(not isinstance(item,dict) or
+                    set(item)!={"path","length","sha256"} or
+                    not isinstance(item["path"],str) or
+                    not item["path"].startswith("vld/") or
+                    item["path"].count("/")!=1 or
+                    not item["path"].endswith(".py") or
+                    type(item["length"]) is not int or
+                    not 0<=item["length"]<=SEED_CEILING or
+                    not isinstance(item["sha256"],str) or
+                    len(item["sha256"])!=64 for item in files) or
+                [item["path"] for item in files]!=sorted(
+                    item["path"] for item in files) or
                 set(names)!={MANIFEST,GROUND,"__main__.py"}|
                             {item["path"] for item in files}):
             raise ValueError("Undeclared seed archive member")
@@ -268,7 +286,8 @@ def extract_sources(binary,target):
     """Optional explicit reconstruction; source paths only, never extractall."""
     verified=verify_seed_bytes(binary)
     target=Path(target)
-    if target.exists() and any(target.iterdir()):
+    if target.is_symlink() or (target.exists() and (
+            not target.is_dir() or any(target.iterdir()))):
         raise ValueError("Refusing to overwrite an occupied destination")
     with zipfile.ZipFile(io.BytesIO(binary)) as archive:
         manifest=json.loads(archive.read(MANIFEST))
