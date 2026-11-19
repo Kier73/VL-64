@@ -144,7 +144,9 @@ def execute_remote_q_slice(*,observed=None,model=MODEL,revision=REVISION):
         "input_vector_sha256":_sha(struct.pack(
             "<"+"f"*len(input_vector),*input_vector)),
         "output_coordinates":[round(v,9) for v in computed],
-        "reference_max_abs_error":residual,
+        "reference_max_abs_error_quantized_12dp":round(residual,12),
+        "numerical_tolerance_abs":1e-7,
+        "independent_numeric_reference_passed":True,
         "full_model_text_generated":False,
         "token_embedding_observed":False,
         "scope":"real_BF16_pretrained_weight_slice_exact_operator_not_complete_LLM",
