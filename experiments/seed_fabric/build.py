@@ -103,6 +103,41 @@ def synthesize_ground(source_files):
         raise ValueError("Expanded source exceeds 64 KiB")
     structures=[program_structure(path,raw) for path,raw in
                 sorted(source_files.items())]
+    # Every module has its own content-derived software Ground; the root Ground
+    # is the immutable relation/index over those per-module descriptions.
+    module_grounds=[]
+    for member,structure in zip(inventory,structures):
+        atom={
+            "schema":"vl64.source-module-ground.v1",
+            "module":structure["module"],
+            "source_path":member["path"],
+            "source_sha256":member["sha256"],
+            "structure":structure,
+        }
+        module_grounds.append({
+            "module":atom["module"],
+            "source_path":atom["source_path"],
+            "source_sha256":atom["source_sha256"],
+            "ground_digest":sha(b"vl64.source-module-ground.v1\x00"+
+                                canonical(atom)),
+        })
+    present={item["module"] for item in module_grounds}
+    dependencies=[]
+    for structure in structures:
+        for edge in structure["relative_imports"]:
+            if edge["depth"]!=1 or not edge["module"]:
+                continue
+            target="vld."+edge["module"]
+            if target in present:
+                dependencies.append({
+                    "source_module":structure["module"],
+                    "target_module":target,
+                    "imported_names":edge["symbols"],
+                    "evidence_kind":"parsed_relative_import",
+                })
+    dependencies.sort(key=lambda row:(
+        row["source_module"],row["target_module"],row["imported_names"]))
+
     ground={
         "schema":"vl64.software-ground.v1",
         "description":"Observed Python-source structure of the exact VL-64 runtime",
@@ -110,6 +145,9 @@ def synthesize_ground(source_files):
         "core_source_bytes":sum(item["length"] for item in inventory),
         "python_requires":">=3.11",
         "observed_program_structure":structures,
+        "module_grounds":module_grounds,
+        "module_relations":dependencies,
+        "ground_role":"source-derived-ground-of-module-grounds",
         "entrypoints":{
             "package":"vld",
             "python_module":"vld.__main__",
