@@ -93,7 +93,7 @@ weight bytes and matched all **576** last hidden coordinates; max absolute
 error was **0.0 when rounded to 12 decimal places**, within tolerance
 2e-5. The first eight layer-1 hidden values for token 75 were
 `[0.43993053, 0.46390859, 0.35973391, -4.98922, -0.25016834,
--0.22376024, -1.00136428, 0.68742529]`.
+-0.25016834, -1.00136428, 0.68742529]`.
 
 The actual result is preserved in
 [`2026-11-18-real-two-layer-pretrained-receipt.json`](../experiments/model_fabric/datasets/2026-11-18-real-two-layer-pretrained-receipt.json)
