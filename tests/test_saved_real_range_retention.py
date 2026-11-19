@@ -15,7 +15,7 @@ SOURCE = Path(__file__).resolve().parents[1] / (
     'experiments/model_fabric/datasets/'
     '2026-11-19-real-retained-pretrained-range-observations.json'
 )
-HEX = re.compile(r'[0-9a-f]{64}\\Z')
+HEX = re.compile(r'[0-9a-f]{64}\Z')
 
 
 def test_archived_live_range_reuse_receipts():
