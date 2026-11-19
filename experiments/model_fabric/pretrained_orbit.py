@@ -22,9 +22,9 @@ from pathlib import Path
 from vld import domain_digest
 from .execution_dag import MAX_RANGE, QualifiedTensorReader
 from .pretrained_chain import GENESIS, admit_handoff, make_handoff
-from .pretrained_layer import MAX_POSITIONS, PreparedLayer, _fingerprint
+from .pretrained_layer import MAX_POSITIONS, PreparedLayer, LAYER_TENSORS, _fingerprint
 
-SCHEMA = "vl64.model-orbit-checkpoint.v1"
+SCHEMA = "vl64.model-orbit-checkpoint.v2"
 LAYER_SCHEMA = "vl64.model-orbit-layer-pages.v1"
 STEP_SCHEMA = "vl64.model-orbit-step.v1"
 _HEX = re.compile(r"[0-9a-f]{64}\Z")
@@ -151,12 +151,35 @@ def _get_f64(store, manifest, width):
     return values
 
 
+def _static_weight_identity(plan, layer):
+    """Host-independent identity of the ACTUAL admitted decoder-layer values.
+
+    Different source host IDs change receipt provenance, not weight identity.
+    SHA-256 is still content integrity, not a source signature. Check the
+    literal IEEE754-F64 representation to avoid lossy checkpoint hashes.
+    """
+    records=[]
+    for suffix in LAYER_TENSORS:
+        name=f"model.layers.{layer.index}.{suffix}"
+        values=layer.weights[suffix]
+        extent=plan["tensors"][name]["shape"]
+        if len(values)!=math.prod(extent):
+            raise ValueError("Decoded pretrained tensor does not match the admitted shape")
+        h=hashlib.sha256()
+        for index in range(0,len(values),8192):
+            batch=values[index:index+8192]
+            h.update(struct.pack("<"+"d"*len(batch),*batch))
+        records.append({"tensor":name,"shape":extent,"values_sha256":h.hexdigest()})
+    return domain_digest("vl64.static-weight-content-identity.v1",{
+        "dag_digest":plan["dag_digest"],"layer":layer.index,"tensors":records})
+
+
 def _check_root(plan, snapshot, *, expected_head):
     if (not isinstance(snapshot, dict) or set(snapshot) != {
             "schema", "model", "revision", "dag_digest", "tensor_ground_digest",
             "layers_executed", "tokens", "epoch", "owner", "previous_checkpoint",
             "last_handoff_digest", "transcript_head", "last_hidden", "layer_manifests",
-            "weight_witness_chains", "checkpoint_digest"} or
+            "weight_witness_chains", "static_weight_identities", "checkpoint_digest"} or
             snapshot["schema"] != SCHEMA or snapshot["model"] != plan["model"] or
             snapshot["revision"] != plan["revision"] or
             snapshot["dag_digest"] != plan["dag_digest"] or
@@ -176,6 +199,8 @@ def _check_root(plan, snapshot, *, expected_head):
             not isinstance(snapshot["layer_manifests"], list) or
             len(snapshot["layer_manifests"]) != snapshot["layers_executed"]+1 or
             not isinstance(snapshot["weight_witness_chains"], dict) or
+            not isinstance(snapshot["static_weight_identities"], dict) or
+            set(snapshot["static_weight_identities"]) != {str(i) for i in range(snapshot["layers_executed"]+1)} or
             set(snapshot["weight_witness_chains"]) != {
                 str(i) for i in range(-1, snapshot["layers_executed"]+1)}):
         raise ValueError("Invalid causal model checkpoint scope")
@@ -184,6 +209,8 @@ def _check_root(plan, snapshot, *, expected_head):
     for value in snapshot["layer_manifests"]:
         _digest(value)
     for value in snapshot["weight_witness_chains"].values():
+        _digest(value)
+    for value in snapshot["static_weight_identities"].values():
         _digest(value)
     return count
 
@@ -218,6 +245,8 @@ class RecoverableModelOrbit:
         self.readers = {i:QualifiedTensorReader(plan,range_hosts[i],
                         approved_hosts=approved_hosts[i]) for i in range(-1,last_layer+1)}
         self.layers = [PreparedLayer(self.readers[i],i) for i in range(last_layer+1)]
+        self.static_weight_identities={str(i):_static_weight_identity(plan,layer)
+                                       for i,layer in enumerate(self.layers)}
         self.tokens = []
         self.kv_refs = [[] for _ in self.layers]
         self.previous_checkpoint = GENESIS
@@ -307,7 +336,8 @@ class RecoverableModelOrbit:
                 "transcript_head":self.transcript_head,
                 "last_hidden":self.last_hidden,"layer_manifests":manifests,
                 "weight_witness_chains":{str(i):r.receipt_chain
-                                         for i,r in self.readers.items()}}
+                                         for i,r in self.readers.items()},
+                "static_weight_identities":dict(self.static_weight_identities)}
         root["checkpoint_digest"] = domain_digest(SCHEMA,root)
         if len(_encoded(root))>MAX_RANGE:
             raise ValueError("Root checkpoint exceeds bounded byte frame")
@@ -352,6 +382,8 @@ class RecoverableModelOrbit:
                       compute_actors=compute_actors,approved_producers=approved_producers,
                       store=store,owner=new_owner,epoch=new_epoch,
                       last_layer=snapshot["layers_executed"],transfer=transfer)
+        if session.static_weight_identities != snapshot["static_weight_identities"]:
+            raise ValueError("Rehomed observer supplied a different static weight snapshot")
         session.tokens=list(snapshot["tokens"])
         session.previous_checkpoint=snapshot["checkpoint_digest"]
         session.last_handoff=snapshot["last_handoff_digest"]
