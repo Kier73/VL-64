@@ -89,6 +89,10 @@ jobs:
         continue-on-error: true
         run: |
           python -m experiments.model_fabric.remote_operator_probe | tee artifacts/real-pretrained-operator.jsonl
+      - name: Execute real pretrained token embedding with bounded BF16 HTTP range
+        continue-on-error: true
+        run: |
+          python -m experiments.model_fabric.remote_token_probe | tee artifacts/real-pretrained-token-q.jsonl
       - name: Preserve executable model weights, tensor Grounds, evidence and outputs
         if: always()
         uses: actions/upload-artifact@v4
