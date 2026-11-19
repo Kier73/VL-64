@@ -64,6 +64,36 @@ def _verify_layer_nodes(plan,index):
     for suffix in LAYER_TENSORS:
         if base+suffix not in plan["tensors"]:
             raise ValueError("Unadmitted transformer layer tensor: "+suffix)
+    if len(nodes)!=len(plan["nodes"]):
+        raise ValueError("Duplicate typed DAG nodes")
+    w=f"model.layers.{index}."
+    prior="embedding" if index==0 else f"layer.{index-1}.ffn_residual"
+    shape=[arch["hidden"]]
+    qshape=[arch["heads"],arch["head_dim"]]
+    kvshape=[arch["kv_heads"],arch["head_dim"]]
+    mid=[arch["intermediate"]]
+    expected={
+        "input_norm":([prior],shape,w+"input_layernorm.weight"),
+        "q":([prefix+"input_norm"],qshape,w+"self_attn.q_proj.weight"),
+        "k":([prefix+"input_norm"],kvshape,w+"self_attn.k_proj.weight"),
+        "v":([prefix+"input_norm"],kvshape,w+"self_attn.v_proj.weight"),
+        "q_rope":([prefix+"q"],qshape,None),
+        "k_rope":([prefix+"k"],kvshape,None),
+        "attention":([prefix+"q_rope",prefix+"k_rope",prefix+"v"],shape,None),
+        "o":([prefix+"attention"],shape,w+"self_attn.o_proj.weight"),
+        "attention_residual":([prior,prefix+"o"],shape,None),
+        "post_norm":([prefix+"attention_residual"],shape,w+"post_attention_layernorm.weight"),
+        "gate":([prefix+"post_norm"],mid,w+"mlp.gate_proj.weight"),
+        "up":([prefix+"post_norm"],mid,w+"mlp.up_proj.weight"),
+        "swiglu":([prefix+"gate",prefix+"up"],mid,None),
+        "down":([prefix+"swiglu"],shape,w+"mlp.down_proj.weight"),
+        "ffn_residual":([prefix+"attention_residual",prefix+"down"],shape,None),
+    }
+    for stage,(inputs,output_shape,weight) in expected.items():
+        node=nodes[prefix+stage]
+        if (node["inputs"]!=inputs or node["output_shape"]!=output_shape or
+                node["weight"]!=weight):
+            raise ValueError("Typed DAG dependency/shape/weight contract differs")
     return arch
 
 
