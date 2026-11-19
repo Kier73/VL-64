@@ -22,9 +22,11 @@ RANGE_SCHEMA = 'vl64.qualified-shard-range.v1'
 MAX_RANGE = 65536
 MAX_INDEX_BYTES = 16 * 1024 * 1024
 MAX_HEADER_BYTES = 32 * 1024 * 1024
-DTYPE_BYTES = {'BOOL':1,'U8':1,'I8':1,'F8_E4M3':1,'F8_E5M2':1,
-               'F16':2,'BF16':2,'I16':2,'U16':2,'F32':4,'I32':4,'U32':4,
-               'F64':8,'I64':8,'U64':8}
+DTYPE_BITS = {'BOOL':8,'U8':8,'I8':8,'F4':4,'F6_E2M3':6,
+              'F6_E3M2':6,'F8_E4M3':8,'F8_E5M2':8,
+              'F8_E8M0':8,'F8_E4M3FNUZ':8,'F8_E5M2FNUZ':8,
+              'F16':16,'BF16':16,'I16':16,'U16':16,'F32':32,'I32':32,
+              'U32':32,'C64':64,'F64':64,'I64':64,'U64':64}
 _REPO = re.compile(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\Z')
 _REV = re.compile(r'[0-9a-f]{40}\Z')
 _SHARD = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*\.safetensors\Z')
@@ -112,13 +114,13 @@ def admit_shard_header(header_raw: bytes, *, filename: str, expected_names: set[
         if not isinstance(item,dict) or set(item)!={'dtype','shape','data_offsets'}:
             raise ValueError('Malformed tensor definition')
         dtype=item['dtype']; shape=item['shape']; offsets=item['data_offsets']
-        if dtype not in DTYPE_BYTES or not isinstance(shape,list) or len(shape)>8 or any(
+        if dtype not in DTYPE_BITS or not isinstance(shape,list) or len(shape)>8 or any(
                 type(dim) is not int or dim<0 or dim>2**48 for dim in shape):
             raise ValueError('Unadmitted shape or dtype')
         if not isinstance(offsets,list) or len(offsets)!=2 or any(type(x) is not int or x<0 for x in offsets):
             raise ValueError('Unadmitted tensor offsets')
         start,end=offsets
-        if end<start or end-start!=math.prod(shape)*DTYPE_BYTES[dtype]:
+        if end<start or end-start!=(math.prod(shape)*DTYPE_BITS[dtype]+7)//8:
             raise ValueError('Declared tensor byte extent disagrees with shape')
         if file_size is not None and (type(file_size) is not int or end+n+8>file_size):
             raise ValueError('Tensor exceeds observed shard size')
@@ -253,8 +255,11 @@ class QualifiedShardNavigator:
         if count is None:count=total-flat_start
         if type(flat_start) is not int or type(count) is not int or flat_start<0 or count<=0 or flat_start+count>total:
             raise ValueError('Tensor selection exceeds its typed extent')
-        begin=desc['header_bytes']+desc['data_offsets'][0]+flat_start*DTYPE_BYTES[dtype]
-        stop=begin+count*DTYPE_BYTES[dtype]
+        bits=DTYPE_BITS[dtype]
+        if flat_start*bits%8 or (count*bits%8 and flat_start+count!=total):
+            raise ValueError('Packed dtype range must preserve byte alignment')
+        begin=desc['header_bytes']+desc['data_offsets'][0]+flat_start*bits//8
+        stop=begin+(count*bits+7)//8
         result=bytearray()
         for p in range(begin,stop,MAX_RANGE):
             result.extend(self._read_range(desc['file'],p,min(p+MAX_RANGE,stop),purpose='tensor'))
