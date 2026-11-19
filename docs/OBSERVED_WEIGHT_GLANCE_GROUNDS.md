@@ -98,3 +98,12 @@ After independently verifying the actual full-layer outputs, extend the
 operator to the model's remaining full-attention layers. DeepSeek's next
 similar step is selected-only expert coverage spanning entire w1/w3/w2 matrices
 and all scale pages, rather than row slices. Preserve the same Ground format.
+## Verified pinned pretrained observation replay (2026-11-19)
+
+[GitHub Actions run #44585746575](https://github.com/Kier73/VL-64/actions/runs/44585746575) completed both real-weight probes, **separate** from the fixture suite.
+
+- **Qwen3.8-27B**, pinned revision `37561816e66b5b9153b1b64c10968c18c1e6f4a0`: 100 original qualified HTTP ranges, 5,322,588 transferred bytes including shard headers. The frozen Ground provided 101 local range reads (including an independently re-partitioned 10-byte read), with **zero further HTTP requests**. The genuine recurrent-head partial projection remained `-0.003032839242`, with reported reference error `0.0`.
+- **DeepSeek-V4.1-Flash-1017**, pinned revision `1bae0e1088993b9b82de08f59de5be5a34e42170`: 106 original qualified HTTP ranges, 4,231,824 transferred bytes including headers. The frozen Ground provided 107 local reads (including a new 20-byte partition), again with **zero further HTTP requests**. The real trained router continued to select experts `240, 360, 2, 34, 164, 199`; the verified six FP4 expert-row slices reproduced the prior independent reference.
+- Exact reports, catalogue heads, Ground heads and transcript hashes are archived in [the two real-model replay receipts](../experiments/model_fabric/datasets/2026-11-19-real-trained-weight-glance-replays.json). The saved-evidence test checks these observations offline.
+
+**Scope:** This validates real pretrained weight observation, retention, reinterpretation under changed read partitions, and numerical replay of trained *subgraphs*. It does not prove that the full Qwen/DeepSeek transformer layers or autoregressive decoders have executed.
