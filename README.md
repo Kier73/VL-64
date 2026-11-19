@@ -246,6 +246,21 @@ python -m experiments.observer_intent.arbitrate \
 
 This uses a recorded multi-field Ground; it performs no external actions. Missing transitions stay unresolved. The controlled 512-byte frame experiment compressed 16,384 bytes of observed transition frames into a 4,322-byte Ground and checked 62 new mixed action compositions. This is a *bounded fixed-layout prototype*, not a general arbitrary machine decoder.
 
+## Observe partial state across several byte fields
+
+The [Multi-Field and Partial-Observation Grounds](docs/MULTIFIELD_PARTIAL_GROUNDS.md) experiment discovers disjoint changing byte regions from actual frames, retains a **sparse, witnessed joint state/action graph**, and identifies the best missing byte interval for an external observer to inspect next.
+
+```bash
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/multifield_recommend_field.json \
+  --out suggested-observation.json
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/multifield_trillion.json \
+  --out modeled-state.json
+```
+
+The observer may supply **one known byte**, not a whole frame. A requested missing transition remains unresolved; long-horizon navigation is confined to already witnessed edges. The experiments and adapter stay outside the 64 KiB runtime.
+
 ## Documentation
 
 - [Usage guide](docs/USAGE_GUIDE.md) — commands, API examples, and extension points.
