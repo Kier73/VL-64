@@ -30,7 +30,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install regression dependencies
-        run: python -m pip install -e ".[dev]"
+        run: python -m pip install -e ".[dev]" numpy
       - name: Run monolithic seed and existing regression suites
         run: python -m pytest -q tests/
       - name: Procedurally generate monolithic seed and software Ground
@@ -59,7 +59,8 @@ jobs:
           assert inside==witness==derived
           assert check==verify_seed_bytes(raw)
           assert len(raw)<65536
-          assert check["source_bytes"]==65093
+          assert check["source_bytes"]==sum(map(len,input_sources(Path.cwd()).values()))
+          assert check["source_bytes"]<=65536
           assert check["compressed_vs_source_ratio"]>1
           extract_sources(raw,Path("artifacts/exact-source"))
           for name,content in input_sources(Path.cwd()).items():
