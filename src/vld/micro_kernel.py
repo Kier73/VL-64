@@ -16,7 +16,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 # --- Canonical Serialization & Domain Hashing ---
 def canonical_bytes(val: Any) -> bytes:
     """Canonical UTF-8 JSON representation with strict key sorting."""
-    return json.dumps(val, sort_keys=True, separators=(',', ':'), ensure_ascii=True).encode('utf-8')
+    return json.dumps(val, sort_keys=True, separators=(',', ':'), ensure_ascii=True, allow_nan=False).encode('utf-8')
 
 def domain_digest(domain: str, payload: Any) -> str:
     """Domain-separated SHA-256: H_dom(x) = SHA256(dom || 0x00 || canonical(x))."""
