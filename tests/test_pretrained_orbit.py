@@ -236,8 +236,11 @@ resumed,previous=RecoverableModelOrbit.restore(plan,load_checkpoint(root/"state.
 result=resumed.advance(6,expected_position=2)
 print(json.dumps({"state":result["state"],"tokens":resumed.tokens,"source":resumed.owner}))
 '''
+    repo_root=Path(__file__).resolve().parents[1]
+    subprocess_cwd=(repo_root if (repo_root/"experiments").is_dir()
+                    else Path(__file__).resolve().parent)
     proc=subprocess.run([sys.executable,"-c",script,str(tmp_path),head],
-        cwd=Path(__file__).resolve().parent,capture_output=True,text=True,timeout=30)
+        cwd=subprocess_cwd,capture_output=True,text=True,timeout=30)
     assert proc.returncode==0,proc.stderr
     output=json.loads(proc.stdout.strip())
     assert output["source"]=="new-process" and output["tokens"]==[4,3,6]
