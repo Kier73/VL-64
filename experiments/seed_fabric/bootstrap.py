@@ -83,6 +83,34 @@ def verify_seed(path):
             raise ValueError("Self Ground is not consistent with admitted source")
         if len(ground["ground_digest"])!=64:
             raise ValueError("Invalid Ground fingerprint")
+        structural=ground.get("observed_program_structure")
+        atoms=ground.get("module_grounds")
+        if (not isinstance(structural,list) or
+                not isinstance(atoms,list) or
+                len(structural)!=len(modules) or len(atoms)!=len(modules)):
+            raise ValueError("Missing modular software Grounds")
+        for source,structure,atom in zip(modules,structural,atoms):
+            if not isinstance(structure,dict) or not isinstance(atom,dict):
+                raise ValueError("Malformed source module Ground")
+            candidate={
+                "schema":"vl64.source-module-ground.v1",
+                "module":structure["module"],
+                "source_path":source["path"],
+                "source_sha256":source["sha256"],
+                "structure":structure,
+            }
+            if (atom.get("source_path")!=source["path"] or
+                    atom.get("module")!=structure["module"] or
+                    atom.get("source_sha256")!=source["sha256"] or
+                    atom.get("ground_digest")!=_sha(
+                        b"vl64.source-module-ground.v1\x00"+canonical(candidate))):
+                raise ValueError("Module Ground identity disagrees")
+        identifiers={x["module"] for x in atoms}
+        if not isinstance(ground.get("module_relations"),list) or any(
+                edge.get("source_module") not in identifiers or
+                edge.get("target_module") not in identifiers
+                for edge in ground["module_relations"]):
+            raise ValueError("Dangling software Ground relation")
         return {
             "status":"VERIFIED_MONOLITHIC_SEED",
             "source_bytes":manifest["core_source_bytes"],
@@ -109,6 +137,20 @@ def main():
         return
     if command=="seed-ground":
         print(json.dumps(checked["ground"],sort_keys=True,indent=2))
+        return
+    if command=="seed-modules":
+        print(json.dumps(checked["ground"]["module_grounds"],sort_keys=True,indent=2))
+        return
+    if command=="seed-relations":
+        print(json.dumps(checked["ground"]["module_relations"],sort_keys=True,indent=2))
+        return
+    if command=="seed-symbols":
+        name=sys.argv[2] if len(sys.argv)>2 else ""
+        matching=[item for item in checked["ground"]["observed_program_structure"]
+                  if item["module"]==name]
+        if len(matching)!=1:
+            raise SystemExit("VL64_SEED_UNRESOLVED: unknown source module")
+        print(json.dumps(matching[0],sort_keys=True,indent=2))
         return
     # The existing CLI remains the execution authority and supports verify,
     # navigate and established operations. Seed-specific introspection never
