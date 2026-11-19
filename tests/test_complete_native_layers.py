@@ -239,3 +239,49 @@ def test_causal_pages_refuse_rollback_tampering_and_corrupt_byte(tmp_path):
         restore_qwen_causal_ground(target,store,cp,expected_digest=pin,
                                   expected_input_sequence_digest='c'*64)
     assert target.position==0
+
+
+def test_48_native_qwen_recurrent_heads_and_multi_page_handoff(tmp_path):
+    """Exercise *all* 48 heads (16 shared QK) and >64KiB paged state."""
+    from experiments.model_fabric.complete_native_layers import (
+        LocalStatePages, export_qwen_causal_ground, restore_qwen_causal_ground)
+    key_heads, value_heads, kd, vd, width = 16, 48, 16, 16, 3
+    mixed=2*key_heads*kd+value_heads*vd
+    prefix='model.language_model.layers.0.'
+    specs={
+        'input_layernorm.weight':([width],[0.]*width),
+        'linear_attn.in_proj_qkv.weight':([mixed,width],[.03125]*(mixed*width)),
+        'linear_attn.in_proj_z.weight':([value_heads*vd,width],[.03125]*(value_heads*vd*width)),
+        'linear_attn.in_proj_a.weight':([value_heads,width],[.03125]*(value_heads*width)),
+        'linear_attn.in_proj_b.weight':([value_heads,width],[.03125]*(value_heads*width)),
+        'linear_attn.conv1d.weight':([mixed,1,2],[.25,.5]*mixed),
+        'linear_attn.A_log':([value_heads],[0.]*value_heads),
+        'linear_attn.dt_bias':([value_heads],[0.]*value_heads),
+        'linear_attn.norm.weight':([vd],[1.]*vd),
+        'linear_attn.out_proj.weight':([width,value_heads*vd],[.0078125]*(width*value_heads*vd)),
+        'post_attention_layernorm.weight':([width],[0.]*width),
+        'mlp.gate_proj.weight':([4,width],[.0625]*12),
+        'mlp.up_proj.weight':([4,width],[.03125]*12),
+        'mlp.down_proj.weight':([width,4],[.03125]*12),
+    }
+    tensors={prefix+n:('F32',shape,struct.pack('<'+str(len(vals))+'f',*vals))
+             for n,(shape,vals) in specs.items()}
+    one=QwenQualifiedLayer(nav_for(tensors),layer=0,key_heads=key_heads,
+                            value_heads=value_heads,key_dim=kd,value_dim=vd)
+    one.next([.1,.2,.3])
+    assert len(one.recurrent_state)==48
+    assert all(len(head)==16 and all(len(row)==16 for row in head)
+               for head in one.recurrent_state)
+    store=LocalStatePages(tmp_path)
+    saved=export_qwen_causal_ground(one,store,input_sequence_digest='b'*64)
+    assert saved['state_f64_bytes']>65536
+    assert len(saved['causal_pages'])>1
+    assert max(p['size'] for p in saved['causal_pages'])==65536
+    expect,_=one.next([.2,.1,.4])
+    two=QwenQualifiedLayer(nav_for(tensors),layer=0,key_heads=key_heads,
+                            value_heads=value_heads,key_dim=kd,value_dim=vd)
+    restore_qwen_causal_ground(two,LocalStatePages(tmp_path),saved,
+          expected_digest=saved['checkpoint_digest'],expected_input_sequence_digest='b'*64)
+    received,receipt=two.next([.2,.1,.4])
+    assert received==pytest.approx(expect,abs=1e-12)
+    assert receipt['position']==1 and two.position==2
