@@ -8,8 +8,10 @@ on:
       - 'experiments/model_fabric/intention_*.py'
       - 'experiments/model_fabric/native_chat_host.py'
       - 'experiments/model_fabric/operational_ground.py'
+      - 'experiments/model_fabric/operational_hosts.py'
       - 'tests/test_intention_*.py'
       - 'tests/test_core_integrity_bounds.py'
+      - 'tests/test_host_resident_kv.py'
       - '.github/workflows/intention-model-fleet.yml'
   pull_request:
   workflow_dispatch:
@@ -45,7 +47,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install -e '.[dev]'
       - name: Run intent, tokenizer, agent, fleet, and core audit regressions
-        run: python -m pytest -q tests/test_intention_fabric.py tests/test_intention_trained_byte.py tests/test_intention_fleet_lab.py tests/test_core_integrity_bounds.py tests/test_operational_ground.py tests/test_operational_tensor_graph.py
+        run: python -m pytest -q tests/test_intention_fabric.py tests/test_intention_trained_byte.py tests/test_intention_fleet_lab.py tests/test_core_integrity_bounds.py tests/test_host_resident_kv.py tests/test_operational_ground.py tests/test_operational_tensor_graph.py
       - name: Enforce compact source budget
         run: |
           python - <<'PY'

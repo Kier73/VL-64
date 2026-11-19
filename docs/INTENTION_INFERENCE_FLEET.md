@@ -33,8 +33,12 @@ The core audit tightens canonical JSON hashing to reject non-finite floats (NaN 
 ## Commands
 
 ```bash
-python -m pytest -q tests/test_intention_fabric.py tests/test_intention_trained_byte.py tests/test_core_integrity_bounds.py tests/test_operational_ground.py tests/test_operational_tensor_graph.py
+python -m pytest -q tests/test_intention_fabric.py tests/test_intention_trained_byte.py tests/test_core_integrity_bounds.py tests/test_host_resident_kv.py tests/test_operational_ground.py tests/test_operational_tensor_graph.py
 python -m experiments.model_fabric.intention_fleet_lab --out artifacts/intent-fleet.json
 ```
 
 The development should next connect output-shape tests to independent answer/coding evaluations on a capable, instruction-tuned model, and authenticated host transfer. The Virtual Layer's operational Ground can guide the **intention**, but it cannot create model capabilities absent from the weights or turn untrusted host descriptions into proof.
+
+## Host-resident KV reuse
+
+The optional `HostedTransformersLanguage` now requests `use_cache=True` from the model runtime. When and only when a new token prefix equals the previous committed prefix plus one token, it supplies the host-owned `past_key_values` and computes the new token from a one-token input. A different prefix, missing cache, or failed operation forces a full prefill and never publishes a stale causal cache head. This improves the mathematical work for successive tokens, **not the byte size of the VL core**. Synthetic fake-model tests independently check `[full prefill, 1, 1]` input lengths, sibling-prefix invalidation, model failures and runtimes that do not support KV. The actual speedup depends on architecture, runtime and host hardware and is not inferred from those fixtures.
