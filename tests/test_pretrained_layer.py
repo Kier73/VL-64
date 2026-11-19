@@ -114,6 +114,22 @@ def test_recomputed_digest_cannot_authorize_unrecognized_graph_stage():
                                  approved_hosts={"local-f32-observer"})
 
 
+
+def test_recomputed_dag_digest_cannot_divert_dependency_or_weight():
+    observed,data,_=synthetic_pretrained_ground()
+    plan=compile_decoder_dag(observed)
+    changed=copy.deepcopy(plan)
+    for node in changed["nodes"]:
+        if node["id"]=="layer.0.q_rope":
+            node["inputs"]=["layer.0.k"]
+        if node["id"]=="layer.0.gate":
+            node["weight"]="model.layers.0.mlp.up_proj.weight"
+    changed["dag_digest"]=domain_digest(changed["schema"],
+        {k:v for k,v in changed.items() if k!="dag_digest"})
+    with pytest.raises(ValueError,match="dependency/shape/weight"):
+        execute_pretrained_layer(changed,[2],qualified_host(observed,data),
+                                 approved_hosts={"local-f32-observer"})
+
 def test_nonfinite_intermediate_refused():
     with pytest.raises(ValueError,match="Nonfinite"):
         _fingerprint([float("nan")])
