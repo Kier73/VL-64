@@ -1,0 +1,84 @@
+name: VL-64 full 30-layer decoder and process-transferred state
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "experiments/model_fabric/full_decoder.py"
+      - "experiments/model_fabric/full_decoder_lab.py"
+      - "tests/test_full_decoder.py"
+      - "docs/FULL_PRETRAINED_DECODER.md"
+      - ".github/workflows/pretrained-full-decoder.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-decoder-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e '.[dev]' numpy
+      - name: Verify all 30 layers, full logits, externally pinned recovery
+        run: |
+          python -m pytest -q tests/test_execution_dag.py tests/test_pretrained_layer.py tests/test_pretrained_chain.py tests/test_pretrained_orbit.py tests/test_full_decoder.py
+      - name: Retain 64 KiB portable core budget
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          total=sum(p.stat().st_size for p in Path('src/vld').glob('*.py'))
+          assert total<=65536
+          print('VL64_CORE_SOURCE_BYTES',total)
+          PY
+
+  pinned-30-layer-pretrained:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    # Network failure should not falsify mandatory offline fixture verification.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -e '.[dev]' numpy
+      - name: Execute first 15 real layers in process A
+        id: first
+        run: |
+          python -m experiments.model_fabric.full_decoder_lab \
+            --tokens 42 75 --through-layer 15 \
+            --owner observer-process-A --epoch 0 \
+            --state-dir artifacts/full-pretrained \
+            --result-out artifacts/pretrained-partial.json \
+            --github-output "$GITHUB_OUTPUT"
+      - name: Independently resume layers 15-29 and all vocabulary rows in process B
+        if: steps.first.outcome == 'success'
+        run: |
+          python -m experiments.model_fabric.full_decoder_lab \
+            --tokens 42 75 --through-layer 30 \
+            --owner observer-process-B --epoch 1 \
+            --resume-from artifacts/full-pretrained/checkpoint.json \
+            --expected-head "${{ steps.first.outputs.checkpoint_head }}" \
+            --state-dir artifacts/full-pretrained \
+            --result-out artifacts/pretrained-complete.json
+      - name: Preserve verifiable evidence or unresolved failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-30-layer-pretrained-fabric
+          path: |
+            artifacts/pretrained-partial.json
+            artifacts/pretrained-complete.json
+            artifacts/full-pretrained/checkpoint.json
+          if-no-files-found: warn
+          retention-days: 30
