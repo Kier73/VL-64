@@ -253,7 +253,7 @@ def probe_deepseek_selected_fp4_expert_slices(nav, router):
                 len(d2['shape'])!=2 or d1['shape']!=d3['shape'] or
                 d1['shape'][0]<1 or d2['shape'][0]<1 or
                 d2['shape'][1]!=d1['shape'][0] or d1['shape'][1]%32):
-            raise ValueError('Selected DeepSeek expert SwiGLU dimensions do not compose')
+            raise ValueError('Selected DeepSeek expert SwiGLU dimensions do not compose: '+repr((d1['dtype'],d1['shape'],d3['dtype'],d3['shape'],d2['dtype'],d2['shape'])))
         hidden=[math.cos((j+1)*.013)*.0625 for j in range(d1['shape'][1])]
         gate,eg=_mx_fp4_row(nav,w1,hidden)
         up,eu=_mx_fp4_row(nav,w3,hidden)
