@@ -1,0 +1,71 @@
+name: VL64 trained Qwen and DeepSeek subgraph frontier
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'experiments/model_fabric/trained_subgraphs.py'
+      - 'experiments/model_fabric/qualified_subgraphs.py'
+      - 'experiments/model_fabric/trained_subgraph_lab.py'
+      - 'tests/test_trained_subgraphs.py'
+      - 'tests/test_qualified_subgraphs.py'
+      - '.github/workflows/trained-subgraph-frontier.yml'
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  independent-mathematical-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11','3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e '.[dev]'
+      - run: |
+          python -m pytest -q \
+            tests/test_trained_subgraphs.py tests/test_qualified_subgraphs.py \
+            tests/test_architecture_ops.py tests/test_architecture_probe.py \
+            tests/test_scaled_model_fabric.py tests/test_scaled_model_lab.py
+      - name: Preserve VL64 compact core
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          n=sum(p.stat().st_size for p in Path('src/vld').glob('*.py'))
+          assert n<=65536,n
+          print('VL64_CORE_BYTES',n)
+          PY
+  pinned-pretrained-subgraphs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # Network/server denial must create an explicit unresolved receipt, never
+    # compromise mandatory mathematical tests or invent verified numerical work.
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [qwen, deepseek]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -e '.[dev]'
+      - name: Acquire pinned tensor ranges and independently verify native subgraph
+        run: |
+          python -m experiments.model_fabric.trained_subgraph_lab \
+            --model '${{ matrix.model }}' \
+            --out 'artifacts/${{ matrix.model }}-trained-subgraph.json'
+      - name: Archive exact outcome including unresolved status
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-${{ matrix.model }}-trained-subgraph-evidence
+          path: artifacts/${{ matrix.model }}-trained-subgraph.json
+          retention-days: 30
+          if-no-files-found: warn
