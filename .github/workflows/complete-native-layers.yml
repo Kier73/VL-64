@@ -1,0 +1,80 @@
+name: Complete native Qwen GDN and DeepSeek MoE arithmetic
+
+on:
+  push:
+    paths:
+      - "experiments/model_fabric/complete_native_layers.py"
+      - "experiments/model_fabric/complete_native_lab.py"
+      - "tests/test_complete_native_layers.py"
+      - "tests/test_complete_native_lab.py"
+      - ".github/workflows/complete-native-layers.yml"
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Pinned model to execute with actual pretrained weights"
+        required: true
+        type: choice
+        options: [qwen, deepseek]
+      execute_real_weights:
+        description: "Perform real large-model execution (substantial network/CPU use)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+jobs:
+  independent-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e '.[dev]'
+      - name: Independent native Qwen and DeepSeek fixture references
+        run: python -m pytest -q tests/test_complete_native_layers.py tests/test_complete_native_lab.py tests/test_trained_subgraphs.py tests/test_qualified_subgraphs.py tests/test_scaled_model_fabric.py
+      - name: Preserve compact VL64 core ceiling
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          n=sum(p.stat().st_size for p in Path('src/vld').glob('*.py'))
+          assert n<=65536
+          print('VL64_CORE_BYTES',n)
+          PY
+  optional-real-checkpoint:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -e '.[dev]'
+      - name: Real pinned native computation, or explicit structural-only plan
+        env:
+          MODEL: ${{ inputs.model }}
+          EXECUTE: ${{ inputs.execute_real_weights }}
+        shell: bash
+        run: |
+          if [[ "$EXECUTE" == "true" ]]; then
+            python -m experiments.model_fabric.complete_native_lab --model "$MODEL" --execute \
+              --budget-bytes 1500000000 --out artifacts/native-layer.json
+          else
+            python -m experiments.model_fabric.complete_native_lab --model "$MODEL" \
+              --out artifacts/native-layer.json
+          fi
+      - name: Retain exact evidence or refusal
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-pinned-complete-native-layer
+          path: artifacts/native-layer.json
+          if-no-files-found: warn
