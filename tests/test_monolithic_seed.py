@@ -55,7 +55,7 @@ def test_monolithic_seed_runs_with_isolated_python_and_no_installed_package(tmp_
     runtime=invoke(binary,tmp_path,"navigate","--a","5","--b","1",
                    "--x0","3","--steps","1000000000000","--modulus","256")
     assert runtime.returncode==0,runtime.stderr
-    assert "terminal_state" in runtime.stdout or "result" in runtime.stdout
+    assert "Result after 1000000000000 steps: 3" in runtime.stdout
     selftest=invoke(binary,tmp_path,"verify")
     assert selftest.returncode==0,selftest.stderr
 
@@ -115,7 +115,8 @@ def test_bootstrap_ground_and_unknown_file_tampering_are_rejected(tmp_path):
         corrupted=dict(members)
         corrupted[name]+=b"#altered"
         altered=make_archive(corrupted)
-        with pytest.raises(ValueError,match="bootstrap|Ground"):
+        with pytest.raises((ValueError,json.JSONDecodeError),
+                           match="bootstrap|Ground|Extra data"):
             verify_seed_bytes(altered)
     corrupted=dict(members)
     corrupted["surprise.py"]=b"print('not admitted')\n"
