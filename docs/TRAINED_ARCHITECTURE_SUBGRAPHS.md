@@ -100,3 +100,10 @@ python -m experiments.model_fabric.trained_subgraph_lab --model deepseek --selec
    interfaces and later model-operated research loops.
 
 Sources: [Qwen3.8 architecture/implementation analysis](https://github.com/PhyLiusir/Qwen3.8-27B-Arch/blob/main/docs/layer-by-layer.md), [DeepSeek state-dict tensor naming](https://docs.nvidia.com/nemo/automodel/v0.4/nemo-automodel/nemo_automodel/components/models/deepseek_v41/state_dict_adapter), and original pinned Hugging Face model manifests.
+
+
+## Observed CI milestone — 2026-11-19
+
+[Actions run #44556312995](https://github.com/Kier73/VL-64/actions/runs/44556312995) succeeded on the pinned models and mandatory Python 3.11/3.13 fixtures. Qwen acquired **5,277,188 trained-weight bytes in 100 qualified ranges**, executing one real head through its partial output-projection contribution (row-0 contribution `-0.003032839242`). DeepSeek acquired **3,933,696 bytes in 70 ranges** for its real trained 384-way selector, selecting IDs **240, 360, 2, 34, 164, 199**; it then acquired **39,984 additional bytes in 36 ranges** to execute verified FP4 gate/up and down-row *partial* contributions from those six experts. Total DeepSeek weight payload **3,973,680 bytes in 106 ranges**. Both independently checked zero error at 12 decimal places.
+
+The exact structured reports are preserved under [saved trained subgraphs](../experiments/model_fabric/datasets/2026-11-19-qwen-deepseek-trained-subgraphs.json), and `tests/test_saved_trained_architecture_subgraphs.py` asserts their status, names, pinned revisions, accounting, and scope. No full Qwen or DeepSeek inference is claimed.

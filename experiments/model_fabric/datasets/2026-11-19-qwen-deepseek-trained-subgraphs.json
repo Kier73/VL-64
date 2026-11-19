@@ -1,0 +1,151 @@
+{
+  "schema": "vl64.saved-large-trained-subgraph-evidence.v1",
+  "source_actions_run": 44556312995,
+  "qwen": {
+    "index_ground_digest": "059c388b0818e297d54b9ce322312cb93eab30920f0ba250bcbe46839b6f36f3",
+    "index_sha256": "77042094076611b69791a610065f28b7013b8c621795fa86ddccc8bac7d1b9df",
+    "input_scope": "synthetic_hidden",
+    "layer": 0,
+    "max_abs_independent_error": 0,
+    "model": "Qwen/Qwen3.8-27B",
+    "output_row0_head_contribution": -0.003032839242,
+    "range_chain": "51b4c4b8d93a333f83d222055548209cf097bb19639464014139b11a3f5a9fc4",
+    "range_count": 100,
+    "revision": "37561816e66b5b9153b1b64c10968c18c1e6f4a0",
+    "schema": "vl64.trained-architecture-subgraph.v1",
+    "scope": "one trained recurrent head, not a full Qwen layer or next-token inference",
+    "status": "REAL_QWEN_GATED_DELTA_TRAINED_HEAD_VERIFIED",
+    "trained_operations": [
+      "zero_centered_rmsnorm",
+      "QKV_rows",
+      "depthwise_conv",
+      "delta_gate",
+      "gated_recurrent_head",
+      "gated_rmsnorm",
+      "partial_out_projection"
+    ],
+    "value_head": 0,
+    "weight_bytes": 5277188
+  },
+  "deepseek": {
+    "index_ground_digest": "a449b268199162da03bd2d5b8d8471297d630e7f9446864fc8df86257cb5b9ac",
+    "index_sha256": "74b0686a3d2891980d5e303251b075a3bccae2c2ff650747db2620a649b98fa8",
+    "input_scope": "synthetic_hidden",
+    "layer": 0,
+    "max_abs_independent_error": 0,
+    "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+    "range_chain": "e5094df5a86cf25982ea92fca23938aab85faf6c11438453413c5dc3f8a1fade",
+    "range_count": 70,
+    "revision": "1bae0e1088993b9b82de08f59de5be5a34e42170",
+    "routing_weights": [
+      0.246977409264,
+      0.253943271763,
+      0.249994558647,
+      0.249331924719,
+      0.250151695338,
+      0.249601140268
+    ],
+    "schema": "vl64.trained-architecture-subgraph.v1",
+    "scope": "real 384-way trained router; selected experts not numerically executed",
+    "selected_experts": [
+      240,
+      360,
+      2,
+      34,
+      164,
+      199
+    ],
+    "selected_fp4_slices": {
+      "layer": 0,
+      "max_abs_independent_error": 0,
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "range_chain": "7408b9dcf1d75a182c4c3d5e8def987d8ca5c6e3fd4f7cfe2c71161b16e81ace",
+      "range_count": 106,
+      "revision": "1bae0e1088993b9b82de08f59de5be5a34e42170",
+      "schema": "vl64.trained-architecture-subgraph.v1",
+      "scope": "six genuine selected expert gate/up rows plus one down coeff each; not full MoE",
+      "selected_experts": [
+        240,
+        360,
+        2,
+        34,
+        164,
+        199
+      ],
+      "slices": [
+        {
+          "down0_from_channel0": -0.0000658092,
+          "expert": 240,
+          "gate0": 0.0708312157,
+          "up0": -0.0574292631
+        },
+        {
+          "down0_from_channel0": 0.0000275797,
+          "expert": 360,
+          "gate0": -0.0467835928,
+          "up0": -0.0772651669
+        },
+        {
+          "down0_from_channel0": -0.000003418,
+          "expert": 2,
+          "gate0": -0.0135194987,
+          "up0": 0.0325807462
+        },
+        {
+          "down0_from_channel0": 0.0000121416,
+          "expert": 34,
+          "gate0": 0.0250824661,
+          "up0": -0.0152983203
+        },
+        {
+          "down0_from_channel0": 0.0000104185,
+          "expert": 164,
+          "gate0": -0.0217923343,
+          "up0": 0.0618684402
+        },
+        {
+          "down0_from_channel0": 0.0001135907,
+          "expert": 199,
+          "gate0": 0.1479380957,
+          "up0": -0.0610160545
+        }
+      ],
+      "status": "REAL_DEEPSEEK_SELECTED_FP4_SWIGLU_SLICES_VERIFIED",
+      "weight_bytes": 3973680
+    },
+    "selected_weight_paths": {
+      "2": [
+        "layers.0.ffn.experts.2.w1.weight",
+        "layers.0.ffn.experts.2.w3.weight",
+        "layers.0.ffn.experts.2.w2.weight"
+      ],
+      "34": [
+        "layers.0.ffn.experts.34.w1.weight",
+        "layers.0.ffn.experts.34.w3.weight",
+        "layers.0.ffn.experts.34.w2.weight"
+      ],
+      "164": [
+        "layers.0.ffn.experts.164.w1.weight",
+        "layers.0.ffn.experts.164.w3.weight",
+        "layers.0.ffn.experts.164.w2.weight"
+      ],
+      "199": [
+        "layers.0.ffn.experts.199.w1.weight",
+        "layers.0.ffn.experts.199.w3.weight",
+        "layers.0.ffn.experts.199.w2.weight"
+      ],
+      "240": [
+        "layers.0.ffn.experts.240.w1.weight",
+        "layers.0.ffn.experts.240.w3.weight",
+        "layers.0.ffn.experts.240.w2.weight"
+      ],
+      "360": [
+        "layers.0.ffn.experts.360.w1.weight",
+        "layers.0.ffn.experts.360.w3.weight",
+        "layers.0.ffn.experts.360.w2.weight"
+      ]
+    },
+    "status": "REAL_DEEPSEEK_TRAINED_384_ROUTER_VERIFIED",
+    "weight_bytes": 3933696
+  }
+}
