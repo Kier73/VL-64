@@ -46,8 +46,14 @@ The real pinned probe `probe_deepseek_trained_router` executes the trained
 384-way router weights with actual selection bias on a declared synthetic
 hidden vector. It checks the exact six selected indices and unbiased
 contribution weights independently, and returns only the six experts' index
-paths. It **does not claim** those selected experts' quantized matrices were
-retrieved or multiplied. Weight/scale admission and host reassignment must
+paths. The *additional* optional FP4 probe then acquires genuine w1/w3 first
+rows and each w2 first row with exact paired UE8M0 scales for **the six selected
+experts only**. It verifies the SwiGLU intermediate channel and that channel's
+partial down-projection contribution against an independent nibble/scale
+decoder. Other intermediate channels, the shared expert and the full routed
+output remain unexecuted. If any companion is missing the separate FP4 field
+is explicitly UNRESOLVED while the independently verified trained router remains
+valid. Weight/scale admission and host reassignment must
 precede any selected-expert numerical receipt.
 
 ## Observation, transfer and safety contracts
@@ -74,7 +80,7 @@ python -m pytest -q tests/test_trained_subgraphs.py tests/test_qualified_subgrap
 # Requires outbound HTTPS and exact 206 Range support:
 python -m experiments.model_fabric.trained_subgraph_lab --model qwen \
   --out artifacts/qwen-trained-head.json
-python -m experiments.model_fabric.trained_subgraph_lab --model deepseek \
+python -m experiments.model_fabric.trained_subgraph_lab --model deepseek --selected-fp4 \
   --out artifacts/deepseek-trained-router.json
 ```
 

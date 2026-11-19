@@ -73,3 +73,41 @@ def test_shape_bound_row_selection_refuses_truncation():
     nav=nav_for({'m':('F32',[2,3],struct.pack('<6f',1,2,3,4,5,6))})
     with pytest.raises(ValueError,match='shape'):observed_rows(nav,'m',[1.,2.])
     with pytest.raises(ValueError,match='Unqualified'):observed_rows(nav,'m',[1.,2.,3.],first=1,count=2)
+
+
+def test_six_selected_fp4_expert_slices_weight_and_scale_actual_numeric():
+    from experiments.model_fabric.qualified_subgraphs import probe_deepseek_selected_fp4_expert_slices
+    selected=[9,15,4,20,31,0]
+    tensors={}
+    for i in selected:
+        for path in ('w1','w3','w2'):
+            prefix=f'layers.0.ffn.experts.{i}.{path}'
+            tensors[prefix+'.weight']=('F4',[32,32],bytes([0x22]*512))
+            tensors[prefix+'.scale']=('F8_E8M0',[32,1],bytes([127]*32))
+    nav=nav_for(tensors)
+    report=probe_deepseek_selected_fp4_expert_slices(nav,{
+        'status':'REAL_DEEPSEEK_TRAINED_384_ROUTER_VERIFIED',
+        'layer':0,'selected_experts':selected})
+    assert report['status']=='REAL_DEEPSEEK_SELECTED_FP4_SWIGLU_SLICES_VERIFIED'
+    assert [v['expert'] for v in report['slices']]==selected
+    assert report['max_abs_independent_error']==pytest.approx(0.,abs=1e-12)
+    # 6 experts x (2 full input rows + 1 down row) with exact E8M0 scales.
+    assert nav.weight_bytes==6*3*(16+1)
+
+
+def test_selected_fp4_missing_scale_and_nan_scale_fail_closed():
+    from experiments.model_fabric.qualified_subgraphs import probe_deepseek_selected_fp4_expert_slices
+    selected=list(range(6)); tensors={}
+    for i in selected:
+        for part in ('w1','w3','w2'):
+            prefix=f'layers.0.ffn.experts.{i}.{part}'
+            tensors[prefix+'.weight']=('F4',[32,32],bytes([0x22]*512))
+            tensors[prefix+'.scale']=('F8_E8M0',[32,1],bytes([127]*32))
+    tensor='layers.0.ffn.experts.2.w2.scale'
+    corrupted=dict(tensors);corrupted.pop(tensor)
+    route={'status':'REAL_DEEPSEEK_TRAINED_384_ROUTER_VERIFIED','layer':0,'selected_experts':selected}
+    with pytest.raises(ValueError,match='scale'):
+        probe_deepseek_selected_fp4_expert_slices(nav_for(corrupted),route)
+    corrupted=dict(tensors);corrupted[tensor]=('F8_E8M0',[32,1],bytes([255]*32))
+    with pytest.raises(ValueError,match='scale'):
+        probe_deepseek_selected_fp4_expert_slices(nav_for(corrupted),route)

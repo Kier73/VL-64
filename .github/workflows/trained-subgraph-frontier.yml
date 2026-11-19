@@ -59,7 +59,7 @@ jobs:
       - name: Acquire pinned tensor ranges and independently verify native subgraph
         run: |
           python -m experiments.model_fabric.trained_subgraph_lab \
-            --model '${{ matrix.model }}' \
+            --model '${{ matrix.model }}' --selected-fp4 \
             --out 'artifacts/${{ matrix.model }}-trained-subgraph.json'
       - name: Archive exact outcome including unresolved status
         if: always()

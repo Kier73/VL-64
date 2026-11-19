@@ -11,10 +11,11 @@ from pathlib import Path
 
 from .scaled_model_fabric import MAX_INDEX_BYTES,QualifiedShardNavigator
 from .scaled_model_lab import PINNED,_url,_fetch_metadata,pinned_hf_range_host
-from .qualified_subgraphs import probe_qwen_trained_delta_head,probe_deepseek_trained_router
+from .qualified_subgraphs import (probe_qwen_trained_delta_head,probe_deepseek_trained_router,
+                                  probe_deepseek_selected_fp4_expert_slices)
 
 
-def run(model):
+def run(model, *, selected_fp4=False):
     model_name,revision=PINNED[model]
     index=_fetch_metadata(_url(model_name,revision,'model.safetensors.index.json'),MAX_INDEX_BYTES)
     nav=QualifiedShardNavigator(model=model_name,revision=revision,index_raw=index,
@@ -22,6 +23,14 @@ def run(model):
           approved_hosts={'pinned-huggingface-https-range'})
     result=(probe_qwen_trained_delta_head(nav) if model=='qwen'
             else probe_deepseek_trained_router(nav))
+    if model=='deepseek' and selected_fp4:
+        try:
+            result['selected_fp4_slices']=probe_deepseek_selected_fp4_expert_slices(nav,result)
+        except (ValueError,OSError,TimeoutError) as exc:
+            result['selected_fp4_slices']={'status':'UNRESOLVED',
+                'reason':type(exc).__name__,
+                'refusal':str(exc)[:160] if isinstance(exc,ValueError) else None,
+                'scope':'trained router verified separately; no FP4 expert arithmetic claimed'}
     result['index_sha256']=nav.index['index_sha256']
     result['index_ground_digest']=nav.index['ground_digest']
     return result
@@ -31,10 +40,12 @@ def main(argv=None):
     parser=argparse.ArgumentParser()
     parser.add_argument('--model',required=True,choices=sorted(PINNED))
     parser.add_argument('--out',default='artifacts/trained-subgraph.json')
+    parser.add_argument('--selected-fp4',action='store_true',
+                        help='Probe six selected FP4 expert row fragments if admitted')
     args=parser.parse_args(argv)
     target=Path(args.out);target.parent.mkdir(parents=True,exist_ok=True)
     try:
-        result=run(args.model)
+        result=run(args.model,selected_fp4=args.selected_fp4)
     except (ValueError,OSError,TimeoutError,OverflowError) as exc:
         result={'status':'UNRESOLVED','model':PINNED[args.model][0],
                 'revision':PINNED[args.model][1],

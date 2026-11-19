@@ -196,3 +196,81 @@ def probe_deepseek_trained_router(nav, *, layer=0, topk=6):
             'weight_bytes':nav.weight_bytes,'range_count':nav.range_count,
             'range_chain':nav.chain,
             'scope':'real 384-way trained router; selected experts not numerically executed'}
+
+
+def _mx_fp4_row(nav,name,x,*,first_row=0,first_cols=None):
+    """Acquire native F4 row and paired E8M0 scales, never synthesize scales."""
+    from .architecture_ops import mx_block_matvec
+    d=nav.locate(name);shape=d['shape']
+    scale_name=name[:-len('.weight')]+'.scale' if name.endswith('.weight') else ''
+    if (len(shape)!=2 or d['dtype']!='F4' or shape[1]%32 or
+            scale_name not in nav.weight_map or len(x)!=shape[1] or
+            type(first_row) is not int or not 0<=first_row<shape[0]):
+        raise ValueError('DeepSeek selected expert FP4 extent/scale incomplete')
+    sc=nav.locate(scale_name)
+    if (sc['dtype']!='F8_E8M0' or sc['shape']!=[shape[0],shape[1]//32]):
+        raise ValueError('Selected FP4 expert E8M0 scale grid differs')
+    raw,_=nav.get_raw(name,flat_start=first_row*shape[1],count=shape[1])
+    scales,_=nav.get_raw(scale_name,flat_start=first_row*(shape[1]//32),count=shape[1]//32)
+    got=mx_block_matvec(raw,scales,x,rows=1,cols=shape[1],
+                        format='mxfp4_e2m1',scale_block=(1,32))[0]
+    # Independent nibble and exponent decoding: distinguish FP4 quantization
+    # from BF16/F32, and independently verify each block's scale position.
+    lookup=(0.0,.5,1.,1.5,2.,3.,4.,6.)
+    parts=[]
+    for j in range(shape[1]):
+        nib=(raw[j//2]>>(4*(j%2)))&15
+        code=lookup[nib&7]*(-1 if nib&8 else 1)
+        exponent=scales[j//32]
+        if exponent==255:raise ValueError('Nonfinite E8M0 expert scale')
+        parts.append(code*math.ldexp(1.0,int(exponent)-127)*x[j])
+    reference=math.fsum(parts)
+    if not math.isfinite(got) or abs(got-reference)>2e-5:
+        raise ValueError('Selected FP4 expert row disagrees with independent numerical reference')
+    return got,abs(got-reference)
+
+
+def probe_deepseek_selected_fp4_expert_slices(nav, router):
+    """Advance a trained router into genuine selected-only FP4 SwiGLU rows.
+
+    Each of six selected experts evaluates its first gate and up row and the
+    first down row's *one-column* contribution. Full remaining expert rows,
+    shared expert, mHC and layer residual are NOT computed. Unselected expert
+    bytes are never requested. All three native weight/scale pairs are required.
+    """
+    if router.get('status')!='REAL_DEEPSEEK_TRAINED_384_ROUTER_VERIFIED':
+        raise ValueError('Trained real router receipt required')
+    layer=router['layer']; ids=router['selected_experts']
+    if len(ids)!=6 or len(set(ids))!=6 or any(type(v) is not int or not 0<=v<384 for v in ids):
+        raise ValueError('Unqualified six-way selected expert set')
+    # Every expert body is scoped to the *already selected* ids.
+    results=[];errors=[]
+    for i in ids:
+        prefix=f'layers.{layer}.ffn.experts.{i}.'
+        w1=prefix+'w1.weight';w3=prefix+'w3.weight';w2=prefix+'w2.weight'
+        d1=nav.locate(w1);d3=nav.locate(w3);d2=nav.locate(w2)
+        if (len(d1['shape'])!=2 or len(d3['shape'])!=2 or
+                len(d2['shape'])!=2 or d1['shape']!=d3['shape'] or
+                d1['shape'][0]<1 or d2['shape'][0]<1 or
+                d2['shape'][1]!=d1['shape'][0] or d1['shape'][1]%32):
+            raise ValueError('Selected DeepSeek expert SwiGLU dimensions do not compose')
+        hidden=[math.cos((j+1)*.013)*.0625 for j in range(d1['shape'][1])]
+        gate,eg=_mx_fp4_row(nav,w1,hidden)
+        up,eu=_mx_fp4_row(nav,w3,hidden)
+        activation=gate*_sigmoid(gate)*up
+        # Verify only the first down-projection coefficient's contribution:
+        # the other hidden channels are deliberately absent, not set to zero
+        # in a purported full-model output.
+        d2_cols=d2['shape'][1]
+        partial,ed=_mx_fp4_row(nav,w2,[activation]+[0.]*(d2_cols-1))
+        results.append({'expert':i,'gate0':round(gate,10),
+                        'up0':round(up,10),'down0_from_channel0':round(partial,10)})
+        errors.extend((eg,eu,ed))
+    return {'schema':'vl64.trained-architecture-subgraph.v1',
+            'status':'REAL_DEEPSEEK_SELECTED_FP4_SWIGLU_SLICES_VERIFIED',
+            'model':nav.index['model'],'revision':nav.index['revision'],
+            'layer':layer,'selected_experts':ids,'slices':results,
+            'max_abs_independent_error':round(max(errors),12),
+            'weight_bytes':nav.weight_bytes,'range_count':nav.range_count,
+            'range_chain':nav.chain,
+            'scope':'six genuine selected expert gate/up rows plus one down coeff each; not full MoE'}
