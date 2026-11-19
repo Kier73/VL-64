@@ -1,0 +1,37 @@
+name: VL-64 archived real 30-layer pretrained verification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "experiments/model_fabric/datasets/2026-11-19-real-30-layer-pretrained-*.json"
+      - "tests/test_saved_real_full_pretrained.py"
+      - ".github/workflows/saved-full-pretrained-evidence.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  independent-receipt-accounting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m pytest -q tests/test_saved_real_full_pretrained.py
+      - run: |
+          python - <<'PY'
+          from pathlib import Path
+          size=sum(p.stat().st_size for p in Path('src/vld').glob('*.py'))
+          assert size<=65536
+          print('VL64_CORE_SOURCE_BYTES',size)
+          PY
