@@ -160,6 +160,33 @@ def test_nonzero_layer_rejects_ungrounded_token_embedding():
         execute_pretrained_layer(plan,[2],qualified_host(observed,data),
                                  approved_hosts={"local-f32-observer"},layer=1)
 
+
+def test_mixed_observer_hosts_preserve_layer_result_but_change_provenance():
+    observed,data,_=synthetic_pretrained_ground(dtype="BF16")
+    plan=compile_decoder_dag(observed)
+    host_a=qualified_host(observed,data,observer="qualified-host-a")
+    host_b=qualified_host(observed,data,observer="qualified-host-b")
+    seen=set()
+    def distributed(request):
+        source=(host_a if request["tensor"].endswith("weight") and
+                ("q_proj." in request["tensor"] or "gate_proj." in request["tensor"])
+                else host_b)
+        reply=source(request)
+        seen.add(reply["observer_host"])
+        return reply
+    distributed_result=execute_pretrained_layer(
+        plan,[4,3,6],distributed,
+        approved_hosts={"qualified-host-a","qualified-host-b"})
+    single_result=execute_pretrained_layer(
+        plan,[4,3,6],host_b,approved_hosts={"qualified-host-b"})
+    assert seen=={"qualified-host-a","qualified-host-b"}
+    assert distributed_result["output"]==single_result["output"]
+    assert distributed_result["range_witness_chain_digest"]!=single_result[
+        "range_witness_chain_digest"]
+    with pytest.raises(ValueError,match="Unqualified"):
+        execute_pretrained_layer(plan,[4],distributed,
+                                 approved_hosts={"qualified-host-b"})
+
 def test_nonfinite_intermediate_refused():
     with pytest.raises(ValueError,match="Nonfinite"):
         _fingerprint([float("nan")])
