@@ -219,6 +219,13 @@ class QualifiedShardNavigator:
         if not isinstance(raw,bytes) or len(raw)!=end-begin or reply.get('sha256')!=_sha(raw):
             raise ValueError('Incomplete or altered shard range')
         witness={**req,'observer_host':reply['observer_host'],'sha256':reply['sha256']}
+        disposition=reply.get('cache_disposition')
+        if disposition is not None:
+            if disposition not in ('FRESH_HOST_OBSERVATION',
+                                   'RETAINED_ORIGINAL_OBSERVATION',
+                                   'REQUALIFIED_EQUAL_BYTES'):
+                raise ValueError('Unadmitted cache evidence disposition')
+            witness['cache_disposition']=disposition
         self.chain=_digest(RANGE_SCHEMA,{'previous':self.chain,'witness':witness})
         self.range_count+=1
         if purpose=='tensor':self.weight_bytes+=len(raw)
