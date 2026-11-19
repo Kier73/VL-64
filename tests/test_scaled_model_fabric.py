@@ -167,3 +167,12 @@ def test_unsupported_families_cannot_masquerade_as_verified_llama():
     corrupted=copy.deepcopy(ix);corrupted['tensor_count']=999
     with pytest.raises(ValueError,match='Modified'):
         admit_architecture(json_bytes(qwen()),model=MODEL,revision=REV,index_ground=corrupted)
+
+
+def test_probe_accepts_non_llama_normalization_name():
+    name='model.layers.0.attn_norm.weight'
+    raw=bf16([0.5,1.,1.5,2.])
+    nav,requests,_,_=setup({'a.safetensors':{name:([4],'BF16',raw)}})
+    result=nav.small_numeric_probe()
+    assert result['status']=='WEIGHT_BACKED_NORMALIZATION_SLICE_VERIFIED'
+    assert result['tensor']==name and result['actual_weight_bytes']==len(raw)
