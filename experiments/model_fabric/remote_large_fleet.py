@@ -197,22 +197,63 @@ def _accept_response(raw, route):
 
 
 def _python_task_quality(text):
-    """Fail-closed AST requirements; never execute model-generated Python."""
-    try: tree = ast.parse(text)
-    except SyntaxError: return False
-    if len(tree.body) != 1 or not isinstance(tree.body[0], ast.FunctionDef):
+    """Recognize the exact safe_divide task law without executing generated code.
+
+    This is a deliberately narrow, independent structural evaluator, not a
+    claim that arbitrary AST-safe code is semantically correct. The guard must
+    test `b == 0` (or `b != 0`) and the other path return `a / b`.
+    """
+    try:
+        tree = ast.parse(text)
+    except (SyntaxError, ValueError, TypeError):
         return False
-    func = tree.body[0]
-    if func.name != 'safe_divide' or [a.arg for a in func.args.args] != ['a','b'] or func.decorator_list:
+    if len(tree.body) != 1 or type(tree.body[0]) is not ast.FunctionDef:
         return False
-    safe = (ast.Module, ast.FunctionDef, ast.arguments, ast.arg, ast.If, ast.Compare,
-            ast.Eq, ast.Constant, ast.Name, ast.Load, ast.Return, ast.BinOp, ast.Div, ast.Pass)
-    if any(not isinstance(node, safe) for node in ast.walk(tree)):
+    fn = tree.body[0]
+    args = fn.args
+    if (fn.name != 'safe_divide' or fn.decorator_list or
+            [x.arg for x in args.args] != ['a','b'] or
+            args.posonlyargs or args.kwonlyargs or args.vararg or args.kwarg or
+            args.defaults or args.kw_defaults):
         return False
-    # AST shape is necessary but not sufficient; deliberately no eval/exec.
-    return any(isinstance(x, ast.BinOp) and isinstance(x.op, ast.Div)
-               for x in ast.walk(func)) and any(isinstance(x, ast.Constant) and x.value is None
-               for x in ast.walk(func))
+
+    def is_none_return(node):
+        return (type(node) is ast.Return and type(node.value) is ast.Constant and
+                node.value.value is None)
+
+    def is_divide_return(node):
+        if type(node) is not ast.Return or type(node.value) is not ast.BinOp:
+            return False
+        op=node.value
+        return (type(op.op) is ast.Div and type(op.left) is ast.Name and
+                op.left.id=='a' and type(op.right) is ast.Name and
+                op.right.id=='b')
+
+    def zero_guard(node):
+        if (type(node) is not ast.Compare or len(node.ops)!=1 or
+                len(node.comparators)!=1):
+            return None
+        left,right=node.left,node.comparators[0]
+        valid=(type(left) is ast.Name and left.id=='b' and
+               type(right) is ast.Constant and type(right.value) is int and
+               right.value==0) or (type(right) is ast.Name and right.id=='b' and
+               type(left) is ast.Constant and type(left.value) is int and
+               left.value==0)
+        if not valid:return None
+        if type(node.ops[0]) is ast.Eq:return 'zero'
+        if type(node.ops[0]) is ast.NotEq:return 'nonzero'
+        return None
+
+    if not fn.body or type(fn.body[0]) is not ast.If:return False
+    first=fn.body[0]
+    sense=zero_guard(first.test)
+    if sense is None or len(first.body)!=1 or len(first.orelse)>1:return False
+    true_path=is_none_return if sense=='zero' else is_divide_return
+    false_path=is_divide_return if sense=='zero' else is_none_return
+    if not true_path(first.body[0]):return False
+    if first.orelse:
+        return len(fn.body)==1 and false_path(first.orelse[0])
+    return len(fn.body)==2 and false_path(fn.body[1])
 
 
 def _quality(kind, text):
