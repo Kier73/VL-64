@@ -1,0 +1,81 @@
+name: VL64 observed-weight Glance Grounds and independent replay
+
+on:
+  push:
+    paths:
+      - 'experiments/model_fabric/weight_glance_ground.py'
+      - 'experiments/model_fabric/glance_model_lab.py'
+      - 'experiments/model_fabric/scaled_model_fabric.py'
+      - 'tests/test_weight_glance_ground.py'
+      - 'tests/test_glance_model_lab.py'
+      - 'tests/test_saved_weight_glance_replay.py'
+      - '.github/workflows/weight-glance-ground.yml'
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      live_pretrained:
+        description: 'Run real Qwen/DeepSeek trained-weight observation replay'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  independent-ground-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11','3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e '.[dev]'
+      - name: Independently verify Glance replay, causal recovery and existing native subgraphs
+        run: |
+          python -m pytest -q tests/test_weight_glance_ground.py tests/test_glance_model_lab.py tests/test_saved_weight_glance_replay.py \
+            tests/test_qualified_range_cache.py tests/test_retained_model_lab.py \
+            tests/test_complete_native_layers.py tests/test_qualified_subgraphs.py \
+            tests/test_scaled_model_fabric.py
+      - name: Keep original compact VL64 executable core
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          count=sum(p.stat().st_size for p in Path('src/vld').glob('*.py'))
+          assert count <= 65536, count
+          print('VL64_CORE_BYTES',count)
+          PY
+
+  live-pretrained-replay:
+    if: (github.event_name == 'workflow_dispatch' && inputs.live_pretrained) || (github.event_name == 'push' && github.ref == 'refs/heads/feat/portable-weight-glance-ground-20261119')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ['qwen','deepseek']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -e '.[dev]'
+      - name: Observe actual trained weights then replay same subgraph without network
+        run: |
+          python -m experiments.model_fabric.glance_model_lab \
+            --model '${{ matrix.model }}' \
+            --root 'artifacts/${{ matrix.model }}-glances' \
+            --out 'artifacts/${{ matrix.model }}-glance-result.json'
+      - name: Preserve measured success or explicit refusal
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-${{ matrix.model }}-retained-glances
+          path: artifacts/${{ matrix.model }}-glance-result.json
+          retention-days: 30
+          if-no-files-found: warn

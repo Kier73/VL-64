@@ -220,7 +220,21 @@ class QualifiedShardNavigator:
             raise ValueError('Incomplete or altered shard range')
         witness={**req,'observer_host':reply['observer_host'],'sha256':reply['sha256']}
         disposition=reply.get('cache_disposition')
-        if disposition is not None:
+        if disposition == 'PINNED_GLANCE_DERIVATION':
+            # New qualified *local* observer, NOT a fresh network observation.
+            # Its source Ground and the exact original fragments become part
+            # of this execution's range evidence chain.
+            head=reply.get('glance_ground_head')
+            origins=reply.get('original_witnesses')
+            if (not isinstance(head,str) or len(head)!=64 or
+                    any(z not in '0123456789abcdef' for z in head) or
+                    not isinstance(origins,list) or not origins or len(origins)>65536):
+                raise ValueError('Unqualified reconstructed observation lineage')
+            witness['cache_disposition']=disposition
+            witness['glance_ground_head']=head
+            witness['historical_sources_digest']=_digest(
+                'vl64.glance-derivation-witness.v1',origins)
+        elif disposition is not None:
             if disposition not in ('FRESH_HOST_OBSERVATION',
                                    'RETAINED_ORIGINAL_OBSERVATION',
                                    'REQUALIFIED_EQUAL_BYTES'):
