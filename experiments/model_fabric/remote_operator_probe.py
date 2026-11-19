@@ -20,6 +20,7 @@ from vld import StructuralLinearOperator,rms_norm,domain_digest
 from .hf_glance import (
     MODEL,REVISION,_read,_url,observe_model,
 )
+from .slice_ground import compile_slice_ground,replay_slice_ground
 
 
 def _sha(data):
@@ -48,7 +49,8 @@ def _tensor(ground,name,shape):
     return hits[0]
 
 
-def execute_remote_q_slice(*,observed=None,model=MODEL,revision=REVISION):
+def execute_remote_q_slice(*,observed=None,model=MODEL,revision=REVISION,
+                           return_slice=False):
     remote=observed if observed is not None else observe_model(
         model=model,revision=revision)
     if remote.get("tensor_header_status")!="OBSERVED_COMPLETE_TENSOR_HEADER":
@@ -124,6 +126,15 @@ def execute_remote_q_slice(*,observed=None,model=MODEL,revision=REVISION):
     if residual>1e-7:
         raise RuntimeError("Remote BF16 operator disagrees with scalar reference")
 
+    slice_ground=compile_slice_ground(
+        model=model,revision=revision,
+        root_ground_digest=remote["ground_digest"],
+        tensor_ground_digest=remote["tensors"]["ground_digest"],
+        hidden=hidden,epsilon=epsilon,norm_raw=norm_bytes,q_raw=q_bytes,
+        source_witnesses=[norm_witness,q_witness])
+    replay=replay_slice_ground(slice_ground)
+    if replay["output_coordinates"]!=[round(v,9) for v in computed]:
+        raise RuntimeError("Portable tensor slice replay disagrees with live result")
     full_payload=remote["tensors"]["declared_payload_bytes"]
     payload=len(norm_bytes)+len(q_bytes)
     receipt={
@@ -147,24 +158,32 @@ def execute_remote_q_slice(*,observed=None,model=MODEL,revision=REVISION):
         "reference_max_abs_error_quantized_12dp":round(residual,12),
         "numerical_tolerance_abs":1e-7,
         "independent_numeric_reference_passed":True,
+        "portable_slice_ground_digest":slice_ground["ground_digest"],
+        "portable_slice_ground_json_bytes":len(json.dumps(
+            slice_ground,sort_keys=True,separators=(",",":")).encode()),
+        "portable_replay_receipt_digest":replay["receipt_digest"],
         "full_model_text_generated":False,
         "token_embedding_observed":False,
         "scope":"real_BF16_pretrained_weight_slice_exact_operator_not_complete_LLM",
     }
     receipt["receipt_digest"]=domain_digest(
         "vl64.real-pretrained-model-subgraph-execution.v1",receipt)
-    return receipt
+    return (receipt,slice_ground) if return_slice else receipt
 
 
 def main():
     try:
-        result=execute_remote_q_slice()
+        result,slice_ground=execute_remote_q_slice(return_slice=True)
     except (ValueError,OSError,TimeoutError) as error:
         result={"status":"UNRESOLVED",
                 "reason":type(error).__name__,
                 "scope":"no_weight_slice_execution_claim_without_exact_remote_bytes"}
+        slice_ground=None
     print("VL64_REAL_PRETRAINED_OPERATOR "+json.dumps(
         result,sort_keys=True,separators=(",",":")))
+    if slice_ground is not None:
+        print("VL64_PRETRAINED_SLICE_GROUND "+json.dumps(
+            slice_ground,sort_keys=True,separators=(",",":")))
 
 
 if __name__=="__main__":
