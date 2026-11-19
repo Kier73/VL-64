@@ -130,6 +130,36 @@ def test_recomputed_dag_digest_cannot_divert_dependency_or_weight():
         execute_pretrained_layer(changed,[2],qualified_host(observed,data),
                                  approved_hosts={"local-f32-observer"})
 
+
+def test_failed_position_does_not_commit_partial_kv_cache():
+    observed,data,_=synthetic_pretrained_ground()
+    plan=compile_decoder_dag(observed)
+    reader=QualifiedTensorReader(plan,qualified_host(observed,data),
+                                 approved_hosts={"local-f32-observer"})
+    layer=PreparedLayer(reader)
+    original=layer._linear
+    def break_after_attention(suffix,x):
+        if suffix=="mlp.down_proj.weight":
+            raise ValueError("simulated observer execution failure")
+        return original(suffix,x)
+    layer._linear=break_after_attention
+    with pytest.raises(ValueError,match="simulated"):
+        layer.next([0.1]*plan["architecture"]["hidden"])
+    assert layer.step==0
+    assert not layer.keys and not layer.values
+    layer._linear=original
+    result,_=layer.next([0.1]*plan["architecture"]["hidden"])
+    assert len(result)==plan["architecture"]["hidden"]
+    assert layer.step==1 and len(layer.keys)==1 and len(layer.values)==1
+
+
+def test_nonzero_layer_rejects_ungrounded_token_embedding():
+    observed,data,_=synthetic_pretrained_ground(layers=2)
+    plan=compile_decoder_dag(observed)
+    with pytest.raises(ValueError,match="predecessor"):
+        execute_pretrained_layer(plan,[2],qualified_host(observed,data),
+                                 approved_hosts={"local-f32-observer"},layer=1)
+
 def test_nonfinite_intermediate_refused():
     with pytest.raises(ValueError,match="Nonfinite"):
         _fingerprint([float("nan")])
