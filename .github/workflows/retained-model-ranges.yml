@@ -9,6 +9,8 @@ on:
       - 'experiments/model_fabric/scaled_model_fabric.py'
       - 'tests/test_qualified_range_cache.py'
       - 'tests/test_retained_model_lab.py'
+      - 'tests/test_saved_real_range_retention.py'
+      - 'experiments/model_fabric/datasets/2026-11-19-real-retained-pretrained-range-observations.json'
       - '.github/workflows/retained-model-ranges.yml'
   pull_request:
   workflow_dispatch:
@@ -32,7 +34,7 @@ jobs:
       - run: python -m pip install -e '.[dev]'
       - name: Retained Qwen causal state, DeepSeek selected experts, crash recovery, and source requalification
         run: |
-          python -m pytest -q tests/test_qualified_range_cache.py tests/test_retained_model_lab.py \
+          python -m pytest -q tests/test_qualified_range_cache.py tests/test_retained_model_lab.py tests/test_saved_real_range_retention.py \
             tests/test_complete_native_layers.py tests/test_trained_subgraphs.py \
             tests/test_qualified_subgraphs.py tests/test_scaled_model_fabric.py
       - name: Preserve 64 KiB compact kernel ceiling
