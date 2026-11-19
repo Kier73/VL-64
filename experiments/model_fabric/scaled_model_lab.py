@@ -108,6 +108,8 @@ def observe_large_model(*,selection, numeric=False):
             report['numeric_probe']=nav.small_numeric_probe()
         except (ValueError,OSError,TimeoutError) as exc:
             report['numeric_probe']={'status':'UNRESOLVED','reason':type(exc).__name__}
+            if isinstance(exc,ValueError):
+                report['numeric_probe']['refusal_contract']=str(exc)[:140]
         report['pretrained_weight_bytes_observed']=nav.weight_bytes
         report['exact_http_ranges']=nav.range_count
         report['range_witness_chain_digest']=nav.chain
