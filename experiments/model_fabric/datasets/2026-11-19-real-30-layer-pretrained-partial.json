@@ -1,0 +1,157 @@
+{
+  "checkpoint_digest": "55eb408739a4eff2ca180f35b78654264bf2ab1a26e30f1c7ab17b0560d0f7c5",
+  "claim": "all layer operands individually range-qualified; independent numeric check per completed layer",
+  "dag_digest": "f89cfc3a1db00ec48658327a7c25bddf1998b54d3619838d0193fb94cb5fa1c6",
+  "layers_completed": 15,
+  "model": "HuggingFaceTB/SmolLM2-135M",
+  "previous_checkpoint_digest": "0000000000000000000000000000000000000000000000000000000000000000",
+  "range_reads_cumulative": 1697,
+  "revision": "4e53f736cbb20a9a0f56b4c4bf378d9f306ff915",
+  "schema": "vl64.real-pretrained-30-layer-run.v1",
+  "scope": "partial_pretrained_layer_run_no_final_logits",
+  "status": "VERIFIED_PRETRAINED_LAYER_FRONTIER",
+  "tokens": [
+    42,
+    75
+  ],
+  "total_declared_layers": 30,
+  "verified_layers_this_process": 15,
+  "verified_this_process": [
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "07e77959dcad906eb340dac9ef65910e8c06b455770f97a6859f03f2a22bedc6",
+      "index": 0,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "793fead9672083daf3975e8be118d324f5bbca5e5185fc89dd6e6732a39a08ca",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "79abd3b91dacb78f990cc7700d47063a2d4fa43a6dea42e1e6b62012778a3c7c",
+      "index": 1,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "9e106cb7e72d872953f40aade826e2be3cf77fedc80246e5544e1db54b40f92c",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "c54ee061800333f6949c2a6d888f4b65ac635d9239b6fa25b7725639b632474d",
+      "index": 2,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "7639ce5e266239743f7ea0846b35dc851ce41d651f214c7fdcad917c40aaeb59",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "31d5ae72c32e7e7e369bf5858c1a72350166900ad7837994b7341174c97a73f3",
+      "index": 3,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "5774857e8b6a4713b25ff561f6c4a4e262ef85725078649b815595ab218fb1cd",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "e6d7e849a9b8f3fb6628e5bc642397d70d1841a83917ffdb385b5b40187bbaa6",
+      "index": 4,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "3aa81baaef85f58a9a95fee94c42ec93e4e46924a3ed70d78b399f2bc7ba5d5f",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "9517c7dc75a740c19ac8150df9f29afef3ce86fbf08186e5e3d07bd51590d9d7",
+      "index": 5,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "6906f2d3d9d0e0439e4aa78a5a8088784164d26758b4a1f61d64704577d300c0",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "7a65a170c5d39012b1b13d40bf1df46ae58081bf6962043b7673e3f3565ade23",
+      "index": 6,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "9e015f6d606eb9b248702845d969b3c7891b2ca5ecf4bb26d233160f1aeacfbe",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "a920e2015b5529666de73b957612fc4fc965dfe333c03982d8f0c4c7c5ed3a61",
+      "index": 7,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "be996e2801c45c0ce65a353e1b215dbfdc66b9b1dd58a64546bde8a6f7e6777d",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "1330ae1543eea1a7210d50c443aef5c40d510e4b133c76431e513951b0c533fe",
+      "index": 8,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "6168fd1ae937e1c68fde2eb647406cdd7b9bfc8c0fc65541a0feed4814ef8d28",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "0b1663bd5fe45db48d3d97e1c2d913b28f74b965efc978b0362bfe1027884ff2",
+      "index": 9,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "cc2351871c30c44eef8cef41d51cee89723ef32379697572da4a62ee352a38ec",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "f5b322de680dccf1e95a5426c02f9b8f78a8b906e9cd56a6c6cc17dd5d97a8f1",
+      "index": 10,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "d98f1cb4e1f55500ee8ea82d82d3eb1e1d75332217a3fb477a07aaeafb8e4242",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "0670613ff6cec25cb9072a7a845d77594ea84ddebee6d87fba845ee62928d315",
+      "index": 11,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "2833a85195805bb83ee2507ba6fa329d118f5df787ae19f4f4a2f075fed53a2d",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "3ea32e796ed3894051b3334003a315e34f3586e545d3b9a762378014a4e2a323",
+      "index": 12,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "f46056516f50d10bd59bd29ea889c2c922a9f5c00a79b2ef3616658157b93c46",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "ae1fa73a3ceadd61ba1d203ff4714208978d8564c95fdb18ad40b1c7cb619b18",
+      "index": 13,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "25c07da11d6fd1cae238717d74fae4c9ab5ced13c39a78be6afdf878d0dbc9f0",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "5e7dcee4a8af633735c3e93c036d0cad71d9c524f86d8da34023adadf9ecf58e",
+      "index": 14,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "f017bae312c6227ba96e397dba1e9e0cac544f9bf9d39c89e2a5cd614e00f0bf",
+      "tolerance_abs": 0.0002
+    }
+  ],
+  "weight_payload_bytes_cumulative": 106205184
+}

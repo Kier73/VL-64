@@ -1,0 +1,178 @@
+{
+  "checkpoint_digest": "a88ea7dd338fd3f33a0ca8a47d24975cdcb3e8651194fcd82dc95be569a41618",
+  "claim": "all layer operands individually range-qualified; independent numeric check per completed layer",
+  "dag_digest": "f89cfc3a1db00ec48658327a7c25bddf1998b54d3619838d0193fb94cb5fa1c6",
+  "full_vocab_size": 49152,
+  "independent_logit_max_abs_error": 0.0,
+  "layers_completed": 30,
+  "logits_f64_sha256": "b44b804f14098c410ec1b4f547b52cb7ae1731f370251d60015b2d2da9232bc4",
+  "model": "HuggingFaceTB/SmolLM2-135M",
+  "previous_checkpoint_digest": "55eb408739a4eff2ca180f35b78654264bf2ab1a26e30f1c7ab17b0560d0f7c5",
+  "range_reads_cumulative": 3392,
+  "range_reads_including_logits": 4271,
+  "result_receipt_digest": "f6ce00f27419266bcb90b6ef8255a75560cdfe612fdf505942e6c7e4fee47911",
+  "revision": "4e53f736cbb20a9a0f56b4c4bf378d9f306ff915",
+  "schema": "vl64.real-pretrained-30-layer-run.v1",
+  "scope": "real_supplied_token_ids_full_30_layer_forward_not_tokenization_or_remote_processor_execution",
+  "selected_next_token": 33,
+  "status": "REAL_PRETRAINED_30_LAYER_LOGITS_INDEPENDENTLY_VERIFIED",
+  "tokens": [
+    42,
+    75
+  ],
+  "top_logits": [
+    30.37484733386915,
+    29.580225558354257,
+    29.300524763933097,
+    28.777542019334835,
+    28.504090535851173
+  ],
+  "top_token_ids": [
+    33,
+    34,
+    35,
+    36,
+    37
+  ],
+  "total_declared_layers": 30,
+  "verified_layers_this_process": 15,
+  "verified_this_process": [
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "0ca4127ad84d6d7033a3590488d510e70db31ba0ff723b6ceb7de0cbdc3a43cd",
+      "index": 15,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "289eba7626cedfe8875541307e683a5d4c942ac2f5bb223c76df6efd234a49c3",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "715b9ee5b1b2c10f8ab5d5024f76601f4c50509f9e45812b7c8d29486733b1b8",
+      "index": 16,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "211572976066c0c13398132db715c900decba5d4147a7fbec28471a342f62892",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "b92147d46bb317c134c788612693bc408b3f8365aa547d441b2bd2bc375bf96e",
+      "index": 17,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "02bd9ee1dd921ba099bb7a96e4aed42a934c827cf38d48a1c31d240239411236",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "36f466293580ff6b01fc94a4f55fb0ad190d8195b59d291912d2f5b52472b8be",
+      "index": 18,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "79438136ad6ae32e97580bca787e6e517b4eb106adcab6b8aff22cf94b00987e",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "2cfca5b1161997c61ab9ceb6e505d4647af17c3152154ffdad3213c295b18baa",
+      "index": 19,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "913a549bf055b5fb0865e0a190835734c5a848aff7a75451e040574ebcbd290e",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "5892f68f2421a0de20827d4c766b38e6ec9d0672c40346f97bc228127c632fc8",
+      "index": 20,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "5cf09fdd7f2c62683a7f7ad179ab6632cea31bd4627563824568e4d22cbe5930",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "1c15fc13cd62a080e19067f3722f1ac43137b4bcb3fd00c278ca4967c70cb815",
+      "index": 21,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "edf040517367d754ab3aef20cad97a8d17478f936977462e562c8b8988d0ac15",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "a5fb27104ce1cbc5bf3cdbb7e4e60ea76eda2d1b21441591b8880f25a23e748e",
+      "index": 22,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "4972409266d4081fc89eb7b36f3ccd7fe56cbcd498279b349f9171ad0bb8e7e5",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "855b53c9debb68067f12eebabacf36f8d7cf2ab2a22f44bbfda869d578c399a7",
+      "index": 23,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "f80f0a3701c5e7265a829e2aa546f925867d28663c82d8cd90bfc6cf4429171f",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "81f9c42f828724349275f59825167456c42a256be2acb6838ecd0b9af62a3110",
+      "index": 24,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "d14892682a36108cf561f41c2a89115d716215fb0052e4eff42ebc7e5c0df2fa",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "576dbf38538c426b1227a0593b5457ad87a18ac2abdd4faab1c5168a30f04edb",
+      "index": 25,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "5bd7897dff97ec9bc5f4dfc4f4da42000c43ccea5273a1423fa7b03e734a9747",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "bd4bbbce1a2507515d06e699b56ef47f004f6dab4e653a3c1d996d4e7a8a5aba",
+      "index": 26,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "e116f27d7cfbbb34a5c164655cd5ad20e049365dad12a86ab74ef1a031b9108e",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "6996fe04843a568804f0837b566f38fcd09021662fb7decf99d94d78bb9d9fbd",
+      "index": 27,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "1b524108897fe13822623bfcdd287c86211f9e8b2fc1506e55f2f2ce96ad087e",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "312a9cf8d0ed6b38fca652d4f818e1c439b09fa08f007b8daf02ddefb55b06fd",
+      "index": 28,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "c9954c4213f9ddc5cdbc820693522e2aed92c734127694680ca18a000551a5b8",
+      "tolerance_abs": 0.0002
+    },
+    {
+      "bytes_acquired": 7080192,
+      "hidden_sha256": "32fdd57ed671cd8fd1be0bf5305ac6fd915302049fdaa3cef1a2e5bd4e0aff95",
+      "index": 29,
+      "max_abs_error": 0.0,
+      "range_reads": 113,
+      "static_weight_identity": "339746c85f4b349f13fc6320ab75c5a10d6fb1506657436c8614a0b9b91f0539",
+      "tolerance_abs": 0.0002
+    }
+  ],
+  "weight_bytes_including_logits": 269032320,
+  "weight_payload_bytes_cumulative": 212408064
+}
