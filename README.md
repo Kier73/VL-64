@@ -230,6 +230,22 @@ python -I artifacts/VL64.pyz verify
 
 Both the expanded source and the archive itself must fit within **65,536 bytes**. The builder and tests live outside the runtime; the exact software Ground is generated from AST and file SHA-256 evidence, not a hand-maintained map. It describes verifiable software structure, not a universal interpreter or an autonomous Internet processor.
 
+## Observe only the bytes that distinguish a Ground
+
+VL-64's [Multi-Field and Partial-Observation Grounds](docs/MULTIFIELD_PARTIAL_GROUNDS.md) experiment discovers **multiple disjoint changing byte spans**, retains the witnessed relationships among their combined states, and navigates qualified action transitions. A partial observer can provide **just one known byte** and ask VL-64 which additional field is most informative to inspect next.
+
+```bash
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/multifield_recommend_field.json \
+  --out suggested-bytes.json
+
+python -m experiments.observer_intent.arbitrate \
+  --intent experiments/byte_fabric/intents/multifield_trillion.json \
+  --out modeled-result.json
+```
+
+This uses a recorded multi-field Ground; it performs no external actions. Missing transitions stay unresolved. The controlled 512-byte frame experiment compressed 16,384 bytes of observed transition frames into a 4,322-byte Ground and checked 62 new mixed action compositions. This is a *bounded fixed-layout prototype*, not a general arbitrary machine decoder.
+
 ## Documentation
 
 - [Usage guide](docs/USAGE_GUIDE.md) — commands, API examples, and extension points.
@@ -241,3 +257,4 @@ Both the expanded source and the archive itself must fit within **65,536 bytes**
 - [Active Action-Conditioned Grounds](docs/ACTIVE_ACTION_GROUNDS.md) — select informative host-qualified observations, refine finite hypotheses, and navigate retained models.
 - [Trace-Derived Action Grounds](docs/TRACE_DERIVED_ACTION_GROUNDS.md) — synthesize competing finite action models from byte traces, actively distinguish them, and test modeled navigation.
 - [Monolithic Seed and Self-Grounds](docs/MONOLITHIC_SEED_AND_SELF_GROUNDS.md) — derive a single executable seed and verifiable Ground of the runtime's own modules and source relations.
+- [Multi-Field and Partial-Observation Grounds](docs/MULTIFIELD_PARTIAL_GROUNDS.md) — discover interacting byte regions, represent missing transitions, and request only informative bytes.
