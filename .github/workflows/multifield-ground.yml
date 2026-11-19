@@ -1,0 +1,38 @@
+name: VL-64 sparse multi-field observation and navigation
+
+on:
+  push:
+    branches:
+      - main
+      - feature/multifield-partial-ground-20261118
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  multi-field:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11","3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test requirements
+        run: python -m pip install -e ".[dev]"
+      - name: Test full VL-64 suite, sparse layouts and partial evidence
+        run: python -m pytest -q tests/
+      - name: Enforce 64 KiB source runtime
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          n=sum(p.stat().st_size for p in Path("src/vld").glob("*.py"))
+          assert n<=65536,n
+          print("VL64_MULTIFIELD_CORE_BYTES",n)
+          PY
