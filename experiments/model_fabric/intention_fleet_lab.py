@@ -123,6 +123,7 @@ def main(argv=None):
                  kind=args.kind,task=args.task,steps=args.steps))
     except (ValueError,RuntimeError,OSError,TimeoutError,ImportError) as exc:
         result={'status':'UNRESOLVED','error_type':type(exc).__name__,
+            'reason':str(exc)[:180] if isinstance(exc,ValueError) else None,
             'scope':'no model execution asserted without admitted host and causal evidence'}
     out.write_text(json.dumps(result,sort_keys=True,indent=2,allow_nan=False)+'\n')
     print('VL64_INTENTION_FLEET '+json.dumps(result,sort_keys=True))

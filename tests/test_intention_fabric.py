@@ -236,3 +236,16 @@ def test_fleet_refuses_shared_mutable_host_object():
     bind={'ground':g,'host':h,'approved_hosts':{'host-1'}}
     with pytest.raises(ValueError,match='share a mutable host'):
         ModelInstanceFleet({'left':bind,'right':bind})
+
+
+def test_admitted_intention_and_model_ground_are_immutable_snapshots():
+    h=ScriptedResidentModel('A tested sentence. Another tested sentence.')
+    g=grounded(h)
+    original=compile_intention(g,kind='paragraph',messages=[{'role':'user','content':'stable task'}])
+    session=IntentionSession(original,g,h,approved_hosts={'host-1'})
+    original['messages'][0]['content']='mutated after admission'
+    g['operations'].append('fake-operation')
+    assert 'stable task' in render_intention(session.intent)
+    assert 'mutated after admission' not in render_intention(session.intent)
+    assert len(session.ground['operations'])==5
+    assert session.run()['status']=='OUTPUT_SHAPE_ADMITTED'

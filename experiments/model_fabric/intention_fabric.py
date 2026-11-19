@@ -167,9 +167,9 @@ class IntentionSession:
     Host execution claims are not independent proof of trained arithmetic.
     """
     def __init__(self, intent, ground, host: Callable, *, approved_hosts):
-        self.ground = _check_ground(dict(ground))
+        self.ground = json.loads(canonical(_check_ground(dict(ground))))
         _check_intention(intent,self.ground)
-        self.intent = dict(intent)
+        self.intent = json.loads(canonical(intent))
         self.nav = OperationalModelNavigator(self.ground,host,approved_hosts=approved_hosts)
 
     def run(self, *, tile_size=4096):
@@ -229,7 +229,7 @@ class ModelInstanceFleet:
             if (not isinstance(key,str) or not _SAFE_NAME.fullmatch(key) or
                     not isinstance(bind,dict) or set(bind)!={'ground','host','approved_hosts'}):
                 raise ValueError('Invalid model instance binding')
-            ground=_check_ground(dict(bind['ground']))
+            ground=json.loads(canonical(_check_ground(dict(bind['ground']))))
             if not callable(bind['host']) or not isinstance(bind['approved_hosts'],set) or \
                     ground['observer_host'] not in bind['approved_hosts']:
                 raise ValueError('Unqualified model host binding')
