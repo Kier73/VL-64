@@ -76,3 +76,22 @@ unfamiliar mathematics by Llama approximations.
 - https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/blob/main/config.json
 - https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/blob/main/inference/model.py
 - https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf
+
+
+## First real pinned numerical observations — 2026-11-19
+
+The first optional live jobs **both completed successfully** in
+[Actions run #44547709486](https://github.com/Kier73/VL-64/actions/runs/44547709486).
+The exact machine-readable reports are retained in
+[`2026-11-19-native-architecture-operator-observations.json`](../experiments/model_fabric/datasets/2026-11-19-native-architecture-operator-observations.json).
+
+| Pinned checkpoint | Real pretrained bytes | Qualified ranges | Numeric result | Independent max absolute error |
+| --- | ---: | ---: | --- | ---: |
+| Qwen/Qwen3.8-27B | 20,484 | 6 | beta 0.491373616; log-decay -0.0009444529 | 0.0 at 12 decimal places |
+| deepseek-ai/DeepSeek-V4.1-Flash-1017 | 5,280 | 7 | scaled projection row 0 = -0.0336196511 | 0.0 at 12 decimal places |
+
+These are weight-backed **sub-operations with synthetic inputs**, not full
+Qwen attention or DeepSeek expert execution. The archived receipt regression
+asserts model revisions, exact tensor identities, byte counts, and evidence
+digest shapes; it cannot replace a full checkpoint signature or a fresh
+independent numerical execution against actual bytes.
