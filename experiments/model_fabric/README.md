@@ -72,3 +72,33 @@ python -m pytest -q tests/test_execution_dag.py
 ```
 
 Full opt-in ranged execution of provided token IDs is available with `--tokens 42 --allow-remote-weights`. It has not been established as real pretrained full-model generation: obtaining all weight bytes, authenticating them against an external checkpoint digest, and comparing end-to-end logits to an independent pretrained reference remain separate validation steps. Read [the typed DAG contract](../../docs/TYPED_PRETRAINED_EXECUTION_DAG.md).
+
+
+## Entire pretrained transformer layer (next milestone)
+
+The [cached layer executor](pretrained_layer.py) now binds the typed DAG to
+all nine real pretrained layer tensors: input norm, Q/K/V, rotary positions,
+causal GQA, output projection, attention residual, post norm, SwiGLU
+gate/up/down and feed-forward residual. The selected layer parameters are
+loaded once per observer Ground and reused for multiple causal token positions.
+All weight ranges remain individually bounded to 65,536 bytes. For
+SmolLM2-135M, layer 0 contains **7,080,192 BF16 weight bytes** and each
+chosen token embedding row adds **1,152 BF16 bytes**.
+
+```bash
+python -m pytest -q tests/test_execution_dag.py tests/test_pretrained_layer.py
+# Network-optional genuine pretrained layer, two actual token IDs:
+python -m experiments.model_fabric.real_layer_lab \
+  --out artifacts/pretrained-layer0-report.json
+```
+
+The [independent scalar reference](real_layer_lab.py) reassembles exact
+admitted ranges and evaluates every layer operation without VL-64 math
+helpers; it compares all 576 final hidden coordinates. The [CI
+workflow](../../.github/workflows/pretrained-layer.yml) runs mandatory BF16
+and F32 fixture checks and an optional live pinned-model observation. No
+result is labeled verified if the remote bytes cannot be obtained.
+
+This is **one complete pretrained layer**, not a full 30-layer pass or
+SmolLM2 next-token generation. See the
+[pretrained layer evidence contract](../../docs/PRETRAINED_LAYER0_GROUND.md).

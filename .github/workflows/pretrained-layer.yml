@@ -1,0 +1,67 @@
+name: VL-64 complete pretrained layer + independent reference
+
+on:
+  push:
+    branches:
+      - main
+      - feat/pretrained-layer0-reference-20261118
+    paths:
+      - "experiments/model_fabric/**"
+      - "tests/test_pretrained_layer.py"
+      - "tests/test_saved_real_pretrained_layer.py"
+      - "tests/test_execution_dag.py"
+      - ".github/workflows/pretrained-layer.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reference-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11","3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test dependencies
+        run: python -m pip install -e ".[dev]"
+      - name: Verify typed model DAG and independent layer numerics
+        run: python -m pytest -q tests/test_execution_dag.py tests/test_pretrained_layer.py tests/test_saved_real_pretrained_layer.py
+      - name: Verify unchanged compact VL64 core budget
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          total=sum(p.stat().st_size for p in Path("src/vld").glob("*.py"))
+          assert total <= 65536
+          print("VL64_CORE_BYTES",total)
+          PY
+
+  pinned-bf16-layer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # A remote model server may deny range requests; never forge verification.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install execution adapter
+        run: python -m pip install -e ".[dev]"
+      - name: Acquire only pinned BF16 ranges and independently verify layer zero
+        run: python -m experiments.model_fabric.real_layer_lab --out artifacts/pretrained-layer0-report.json
+      - name: Preserve measured evidence or explicit unresolved status
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-real-layer0-bf16
+          path: artifacts/pretrained-layer0-report.json
+          retention-days: 30
+          if-no-files-found: warn
