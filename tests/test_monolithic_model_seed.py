@@ -53,7 +53,7 @@ def test_single_zipapp_reproduces_pretrained_operator_without_repo_or_install(tm
     parsed=json.loads(verified.stdout)
     assert parsed["status"]=="VERIFIED_PORTABLE_VL64_MODEL_SEED"
     assert parsed["no_network_required"] is True
-    assert parsed["model_seed_bytes"]==len(payload)
+    assert parsed["seed_bytes"]==len(payload)
     result=subprocess_seed(payload,tmp_path,"model-run")
     assert result.returncode==0,result.stderr
     outcome=json.loads(result.stdout)
