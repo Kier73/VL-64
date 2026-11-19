@@ -216,6 +216,20 @@ python -m experiments.observer_intent.arbitrate \
 
 The first command **recommends** an experiment from two saved input/output traces; it does not execute host actions. The second navigates the learned finite-state model, rather than physically running a trillion operations. The [Trace-Derived Action Grounds](docs/TRACE_DERIVED_ACTION_GROUNDS.md) document explains the evidence, 62 independent held-out checks, and limits of model inference.
 
+## Procedurally generate a monolithic VL-64 seed
+
+The [Monolithic Seed and Self-Grounds](docs/MONOLITHIC_SEED_AND_SELF_GROUNDS.md) experiment derives a self-contained Python archive from the actual seven-module compact runtime. It carries **the exact source bytes, a verifying bootstrap, a source manifest, and a source-derived Ground of seven module Grounds**. The seed can be transferred to another Python-capable host and executed without installing the VL-64 package.
+
+```bash
+python -m experiments.seed_fabric.build build --out artifacts/VL64.pyz
+python -I artifacts/VL64.pyz seed-verify
+python -I artifacts/VL64.pyz seed-ground
+python -I artifacts/VL64.pyz seed-relations
+python -I artifacts/VL64.pyz verify
+```
+
+Both the expanded source and the archive itself must fit within **65,536 bytes**. The builder and tests live outside the runtime; the exact software Ground is generated from AST and file SHA-256 evidence, not a hand-maintained map. It describes verifiable software structure, not a universal interpreter or an autonomous Internet processor.
+
 ## Documentation
 
 - [Usage guide](docs/USAGE_GUIDE.md) — commands, API examples, and extension points.
@@ -226,3 +240,4 @@ The first command **recommends** an experiment from two saved input/output trace
 - [Non-Affine and Observable Grounds](docs/NONAFFINE_AND_OBSERVABLE_GROUNDS.md) — discover finite-state transitions and compress according to future-stable observer equivalence.
 - [Active Action-Conditioned Grounds](docs/ACTIVE_ACTION_GROUNDS.md) — select informative host-qualified observations, refine finite hypotheses, and navigate retained models.
 - [Trace-Derived Action Grounds](docs/TRACE_DERIVED_ACTION_GROUNDS.md) — synthesize competing finite action models from byte traces, actively distinguish them, and test modeled navigation.
+- [Monolithic Seed and Self-Grounds](docs/MONOLITHIC_SEED_AND_SELF_GROUNDS.md) — derive a single executable seed and verifiable Ground of the runtime's own modules and source relations.
