@@ -323,10 +323,11 @@ class MultiFieldNavigator:
             raise ValueError("Partial observation must preserve indexed frame width")
         intervals=self._intervals(known_intervals)
         known=tuple(i for a,b in intervals for i in range(a,b))
-        matches=[
-            state for state in range(len(self.states))
-            if all(self.materialize(state)[i]==observed[i] for i in known)
-        ]
+        matches=[]
+        for state in range(len(self.states)):
+            candidate=self.materialize(state)
+            if all(candidate[i]==observed[i] for i in known):
+                matches.append(state)
         base={
             "schema":"vl64.multifield-partial-observation.v1",
             "ground_digest":self.ground["ground_digest"],
