@@ -68,9 +68,9 @@ def arbitrate_model(request,*,root=None,approved_hosts=None):
                 prompt=bytes.fromhex(opts["prompt_hex"])
                 result=ground.generate(prompt,steps=opts["steps"])
             else:
-                if set(opts)!={"previous_byte","limit"} or
+                if (set(opts)!={"previous_byte","limit"} or
                         type(opts["previous_byte"]) is not int or
-                        type(opts["limit"]) is not int:
+                        type(opts["limit"]) is not int):
                     return {**base,"status":"REFUSED",
                             "reason":"INVALID_PREDICTION_INTENTION"}
                 result=ground.predict(opts["previous_byte"],limit=opts["limit"])
