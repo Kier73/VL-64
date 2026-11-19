@@ -261,6 +261,25 @@ python -m experiments.observer_intent.arbitrate \
 
 The observer may supply **one known byte**, not a whole frame. A requested missing transition remains unresolved; long-horizon navigation is confined to already witnessed edges. The experiments and adapter stay outside the 64 KiB runtime.
 
+## Run language models and pretrained tensor operations through VL-64
+
+The [Model Fabric](experiments/model_fabric/README.md) now executes two actual local model families **using the existing 64 KiB runtime operators**: a byte-level statistical language model trained on repository text, and a small weight-backed causal-attention decoder. Both have independent numerical/predictive tests and typed observer-intention requests.
+
+It can also inspect a real pinned Hugging Face model through bounded Safetensors header requests, identify its tensor structure **without downloading weights**, and then **execute a genuine pretrained model sub-operation** by fetching only the required 5,760 BF16 weight bytes.
+
+A [38,360-byte model seed](docs/MODEL_EXECUTION_GROUNDS.md) procedurally combines the original VL-64 runtime and the verified pretrained tensor slice into a single executable Python archive:
+
+```bash
+python -m experiments.model_fabric.model_seed \
+  --out artifacts/VL64-ModelSeed.pyz
+python -I artifacts/VL64-ModelSeed.pyz model-verify
+python -I artifacts/VL64-ModelSeed.pyz model-run
+```
+
+The pretrained example executes first-layer RMS normalization and **four Q-projection rows**, **not full Hugging Face text generation**. Full inference still requires all causally necessary weights, tokenization, architecture semantics and qualified computation hosts. The 65,093-byte compact source is unchanged.
+
+See [Language Models, Pretrained Tensor Navigation and the Model Seed](docs/MODEL_EXECUTION_GROUNDS.md) for results, evidence and reproducible commands.
+
 ## Documentation
 
 - [Usage guide](docs/USAGE_GUIDE.md) — commands, API examples, and extension points.
