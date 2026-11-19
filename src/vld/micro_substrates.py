@@ -45,11 +45,16 @@ class PageSpace:
         return PageSpace(parent=self)
 
     def read_page(self, page_idx: int) -> bytes:
+        if type(page_idx) is not int or page_idx<0: raise ValueError('Invalid page index')
         if page_idx in self.pages: return bytes(self.pages[page_idx])
         if self.parent: return self.parent.read_page(page_idx)
         return bytes(self.PAGE_SIZE)
 
     def write_page(self, page_idx: int, offset: int, data: bytes):
+        if (type(page_idx) is not int or page_idx<0 or type(offset) is not int or
+                offset<0 or not isinstance(data,(bytes,bytearray)) or
+                offset+len(data)>self.PAGE_SIZE):
+            raise ValueError('Write exceeds fixed page')
         if page_idx not in self.pages:
             base = bytearray(self.read_page(page_idx))
             self.pages[page_idx] = base
