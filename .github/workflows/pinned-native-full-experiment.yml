@@ -1,0 +1,50 @@
+name: VL64 pinned full native pretrained experiment
+
+on:
+  push:
+    branches:
+      - experiment/pinned-native-full-execution-20261119
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qwen-gdn-layer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -e ".[dev]"
+      - name: Try complete pinned Qwen3.8 GDN and SwiGLU layer
+        run: python -m experiments.model_fabric.complete_native_lab --model qwen --execute --budget-bytes 1500000000 --out artifacts/qwen-full-native.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qwen-complete-native-or-refusal
+          path: artifacts/qwen-full-native.json
+          retention-days: 30
+          if-no-files-found: warn
+  deepseek-selected-moe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -e ".[dev]"
+      - name: Try six pinned FP4 experts plus complete shared expert
+        run: python -m experiments.model_fabric.complete_native_lab --model deepseek --execute --budget-bytes 1500000000 --out artifacts/deepseek-full-moe.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deepseek-complete-moe-or-refusal
+          path: artifacts/deepseek-full-moe.json
+          retention-days: 30
+          if-no-files-found: warn
