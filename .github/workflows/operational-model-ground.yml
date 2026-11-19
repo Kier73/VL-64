@@ -5,7 +5,9 @@ on:
     paths:
       - 'experiments/model_fabric/operational_*.py'
       - 'tests/test_operational_*.py'
+      - 'tests/test_saved_pretrained_operational_ground.py'
       - 'docs/OPERATIONAL_MODEL_GROUNDS.md'
+      - 'experiments/model_fabric/datasets/2026-11-19-pretrained-operational-model-host.json'
       - '.github/workflows/operational-model-ground.yml'
   pull_request:
   workflow_dispatch:
@@ -33,7 +35,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install -e '.[dev]'
       - name: Verify host-resident numerics, tiled logits, cross-process recovery and agent authority
-        run: python -m pytest -q tests/test_operational_ground.py tests/test_operational_tensor_graph.py tests/test_operational_model_lab.py
+        run: python -m pytest -q tests/test_operational_ground.py tests/test_operational_tensor_graph.py tests/test_operational_model_lab.py tests/test_saved_pretrained_operational_ground.py
       - name: Benchmark real trained byte-language model through the Virtual Layer
         run: >-
           python -m experiments.model_fabric.operational_model_lab
