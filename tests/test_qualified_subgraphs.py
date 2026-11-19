@@ -111,3 +111,23 @@ def test_selected_fp4_missing_scale_and_nan_scale_fail_closed():
     corrupted=dict(tensors);corrupted[tensor]=('F8_E8M0',[32,1],bytes([255]*32))
     with pytest.raises(ValueError,match='scale'):
         probe_deepseek_selected_fp4_expert_slices(nav_for(corrupted),route)
+
+
+def test_true_deepseek_i8_storage_packs_two_fp4_values_per_byte():
+    from experiments.model_fabric.qualified_subgraphs import probe_deepseek_selected_fp4_expert_slices
+    selected=[240,360,2,34,164,199]
+    tensors={}
+    for i in selected:
+        for part in ('w1','w3','w2'):
+            prefix=f'layers.0.ffn.experts.{i}.{part}'
+            # Physical shape [32,16] I8 bytes -> LOGICAL FP4 [32,32] tensor.
+            tensors[prefix+'.weight']=('I8',[32,16],bytes([0x22]*512))
+            tensors[prefix+'.scale']=('F8_E8M0',[32,1],bytes([127]*32))
+    nav=nav_for(tensors)
+    report=probe_deepseek_selected_fp4_expert_slices(nav,{
+        'status':'REAL_DEEPSEEK_TRAINED_384_ROUTER_VERIFIED',
+        'layer':0,'selected_experts':selected})
+    assert report['status']=='REAL_DEEPSEEK_SELECTED_FP4_SWIGLU_SLICES_VERIFIED'
+    assert [v['expert'] for v in report['slices']]==selected
+    assert report['max_abs_independent_error']<1e-12
+    assert nav.weight_bytes==6*3*(16+1)

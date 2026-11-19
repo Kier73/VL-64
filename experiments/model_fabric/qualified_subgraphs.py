@@ -203,22 +203,27 @@ def _mx_fp4_row(nav,name,x,*,first_row=0,first_cols=None):
     from .architecture_ops import mx_block_matvec
     d=nav.locate(name);shape=d['shape']
     scale_name=name[:-len('.weight')]+'.scale' if name.endswith('.weight') else ''
-    if (len(shape)!=2 or d['dtype']!='F4' or shape[1]%32 or
-            scale_name not in nav.weight_map or len(x)!=shape[1] or
+    if len(shape)!=2:
+        raise ValueError('Selected FP4 expert must be a 2-D packed tensor')
+    packed_i8=d['dtype']=='I8' and '.ffn.experts.' in name
+    logical_cols=shape[1]*2 if packed_i8 else shape[1]
+    if (len(shape)!=2 or (d['dtype']!='F4' and not packed_i8) or
+            logical_cols%32 or scale_name not in nav.weight_map or
+            len(x)!=logical_cols or
             type(first_row) is not int or not 0<=first_row<shape[0]):
         raise ValueError('DeepSeek selected expert FP4 extent/scale incomplete')
     sc=nav.locate(scale_name)
-    if (sc['dtype']!='F8_E8M0' or sc['shape']!=[shape[0],shape[1]//32]):
+    if (sc['dtype']!='F8_E8M0' or sc['shape']!=[shape[0],logical_cols//32]):
         raise ValueError('Selected FP4 expert E8M0 scale grid differs')
     raw,_=nav.get_raw(name,flat_start=first_row*shape[1],count=shape[1])
-    scales,_=nav.get_raw(scale_name,flat_start=first_row*(shape[1]//32),count=shape[1]//32)
-    got=mx_block_matvec(raw,scales,x,rows=1,cols=shape[1],
+    scales,_=nav.get_raw(scale_name,flat_start=first_row*(logical_cols//32),count=logical_cols//32)
+    got=mx_block_matvec(raw,scales,x,rows=1,cols=logical_cols,
                         format='mxfp4_e2m1',scale_block=(1,32))[0]
     # Independent nibble and exponent decoding: distinguish FP4 quantization
     # from BF16/F32, and independently verify each block's scale position.
     lookup=(0.0,.5,1.,1.5,2.,3.,4.,6.)
     parts=[]
-    for j in range(shape[1]):
+    for j in range(logical_cols):
         nib=(raw[j//2]>>(4*(j%2)))&15
         code=lookup[nib&7]*(-1 if nib&8 else 1)
         exponent=scales[j//32]
@@ -252,16 +257,18 @@ def probe_deepseek_selected_fp4_expert_slices(nav, router):
         if (len(d1['shape'])!=2 or len(d3['shape'])!=2 or
                 len(d2['shape'])!=2 or d1['shape']!=d3['shape'] or
                 d1['shape'][0]<1 or d2['shape'][0]<1 or
-                d2['shape'][1]!=d1['shape'][0] or d1['shape'][1]%32):
+                d2['shape'][1]*(2 if d2['dtype']=='I8' else 1)!=d1['shape'][0] or
+                (d1['shape'][1]*(2 if d1['dtype']=='I8' else 1))%32):
             raise ValueError('Selected DeepSeek expert SwiGLU dimensions do not compose: '+repr((d1['dtype'],d1['shape'],d3['dtype'],d3['shape'],d2['dtype'],d2['shape'])))
-        hidden=[math.cos((j+1)*.013)*.0625 for j in range(d1['shape'][1])]
+        hidden=[math.cos((j+1)*.013)*.0625 for j in range(
+            d1['shape'][1]*(2 if d1['dtype']=='I8' else 1))]
         gate,eg=_mx_fp4_row(nav,w1,hidden)
         up,eu=_mx_fp4_row(nav,w3,hidden)
         activation=gate*_sigmoid(gate)*up
         # Verify only the first down-projection coefficient's contribution:
         # the other hidden channels are deliberately absent, not set to zero
         # in a purported full-model output.
-        d2_cols=d2['shape'][1]
+        d2_cols=d2['shape'][1]*(2 if d2['dtype']=='I8' else 1)
         partial,ed=_mx_fp4_row(nav,w2,[activation]+[0.]*(d2_cols-1))
         results.append({'expert':i,'gate0':round(gate,10),
                         'up0':round(up,10),'down0_from_channel0':round(partial,10)})

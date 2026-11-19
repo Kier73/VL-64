@@ -48,7 +48,10 @@ hidden vector. It checks the exact six selected indices and unbiased
 contribution weights independently, and returns only the six experts' index
 paths. The *additional* optional FP4 probe then acquires genuine w1/w3 first
 rows and each w2 first row with exact paired UE8M0 scales for **the six selected
-experts only**. It verifies the SwiGLU intermediate channel and that channel's
+experts only**. The released DeepSeek FP4 checkpoint uses packed `I8` Safetensors storage
+(`physical_columns × 2 = logical E2M1 dimensions`), with independently
+admitted per-row `F8_E8M0` scales. This is verified separately from an
+ordinary `F4`-typed fixture. It checks the SwiGLU intermediate channel and that channel's
 partial down-projection contribution against an independent nibble/scale
 decoder. Other intermediate channels, the shared expert and the full routed
 output remain unexecuted. If any companion is missing the separate FP4 field
