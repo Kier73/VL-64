@@ -1,0 +1,96 @@
+{
+  "schema": "vl64.real-pretrained-glance-replay-archive.v1",
+  "scope": "actual trained Qwen head and DeepSeek selected FP4 expert slices; no full-model inference claimed",
+  "github_actions_run_id": 44585746575,
+  "github_actions_run_url": "https://github.com/Kier73/VL-64/actions/runs/44585746575",
+  "observations": {
+    "qwen": {
+      "index_ground_digest": "059c388b0818e297d54b9ce322312cb93eab30920f0ba250bcbe46839b6f36f3",
+      "model": "Qwen/Qwen3.8-27B",
+      "original_observation": {
+        "head": 0,
+        "output": -0.003032839242,
+        "reference_error": 0,
+        "status": "REAL_QWEN_GATED_DELTA_TRAINED_HEAD_VERIFIED"
+      },
+      "original_remote_bytes": 5322588,
+      "original_remote_ranges": 100,
+      "portable_ground_head": "874256cb770f884c78c8bcb155f6d0f4aa0688352a219ebc335600b95606f0aa",
+      "repartitioned_weight_span_bytes": 10,
+      "replay_range_chain": "f98228eaa378d3f7d0e41477d248998a093fc2000d2b87a1862e20f79b3f284d",
+      "replayed_local_bytes": 5322598,
+      "replayed_local_ranges": 101,
+      "replayed_remote_ranges": 0,
+      "retained_replay": {
+        "head": 0,
+        "output": -0.003032839242,
+        "reference_error": 0,
+        "status": "REAL_QWEN_GATED_DELTA_TRAINED_HEAD_VERIFIED"
+      },
+      "revision": "37561816e66b5b9153b1b64c10968c18c1e6f4a0",
+      "schema": "vl64.real-pretrained-glance-replay.v1",
+      "scope": "trained-head/router-and-six-expert-fragment replay; not a complete large-model layer",
+      "source_catalogue_head": "b13fa990e8c54b711eae0eff3520fe0332cdfa8a5acd8c6f405b4d19de1398c4",
+      "status": "REAL_PINNED_GLANCE_NUMERICAL_REPLAY_VERIFIED",
+      "github_actions_job_id": 135778061942
+    },
+    "deepseek": {
+      "index_ground_digest": "a449b268199162da03bd2d5b8d8471297d630e7f9446864fc8df86257cb5b9ac",
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "original_observation": {
+        "reference_error": 0,
+        "routing_weights": [
+          0.246977409264,
+          0.253943271763,
+          0.249994558647,
+          0.249331924719,
+          0.250151695338,
+          0.249601140268
+        ],
+        "selected_experts": [
+          240,
+          360,
+          2,
+          34,
+          164,
+          199
+        ],
+        "status": "REAL_DEEPSEEK_SELECTED_FP4_SWIGLU_SLICES_VERIFIED"
+      },
+      "original_remote_bytes": 4231824,
+      "original_remote_ranges": 106,
+      "portable_ground_head": "24a1105a35cdef05d37e8a34e384fc354b5e99679d611fe6cb317dd3fc3b849e",
+      "repartitioned_weight_span_bytes": 20,
+      "replay_range_chain": "d9db0b1f25de5a1ac04ad92a7188db86db80d530c06921010976e4d0ffcad74b",
+      "replayed_local_bytes": 4231844,
+      "replayed_local_ranges": 107,
+      "replayed_remote_ranges": 0,
+      "retained_replay": {
+        "reference_error": 0,
+        "routing_weights": [
+          0.246977409264,
+          0.253943271763,
+          0.249994558647,
+          0.249331924719,
+          0.250151695338,
+          0.249601140268
+        ],
+        "selected_experts": [
+          240,
+          360,
+          2,
+          34,
+          164,
+          199
+        ],
+        "status": "REAL_DEEPSEEK_SELECTED_FP4_SWIGLU_SLICES_VERIFIED"
+      },
+      "revision": "1bae0e1088993b9b82de08f59de5be5a34e42170",
+      "schema": "vl64.real-pretrained-glance-replay.v1",
+      "scope": "trained-head/router-and-six-expert-fragment replay; not a complete large-model layer",
+      "source_catalogue_head": "9c2a63617dd570fe953f0ab3dc5b298e6be9b1a758449291584058ba08447dac",
+      "status": "REAL_PINNED_GLANCE_NUMERICAL_REPLAY_VERIFIED",
+      "github_actions_job_id": 135778061724
+    }
+  }
+}
