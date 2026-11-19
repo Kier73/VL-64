@@ -102,3 +102,19 @@ result is labeled verified if the remote bytes cannot be obtained.
 This is **one complete pretrained layer**, not a full 30-layer pass or
 SmolLM2 next-token generation. See the
 [pretrained layer evidence contract](../../docs/PRETRAINED_LAYER0_GROUND.md).
+
+## Pretrained layer composition
+
+The [two-layer chain coordinator](pretrained_chain.py) reuses independently
+prepared layer weights, retains separate causal KV states, and binds each
+`layer.N.ffn_residual` hidden payload to `layer.N+1.input_norm` through a
+bounded, digest-checked, temporally ordered handoff. The
+[independent reference experiment](real_chain_lab.py) has successfully
+executed **two genuine SmolLM2-135M pretrained BF16 layers**, using
+14,162,688 selected weight bytes over 228 qualified range requests for
+tokens `[42,75]`; all 576 final hidden coordinates matched an independent
+scalar reference within 2e-5 (reported error 0.0 at 12 decimal places).
+See [the verified chain receipt](datasets/2026-11-18-real-two-layer-pretrained-receipt.json)
+and [the evidence contract](../../docs/PRETRAINED_LAYER_CHAIN.md).
+The math ran in one Python interpreter; byte providers may be different
+approved observer-hosts. Full-model text generation remains a separate goal.

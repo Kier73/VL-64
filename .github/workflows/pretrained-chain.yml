@@ -1,0 +1,67 @@
+name: VL64 consecutive pretrained layer handoff verification
+
+on:
+  push:
+    branches:
+      - main
+      - feat/two-layer-pretrained-handoff-20261118
+    paths:
+      - "experiments/model_fabric/**"
+      - "tests/test_pretrained_chain.py"
+      - "tests/test_saved_real_pretrained_chain.py"
+      - "tests/test_pretrained_layer.py"
+      - "tests/test_execution_dag.py"
+      - ".github/workflows/pretrained-chain.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reference-fixtures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test dependencies
+        run: python -m pip install -e ".[dev]"
+      - name: Verify typed DAG, single layer and composed hidden handoff
+        run: python -m pytest -q tests/test_execution_dag.py tests/test_pretrained_layer.py tests/test_pretrained_chain.py tests/test_saved_real_pretrained_chain.py
+      - name: Enforce compact VL64 source budget
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          count=sum(p.stat().st_size for p in Path("src/vld").glob("*.py"))
+          assert count <= 65536, count
+          print("VL64_COMPACT_CORE_BYTES", count)
+          PY
+
+  pinned-bf16-two-layers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install model fabric
+        run: python -m pip install -e ".[dev]"
+      - name: Run real pinned BF16 layers with independent scalar reference
+        run: python -m experiments.model_fabric.real_chain_lab --out artifacts/pretrained-two-layer-report.json
+      - name: Preserve verified report or unresolved reason
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-real-pretrained-two-layer
+          path: artifacts/pretrained-two-layer-report.json
+          retention-days: 30
+          if-no-files-found: warn
