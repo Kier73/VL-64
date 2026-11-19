@@ -129,3 +129,26 @@ python -m experiments.model_fabric.real_orbit_lab --out artifacts/pretrained-orb
 ```
 
 The network experiment fetches pinned genuine SmolLM2 BF16 layer ranges, executes token 42, checkpoints, restores to a different *logical* observer assignment and continues token 75, checking against independent scalar math. It returns `UNRESOLVED` on unavailable/incomplete ranges. See [Recovery and host rehoming](../../docs/PRETRAINED_ORBIT_RECOVERY.md).
+
+
+## Scale-independent pretrained Ground navigation
+
+[Scaled model fabric](scaled_model_fabric.py) and
+[pinned real-model lab](scaled_model_lab.py) extend the same evidence
+contract to the 64-layer Qwen3.8-27B hybrid and 40-layer
+DeepSeek-V4.1-Flash-1017 MoE without increasing the VL-64 core.
+They admit large sharded Safetensors indices, validate exact tensor
+shapes, offsets and BF16/F32/packed low-bit header representations,
+and navigate individual ranges of at most 64 KiB.
+
+The first live pinned network run
+([Actions #44541524537](https://github.com/Kier73/VL-64/actions/runs/44541524537))
+verified real BF16 normalization weights independently in **both** models:
+10,240 weight bytes from Qwen and 1,024 from DeepSeek. Their
+[exact receipts](datasets/2026-11-19-large-model-frontier-observations.json)
+are regression-checked against source identities. These are successful
+**real pretrained sub-operations**, not 27B/510GB full-decoder runs:
+Qwen's gated linear/full attention and DeepSeek's sparse MoE/FP8/FP4
+operators require their own numeric adapters.
+
+See [Scale-independent model Grounds](../../docs/SCALE_INDEPENDENT_MODEL_GROUNDS.md).
