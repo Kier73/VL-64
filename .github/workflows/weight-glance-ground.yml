@@ -50,7 +50,7 @@ jobs:
           PY
 
   live-pretrained-replay:
-    if: github.event_name == 'workflow_dispatch' && inputs.live_pretrained
+    if: (github.event_name == 'workflow_dispatch' && inputs.live_pretrained) || (github.event_name == 'push' && github.ref == 'refs/heads/feat/portable-weight-glance-ground-20261119')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     continue-on-error: true
