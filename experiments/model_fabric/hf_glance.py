@@ -91,7 +91,8 @@ def observe_model(*,model=MODEL,revision=REVISION):
             "model_type","architectures","hidden_size",
             "num_hidden_layers","num_attention_heads","num_key_value_heads",
             "intermediate_size","vocab_size","max_position_embeddings",
-            "hidden_act","tie_word_embeddings",
+            "hidden_act","tie_word_embeddings","rms_norm_eps",
+            "rope_theta","attention_bias","mlp_bias",
         ) if key in config
     }
     ground={
