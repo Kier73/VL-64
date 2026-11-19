@@ -1,0 +1,41 @@
+{
+  "backend": "transformer",
+  "checkpoint_head": "03bf859e55c4dfadc2813dbe9de48295391828c9f639e97ad35eacc670c7b938",
+  "elapsed_s": 7.48942,
+  "generated_text": " the capital of",
+  "generated_tokens": [
+    260,
+    3575,
+    282
+  ],
+  "generated_tokens_per_s": 0.40056,
+  "host_calls": 42,
+  "model": "HuggingFaceTB/SmolLM2-135M",
+  "operational_ground": {
+    "ground_digest": "a15f88d6b2512283510c733a54b089abb8dd4d99d1f759bbbdfb409be5a74609",
+    "max_context": 256,
+    "model": "HuggingFaceTB/SmolLM2-135M",
+    "model_artifact_identity": "4046fff836e0ea523e62f04a92e2fe398cff89986db8a8de1c995ff33c6ac31b",
+    "observer_host": "torch-model-host",
+    "operations": [
+      "encode",
+      "decode",
+      "open",
+      "logits_tile",
+      "advance"
+    ],
+    "revision": "4e53f736cbb20a9a0f56b4c4bf378d9f306ff915",
+    "schema": "vl64.operational-model-ground.v1",
+    "tokenizer_id": "hf_tokenizer_pinned_v1",
+    "trust_scope": "host_capability_observation_not_remote_weight_or_execution_attestation",
+    "vocab_size": 49152
+  },
+  "prompt": "The capital of France is",
+  "reference": "complete_host_logit_tiles_not_independent_transformer_math",
+  "remote_weight_bytes_received": 0,
+  "revision": "4e53f736cbb20a9a0f56b4c4bf378d9f306ff915",
+  "schema": "vl64.operational-language-benchmark.v1",
+  "scope": "host-computed real pretrained transformer tokens; remote arithmetic not independently certified",
+  "status": "PRETRAINED_TRANSFORMER_HOST_ORBIT_OBSERVED",
+  "transcript_head": "217af7bf6c074e6957e3ce55b54ecbe4cb668c6df187d757187521bffdfefb36"
+}

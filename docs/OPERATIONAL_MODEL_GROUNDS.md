@@ -55,6 +55,15 @@ python -m experiments.model_fabric.operational_model_lab \
 
 On failure, the CLI returns a nonzero exit and an `UNRESOLVED` report, rather than silently substituting fixture calculations. No dependency is added to the 65,536-byte compact core.
 
+
+## Genuine pinned pretrained host observation — 19 November 2026
+
+[GitHub Actions run #44595226827](https://github.com/Kier73/VL-64/actions/runs/44595226827) completed the optional model-host run successfully. The exact artifact `operational-smollm2.json` is archived in [datasets/2026-11-19-pretrained-operational-model-host.json](../experiments/model_fabric/datasets/2026-11-19-pretrained-operational-model-host.json) (SHA-256 `b45ac96c1068ce67e2d97adf08f6f08a9582d2e14526026d53cc13d9c2241deb`). 
+
+At immutable revision `4e53f736cbb20a9a0f56b4c4bf378d9f306ff915`, a PyTorch CPU host loaded **HuggingFaceTB/SmolLM2-135M** and performed complete causal transformer forward calculations. VL-64 observed **49,152 F32 logits** per step through 12 bounded tiles, chose tokens **[260, 3575, 282]** for prompt `The capital of France is`, and rendered text ` the capital of`. It recorded **42 host operations**, **zero model-parameter bytes crossing the VL interface**, a causal transcript digest and a checkpoint head. The reported **7.48942 seconds** includes construction/loading of the host inside the measured benchmark; it is **not** pure tokens-per-second inference speed.
+
+This demonstrates a real pretrained model *participating in VL-directed language-token inference*; it does not demonstrate answer quality, an instruction-tuned conversation, independent proof of host-side neural math, or full remote-machine execution. The code holds model parameters in the model host, not in the compact VL-64 kernel. `tests/test_saved_pretrained_operational_ground.py` verifies the archived report, its exact bytes, structural Ground, and transcript accounting without downloading weights again.
+
 ## Benchmarks for the next frontier
 
 Evaluate a pinned, instruction-tuned model with actual role-aware chat tokenization, multi-turn continuation, and independent prompt/answer quality scores. Compare tokens per second, host calls, transferred activation bytes, and cost to resident-host inference. Add per-layer operator adapters for Qwen Gated DeltaNet, DeepSeek's MoE/sparse attention and smaller Llama decoders under the procedural graph, then measure actual multi-host operator execution and process recovery. Expand bounded agent tasks with explicit approval/evaluation contracts. The main question is whether operational Grounds reduce redundant interpretation and improve model navigability, not whether a checksum compresses arbitrary trained mathematics.
