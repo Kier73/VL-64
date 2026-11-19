@@ -412,6 +412,10 @@ def arbitrate(request, *, byte_root=None, approved_hosts=None):
             "ground.multifield.navigate", "ground.multifield.observe"):
         from experiments.byte_fabric.multifield_adapter import arbitrate_multifield
         return arbitrate_multifield(request, root=byte_root, approved_hosts=approved_hosts)
+    if request.spec["operation"] in (
+            "model.byte.generate","model.byte.predict","model.neural.generate"):
+        from experiments.model_fabric.observer import arbitrate_model
+        return arbitrate_model(request,root=byte_root,approved_hosts=approved_hosts)
     plan = compile_intention(request)
     if plan["status"] != "ADMITTED_READ_ONLY_PLAN":
         return {"schema": SCHEMA, "status": "UNRESOLVED",
@@ -448,6 +452,9 @@ def render_result(receipt, output):
     if receipt.get("schema") == "vl64.multifield-observer-receipt.v1":
         from experiments.byte_fabric.multifield_adapter import render_multifield
         return render_multifield(receipt, output)
+    if receipt.get("schema") == "vl64.model-execution-observer-receipt.v1":
+        from experiments.model_fabric.observer import render_model
+        return render_model(receipt, output)
     if output == "json":
         return json.dumps(receipt, sort_keys=True, indent=2, allow_nan=False) + "\n"
     if output == "jsonl":
@@ -523,7 +530,9 @@ def main():
             "OBSERVED_CAPABILITY_CATALOGUE", "OBSERVED_GROUND_NAVIGATION",
             "QUALIFIED_INFORMATIVE_PROBE", "MODELED_ACTION_NAVIGATION",
             "MULTIPLE_COMPATIBLE_MODEL_STATES",
-            "UNIQUE_COMPATIBLE_MODEL_STATE", "INDETERMINATE_COMPATIBLE_STATES"):
+            "UNIQUE_COMPATIBLE_MODEL_STATE", "INDETERMINATE_COMPATIBLE_STATES",
+            "MODELED_WEIGHT_BACKED_INFERENCE",
+            "ACTUAL_LOCAL_WEIGHT_BACKED_NEURAL_INFERENCE"):
         raise SystemExit("Observer intention could not be realized")
 
 
