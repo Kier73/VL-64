@@ -81,3 +81,23 @@ quorum fencing. Only claim full language generation after final RMSNorm,
 all 30 pretrained layers, vocabulary projection and tokenizer semantics are
 independently checked. Receipt digests on their own prove internal consistency,
 not authenticity of the complete source checkpoint.
+
+## Observed successful pretrained layer-0 to layer-1 handoff
+
+The real live two-layer run completed successfully on GitHub Actions:
+[run #44454266926](https://github.com/Kier73/VL-64/actions/runs/44454266926).
+It received **14,162,688 actual BF16 weight bytes** in **228 exact HTTP
+range requests** and processed pinned token IDs `42` and `75`.
+An independently implemented scalar reference reconstructed all required
+weight bytes and matched all **576** last hidden coordinates; max absolute
+error was **0.0 when rounded to 12 decimal places**, within tolerance
+2e-5. The first eight layer-1 hidden values for token 75 were
+`[0.43993053, 0.46390859, 0.35973391, -4.98922, -0.25016834,
+-0.22376024, -1.00136428, 0.68742529]`.
+
+The actual result is preserved in
+[`2026-11-18-real-two-layer-pretrained-receipt.json`](../experiments/model_fabric/datasets/2026-11-18-real-two-layer-pretrained-receipt.json)
+and the report's SHA-256, `0123204cf81b58fd3c2e78772a704daba229f17f6cb2ca680f45614b964a916a`,
+is checked by `tests/test_saved_real_pretrained_chain.py`.
+This is a verified two-layer pretrained hidden-state result, not a full
+SmolLM2 forward pass or separately hosted execution.
