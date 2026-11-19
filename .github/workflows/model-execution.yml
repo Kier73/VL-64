@@ -1,0 +1,95 @@
+name: VL-64 real model Ground and language inference
+
+on:
+  push:
+    branches:
+      - main
+      - feature/model-execution-ground-20261118
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  model-execution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11","3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install repository tests
+        run: python -m pip install -e ".[dev]"
+      - name: Verify entire existing suite plus language/neural inference
+        run: python -m pytest -q tests/
+      - name: Train actual text model and execute weight-backed neural attention
+        run: |
+          python -m experiments.model_fabric.model_lab --out artifacts
+          python -m experiments.observer_intent.arbitrate \
+            --intent artifacts/language-intention.json \
+            --out artifacts/observer-language-generation.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent artifacts/neural-intention.json \
+            --out artifacts/observer-neural-generation.json
+      - name: Validate independently reusable model Grounds and admitted weights
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from experiments.model_fabric.byte_lm import ByteLanguageGround
+          from experiments.model_fabric.tiny_attention import TinyCausalAttentionGround
+          from experiments.model_fabric.tensor_ground import read_f32_tensors
+          p=Path("artifacts")
+          load=lambda n:json.loads((p/n).read_text())
+          report=load("model-execution-report.json")
+          model=ByteLanguageGround(load("trained-byte-language-ground.json"))
+          neural_bytes=(p/"local-neural-weights.safetensors").read_bytes()
+          neural=TinyCausalAttentionGround(neural_bytes)
+          language=load("observer-language-generation.json")
+          nested=load("observer-neural-generation.json")
+          assert report["status"]=="EXECUTED_WEIGHT_BACKED_LANGUAGE_AND_NEURAL_MODELS"
+          assert report["heldout_byte_cross_entropy"]<8.0
+          assert report["uniform_baseline_bits_per_byte"]==8.0
+          assert report["training_bytes"]>512
+          assert report["generated_byte_count"]==48
+          assert report["neural_tensor_artifact_bytes"]==len(neural_bytes)
+          assert report["neural_tensor_artifact_sha256"]==hashlib.sha256(neural_bytes).hexdigest()
+          assert language["status"]=="MODELED_WEIGHT_BACKED_INFERENCE"
+          assert nested["status"]=="ACTUAL_LOCAL_WEIGHT_BACKED_NEURAL_INFERENCE"
+          assert language["result"]["generated_hex"]==report["greedy_generated_hex"]
+          assert nested["result"]["generated_tokens"]==report["neural_generated_tokens"]
+          assert model.ground["ground_digest"]==report["trained_language_ground_digest"]
+          assert neural.ground["ground_digest"]==report["neural_ground_digest"]
+          assert neural.ground["payload_admission"]=="full_local_f32_weight_bytes_observed"
+          size=sum(f.stat().st_size for f in Path("src/vld").glob("*.py"))
+          assert size<=65536
+          print("VL64_MODEL_EXECUTED",json.dumps({
+             "core_bytes":size,
+             "trained_ground_digest":model.ground["ground_digest"],
+             "training_bytes":report["training_bytes"],
+             "heldout_bytes":report["heldout_bytes"],
+             "heldout_bits_per_byte":report["heldout_byte_cross_entropy"],
+             "generated_hex":report["greedy_generated_hex"],
+             "neural_ground_digest":neural.ground["ground_digest"],
+             "neural_weights_bytes":len(neural_bytes),
+             "neural_generated_tokens":report["neural_generated_tokens"],
+          },sort_keys=True))
+          PY
+      - name: Observe pinned real Hugging Face architecture without weights
+        continue-on-error: true
+        run: |
+          python -m experiments.model_fabric.hf_glance | tee artifacts/hf-header-observation.jsonl
+      - name: Preserve executable model weights, tensor Grounds, evidence and outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-model-inference-${{ matrix.python-version }}
+          path: artifacts/*
+          retention-days: 30
+          if-no-files-found: warn
