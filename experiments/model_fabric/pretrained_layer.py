@@ -158,10 +158,12 @@ class PreparedLayer:
         vh=[v[j*d:(j+1)*d] for j in range(a["kv_heads"])]
         stage("q_rope",[z for head in qh for z in head])
         stage("k_rope",[z for head in kh for z in head])
-        self.keys.append(kh)
-        self.values.append(vh)
+        # Prepare a speculative temporal state; commit only after every
+        # subsequent operator has executed and passed finite-value checking.
+        candidate_keys=self.keys+[kh]
+        candidate_values=self.values+[vh]
         context=stage("attention",grouped_query_attention(
-            qh,self.keys,self.values,heads=a["heads"],kv_heads=a["kv_heads"]))
+            qh,candidate_keys,candidate_values,heads=a["heads"],kv_heads=a["kv_heads"]))
         attn=stage("o",self._linear("self_attn.o_proj.weight",context))
         residual=stage("attention_residual",[x+y for x,y in zip(hidden,attn)])
         post=stage("post_norm",rms_norm(
@@ -171,6 +173,8 @@ class PreparedLayer:
         intermediate=stage("swiglu",swiglu(gate,up))
         down=stage("down",self._linear("mlp.down_proj.weight",intermediate))
         result=stage("ffn_residual",[x+y for x,y in zip(residual,down)])
+        self.keys=candidate_keys
+        self.values=candidate_values
         self.step+=1
         return result,outputs
 
@@ -183,6 +187,8 @@ def execute_pretrained_layer(plan,tokens,observer_host,*,approved_hosts,
             not 1<=len(tokens)<=min(a["context"],MAX_POSITIONS) or
             any(type(t) is not int or not 0<=t<a["vocab"] for t in tokens)):
         raise ValueError("Unqualified token sequence")
+    if layer!=0:
+        raise ValueError("Nonzero layers require a verified predecessor hidden-state Ground")
     reader=QualifiedTensorReader(plan,observer_host,approved_hosts=approved_hosts)
     program=PreparedLayer(reader,layer)
     stages=[]
