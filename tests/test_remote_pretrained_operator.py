@@ -123,3 +123,37 @@ def test_remote_range_parser_requires_pinned_huggingface_model_and_revision():
         _url(MODEL,"main","model.safetensors")
     with pytest.raises(ValueError):
         _url(MODEL,REVISION,"model.pickle")
+
+
+
+def test_portable_pretrained_ground_replays_the_exact_pretrained_slice_offline(monkeypatch):
+    from experiments.model_fabric.slice_ground import replay_slice_ground
+    import json
+    manifest,requests,_,_=fake_pretrained(monkeypatch)
+    live,capsule=remote.execute_remote_q_slice(observed=manifest,return_slice=True)
+    assert live["portable_slice_ground_digest"]==capsule["ground_digest"]
+    assert len(json.dumps(capsule).encode())<65536
+    assert capsule["training_claim"]=="actual_pinned_pretrained_model_slice_not_synthetic_weights"
+    count=len(requests)
+    offline=replay_slice_ground(capsule)
+    assert len(requests)==count  # absolutely no remote GET on replay
+    assert offline["status"]=="VERIFIED_LOCAL_REPLAY_OF_PRETRAINED_TENSOR_SLICE"
+    assert offline["output_coordinates"]==live["output_coordinates"]
+    assert offline["actual_model_weight_bytes"]==5760
+    assert offline["receipt_digest"]==live["portable_replay_receipt_digest"]
+
+
+def test_tampered_portable_pretrained_ground_cannot_replay(monkeypatch):
+    from experiments.model_fabric.slice_ground import replay_slice_ground
+    from vld import domain_digest
+    manifest,_,_,_=fake_pretrained(monkeypatch)
+    _,capsule=remote.execute_remote_q_slice(observed=manifest,return_slice=True)
+    changed=dict(capsule)
+    changed["norm_bf16_b64"]="AAAA"+changed["norm_bf16_b64"][4:]
+    with pytest.raises(ValueError,match="digest"):
+        replay_slice_ground(changed)
+    changed["ground_digest"]=domain_digest(
+        "vl64.ranged-pretrained-slice-ground.v1",
+        {k:v for k,v in changed.items() if k!="ground_digest"})
+    with pytest.raises(ValueError,match="altered"):
+        replay_slice_ground(changed)
