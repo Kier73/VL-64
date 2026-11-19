@@ -77,5 +77,5 @@ def test_portable_seed_embeds_the_exact_saved_real_model_slice():
     witness=stored("2026-11-18-pretrained-bf16-slice-ground.json")
     assert report["model_slice_ground_digest"]==witness["ground_digest"]
     assert report["model_seed_bytes"]<=65536
-    assert report["core_source_bytes"]==65093
+    assert report["core_source_bytes"]==sum(p.stat().st_size for p in (Path(__file__).resolve().parents[1]/"src/vld").glob("*.py"))
     assert report["complete_pretrained_model_execution"] is False

@@ -30,7 +30,7 @@ def byte_fleet(training_source='README.md', *, steps=16):
     if len(corpus)<64:
         raise ValueError('Need independently trainable model observations')
     a=min(len(corpus)//2,2**20)
-    b=min(len(corpus),2**20)
+    b=min(len(corpus),a+2**20)
     trained=(fit_byte_lm(corpus[:a]),fit_byte_lm(corpus[a:b]))
     hosts=[HostedTrainedByteLanguage(x,observer_host='instance-'+str(i))
            for i,x in enumerate(trained)]

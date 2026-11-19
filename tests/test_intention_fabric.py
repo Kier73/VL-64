@@ -228,3 +228,11 @@ print(json.dumps({'model':r['model'],'head':r['checkpoint']['checkpoint_digest']
     assert outcomes[0]['model']!=outcomes[1]['model']
     assert outcomes[0]['head']!=outcomes[1]['head']
     assert all(x['status']=='OUTPUT_SHAPE_ADMITTED' for x in outcomes)
+
+
+def test_fleet_refuses_shared_mutable_host_object():
+    h=ScriptedResidentModel('This is a line. This is the next line.')
+    g=grounded(h)
+    bind={'ground':g,'host':h,'approved_hosts':{'host-1'}}
+    with pytest.raises(ValueError,match='share a mutable host'):
+        ModelInstanceFleet({'left':bind,'right':bind})

@@ -224,6 +224,7 @@ class ModelInstanceFleet:
         if not isinstance(bindings, dict) or not bindings or len(bindings)>16:
             raise ValueError('Model fleet requires 1..16 explicit host bindings')
         self.bindings={}
+        used_host_objects=set()
         for key,bind in bindings.items():
             if (not isinstance(key,str) or not _SAFE_NAME.fullmatch(key) or
                     not isinstance(bind,dict) or set(bind)!={'ground','host','approved_hosts'}):
@@ -232,6 +233,9 @@ class ModelInstanceFleet:
             if not callable(bind['host']) or not isinstance(bind['approved_hosts'],set) or \
                     ground['observer_host'] not in bind['approved_hosts']:
                 raise ValueError('Unqualified model host binding')
+            if id(bind['host']) in used_host_objects:
+                raise ValueError('Model instances must not share a mutable host object')
+            used_host_objects.add(id(bind['host']))
             self.bindings[key]={'ground':ground,'host':bind['host'],
                                 'approved_hosts':set(bind['approved_hosts'])}
 

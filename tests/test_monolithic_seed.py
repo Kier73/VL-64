@@ -33,7 +33,7 @@ def test_monolithic_seed_is_below_ceiling_and_reproducible_byte_for_byte():
     assert report==report2
     assert len(first)<SEED_CEILING
     assert report["status"]=="VERIFIED_MONOLITHIC_SEED"
-    assert report["source_bytes"]==65093
+    assert report["source_bytes"]==sum(map(len,input_sources(ROOT).values()))
     assert report["seed_bytes"]==len(first)
     assert report["ground_digest"]==ground["ground_digest"]
     assert report["compressed_vs_source_ratio"]>1
@@ -47,7 +47,7 @@ def test_monolithic_seed_runs_with_isolated_python_and_no_installed_package(tmp_
     assert verified.returncode==0,verified.stderr
     parsed=json.loads(verified.stdout)
     assert parsed["ground_digest"]==ground["ground_digest"]
-    assert parsed["source_bytes"]==65093
+    assert parsed["source_bytes"]==report["source_bytes"]
     actual=invoke(binary,tmp_path,"seed-ground")
     assert actual.returncode==0,actual.stderr
     observed=json.loads(actual.stdout)
