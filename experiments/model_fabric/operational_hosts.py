@@ -186,4 +186,8 @@ class HostedTransformersLanguage(OperationalHostBase):
             raise
         self._cached_prefix=tuple(tokens)
         self._cached_kv=getattr(result,'past_key_values',None)
+        if incremental:
+            self.host_kv_reuses=getattr(self,'host_kv_reuses',0)+1
+        else:
+            self.host_kv_prefills=getattr(self,'host_kv_prefills',0)+1
         return values

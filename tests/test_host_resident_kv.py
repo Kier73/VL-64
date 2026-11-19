@@ -60,6 +60,7 @@ def test_exact_causal_prefix_uses_one_token_only_after_prefill():
     expected=[float(-abs(20-i)) for i in range(20)]
     assert c==expected
     assert host._cached_prefix==(2,3,4,5,6)
+    assert host.host_kv_prefills==1 and host.host_kv_reuses==2
     assert a!=b and b!=c
 
 

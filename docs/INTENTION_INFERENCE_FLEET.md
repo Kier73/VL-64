@@ -42,3 +42,7 @@ The development should next connect output-shape tests to independent answer/cod
 ## Host-resident KV reuse
 
 The optional `HostedTransformersLanguage` now requests `use_cache=True` from the model runtime. When and only when a new token prefix equals the previous committed prefix plus one token, it supplies the host-owned `past_key_values` and computes the new token from a one-token input. A different prefix, missing cache, or failed operation forces a full prefill and never publishes a stale causal cache head. This improves the mathematical work for successive tokens, **not the byte size of the VL core**. Synthetic fake-model tests independently check `[full prefill, 1, 1]` input lengths, sibling-prefix invalidation, model failures and runtimes that do not support KV. The actual speedup depends on architecture, runtime and host hardware and is not inferred from those fixtures.
+
+### Optional pinned instruction-model observation
+
+The feature-branch PR workflow attempts three real-model tasks with `HuggingFaceTB/SmolLM2-135M-Instruct` pinned to revision `12fd25f77366fa6b3b4b768ec3050bf629380bac`: a paragraph, Python code, and one approved `add_numbers` agent action. Each writes an independent artifact and is **non-blocking**; failures are reported as unresolved, not fabricated outputs. The host records actual successful causal KV prefill/reuse counts. An instruction-model shape pass does not establish semantic quality, code correctness, or broad autonomy.

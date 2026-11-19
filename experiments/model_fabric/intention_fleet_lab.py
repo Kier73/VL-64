@@ -80,20 +80,27 @@ def instruction_host(*, model, revision, kind, task, steps):
     g=_admit(host)
     fleet=ModelInstanceFleet({'instruction':{'ground':g,'host':host,
                             'approved_hosts':{'instruction-model'}}})
+    eos=getattr(host.tokenizer,'eos_token_id',None)
+    stops=(eos,) if type(eos) is int and 0<=eos<g['vocab_size'] else ()
     if kind=='tool_json':
         result=AuthorizedIntentAgent(fleet,'instruction',
                    tools={'add_numbers':lambda a,b:a+b},max_rounds=2,
-                   stop_tokens=()).run(task,max_new_tokens=steps)
+                   stop_tokens=stops).run(task,max_new_tokens=steps)
         return {'schema':'vl64.intent-instruction-model-benchmark.v1',
                 'status':result['status'],'model':model,'revision':revision,
-                'agent':result,'scope':'host_resident_model_action_only_caller_authorized_tools'}
+                'agent':result,
+                'host_kv_prefills':getattr(host,'host_kv_prefills',0),
+                'host_kv_incremental_steps':getattr(host,'host_kv_reuses',0),
+                'scope':'host_resident_model_action_only_caller_authorized_tools'}
     intention=compile_intention(g,kind=kind,
                 messages=[{'role':'user','content':task}],
-                max_new_tokens=steps,tokenizer_mode='native_chat')
+                max_new_tokens=steps,tokenizer_mode='native_chat',stop_tokens=stops)
     report=fleet.execute([{'instance':'instruction','intent':intention}])[0]
     return {'schema':'vl64.intent-instruction-model-benchmark.v1',
             'status':report['result']['status'],'model':model,'revision':revision,
             'result':report['result'],
+            'host_kv_prefills':getattr(host,'host_kv_prefills',0),
+            'host_kv_incremental_steps':getattr(host,'host_kv_reuses',0),
             'scope':'real_host_computed_model_logits_not_independent_neural_math_or_usefulness_proof'}
 
 
