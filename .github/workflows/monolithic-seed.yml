@@ -1,0 +1,84 @@
+name: VL-64 procedural monolithic seed and self Ground
+
+on:
+  push:
+    branches:
+      - main
+      - feature/reproducible-monolithic-seed-20261118
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    name: seed (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11","3.13"]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install regression dependencies
+        run: python -m pip install -e ".[dev]"
+      - name: Run monolithic seed and existing regression suites
+        run: python -m pytest -q tests/
+      - name: Procedurally generate monolithic seed and software Ground
+        run: |
+          python -m experiments.seed_fabric.build build --out artifacts/VL64.pyz
+          python -m experiments.seed_fabric.build inspect --out artifacts/VL64.pyz
+      - name: Bootstrap from zip alone, no package installation on target path
+        run: |
+          python -I artifacts/VL64.pyz seed-verify
+          python -I artifacts/VL64.pyz seed-ground > artifacts/independently-recovered-ground.json
+          python -I artifacts/VL64.pyz verify
+          python -I artifacts/VL64.pyz navigate --a 5 --b 1 --x0 3 --steps 1000000000000 --modulus 256
+      - name: Check seed, source ceiling, Ground derivation and reproducibility
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          from experiments.seed_fabric.build import build,verify_seed_bytes,synthesize_ground,input_sources,extract_sources
+          seed=Path("artifacts/VL64.pyz")
+          raw=seed.read_bytes()
+          witness=json.loads(Path("artifacts/VL64.ground.json").read_text())
+          inside=json.loads(Path("artifacts/independently-recovered-ground.json").read_text())
+          repeat,derived,check=build()
+          assert raw==repeat
+          assert inside==witness==derived
+          assert check==verify_seed_bytes(raw)
+          assert len(raw)<65536
+          assert check["source_bytes"]==65093
+          assert check["compressed_vs_source_ratio"]>1
+          extract_sources(raw,Path("artifacts/exact-source"))
+          for name,content in input_sources(Path.cwd()).items():
+              assert (Path("artifacts/exact-source")/name).read_bytes()==content
+          print("VL64_SELF_SEED_VERIFIED",json.dumps({
+            "seed_bytes":len(raw),
+            "seed_sha256":hashlib.sha256(raw).hexdigest(),
+            "core_source_bytes":check["source_bytes"],
+            "ground_digest":witness["ground_digest"],
+            "module_count":check["modules"],
+            "compression_vs_source":check["compressed_vs_source_ratio"],
+            "exact_reconstruction":True,
+          },sort_keys=True))
+          PY
+      - name: Upload portable seed, self Ground and reconstructed modules
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-monolithic-seed-${{ matrix.os }}-${{ matrix.python-version }}
+          path: artifacts/
+          retention-days: 30
+          if-no-files-found: warn
