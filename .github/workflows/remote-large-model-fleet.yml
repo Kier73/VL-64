@@ -1,0 +1,79 @@
+name: Remote large-model VL64 interpreter fleet
+
+on:
+  push:
+    paths:
+      - 'experiments/model_fabric/remote_large_fleet*.py'
+      - 'tests/test_remote_large_fleet.py'
+      - 'docs/REMOTE_LARGE_MODEL_FLEET.md'
+      - '.github/workflows/remote-large-model-fleet.yml'
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_live:
+        description: 'Actually call paid/provider-hosted Qwen3.8-27B and DeepSeek V4.1 Flash endpoints'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  cpu-interpreter-contracts:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e '.[dev]'
+      - name: Verify pure CPU interpreter and host-provider evidence contracts
+        run: python -m pytest -q tests/test_remote_large_fleet.py tests/test_intention_fabric.py tests/test_operational_ground.py
+      - name: No VL64 source-budget regression
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          n=sum(p.stat().st_size for p in Path('src/vld').glob('*.py'))
+          assert n <= 65536, n
+          print('VL64_CORE_SOURCE_BYTES',n)
+          PY
+      - name: Run both large-model *protocol fixtures*, not pretrained inference
+        run: python -m experiments.model_fabric.remote_large_fleet_lab --fixture --out artifacts/large-fleet-fixture.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: large-model-cpu-protocol-${{ matrix.python-version }}
+          path: artifacts/large-fleet-fixture.json
+          if-no-files-found: warn
+
+  opt-in-real-large-model-providers:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_live == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -e '.[dev]'
+      - name: Require both qualified external model-provider credentials
+        shell: bash
+        run: |
+          test -n "$HF_TOKEN" || { echo 'HF_TOKEN not configured; no inference claimed'; exit 1; }
+          test -n "$DEEPSEEK_API_KEY" || { echo 'DEEPSEEK_API_KEY not configured; no inference claimed'; exit 1; }
+      - name: Invoke full-scale Qwen3.8-27B and DeepSeek V4.1 Flash via remote providers
+        run: python -m experiments.model_fabric.remote_large_fleet_lab --live --out artifacts/large-fleet-live.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-scale-external-model-observations
+          path: artifacts/large-fleet-live.json
+          if-no-files-found: warn
