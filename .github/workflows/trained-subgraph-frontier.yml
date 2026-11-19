@@ -8,6 +8,8 @@ on:
       - 'experiments/model_fabric/trained_subgraph_lab.py'
       - 'tests/test_trained_subgraphs.py'
       - 'tests/test_qualified_subgraphs.py'
+      - 'tests/test_saved_trained_architecture_subgraphs.py'
+      - 'experiments/model_fabric/datasets/2026-11-19-qwen-deepseek-trained-subgraphs.json'
       - '.github/workflows/trained-subgraph-frontier.yml'
   pull_request:
   workflow_dispatch:
@@ -30,6 +32,7 @@ jobs:
       - run: |
           python -m pytest -q \
             tests/test_trained_subgraphs.py tests/test_qualified_subgraphs.py \
+            tests/test_saved_trained_architecture_subgraphs.py \
             tests/test_architecture_ops.py tests/test_architecture_probe.py \
             tests/test_scaled_model_fabric.py tests/test_scaled_model_lab.py
       - name: Preserve VL64 compact core
