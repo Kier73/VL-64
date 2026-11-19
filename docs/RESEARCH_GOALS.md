@@ -28,6 +28,8 @@ The implemented [Non-Affine and Observable Grounds](NONAFFINE_AND_OBSERVABLE_GRO
 
 [Multi-Field and Partial-Observation Grounds](MULTIFIELD_PARTIAL_GROUNDS.md) introduce fixed-layout disjoint variable spans, action-conditioned joint state descriptions, partial-byte observation and model-relative information-gain probe recommendations, without expanding the 64 KiB runtime.
 
+[Language Models, Pretrained Tensor Navigation and the Model Seed](MODEL_EXECUTION_GROUNDS.md) now links the compact VL-64 tensor operators to verified trained byte-language inference, exact seeded causal-attention execution, a real pinned Hugging Face 272-tensor header observation, the execution of a bounded genuine pretrained BF16 subgraph, and a reproducible 38,360-byte monolithic model seed. All experimental code stays outside the 64 KiB runtime; full remote pretrained language generation remains an explicitly tested research objective.
+
 ## Development discipline
 
 A proposed capability enters the runtime only when it has:

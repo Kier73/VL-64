@@ -1,0 +1,162 @@
+{
+  "schema": "vl64.model-execution-cross-runtime-evidence.v1",
+  "source_run": "https://github.com/Kier73/VL-64/actions/runs/44433828906",
+  "tested_python_versions": [
+    "3.11",
+    "3.13"
+  ],
+  "tests_passed_per_version": 245,
+  "compact_core_source_bytes": 65093,
+  "trained_language": {
+    "core_source_modified": false,
+    "corpus_sha256": "f1bcfb008c2d8765a73daaef0aa756fd6c174e0cb18ef273e0cc2eeba2ee518f",
+    "generated_byte_count": 48,
+    "greedy_generated_hex": "657265726572657265726572657265726572657265726572657265726572657265726572657265726572657265726572",
+    "greedy_generated_utf8_replace": "erererererererererererererererererererererererer",
+    "heldout_byte_cross_entropy": 4.447546,
+    "heldout_bytes": 3400,
+    "heldout_perplexity": 21.819496,
+    "heldout_sha256": "200301650d6e0c117bfdbd68d7df9da46c18d40f8b3c9d450e3a881ea3037c71",
+    "heldout_top1_accuracy": 0.254487,
+    "hf_weight_payload_bytes_used": 0,
+    "learned_ground_json_bytes": 13115,
+    "learned_weight_entries": 1137,
+    "neural_generated_tokens": [
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "neural_ground_digest": "7425e6136cc80c64fd2e451413b2646ba48f1d44364ea51042a7cf33df3bde4e",
+    "neural_one_step_attention_probabilities": [
+      0.28990473,
+      0.20635735,
+      0.2313929,
+      0.27234502
+    ],
+    "neural_operator_logits": [
+      0.48396385,
+      0.11659552,
+      -0.33178545,
+      -1.2593892,
+      -0.08289414,
+      0.00187067,
+      0.23250433,
+      0.61522184
+    ],
+    "neural_tensor_artifact_bytes": 962,
+    "neural_tensor_artifact_sha256": "0d32bc3742bed2f2a048ffe5511e0ce5de55dc31b27cf843a397146ed343f616",
+    "neural_tensor_structure_digest": "2ec30317e02a4d14f1d37ed702e4de528b0b893a6fda2d36347d960d616211ba",
+    "neural_training_claim": "seeded_untrained_numeric_example",
+    "schema": "vl64.model-fabric-experiment.v1",
+    "scope": "actual_trained_bigram_and_seeded_attention_model_not_pretrained_HF_inference",
+    "status": "EXECUTED_WEIGHT_BACKED_LANGUAGE_AND_NEURAL_MODELS",
+    "text_corpus": "VL-64 README real committed UTF-8 bytes",
+    "trained_language_ground_digest": "2d8cb5aaf00ee773b72195e22a963c2a0b1629b33743f657ceca10b7457b76f4",
+    "training_bytes": 13597,
+    "training_ms_one_run": 6.6019,
+    "training_sha256": "180f09db3dfe89fc51e1f7366f8f60cdb36ee210d56123906728472498bce5e9",
+    "uniform_baseline_bits_per_byte": 8,
+    "weight_payload_bytes_for_neural_execution": 528
+  },
+  "pinned_hugging_face_model": {
+    "model": "HuggingFaceTB/SmolLM2-135M",
+    "revision": "4e53f736cbb20a9a0f56b4c4bf378d9f306ff915",
+    "config_sha256": "1d556eab73b69c7f11f64c557a2f9c6f440bd4c6b89bb2584a6b498c92603843",
+    "config_bytes": 704,
+    "configuration": {
+      "architectures": [
+        "LlamaForCausalLM"
+      ],
+      "attention_bias": false,
+      "hidden_act": "silu",
+      "hidden_size": 576,
+      "intermediate_size": 1536,
+      "max_position_embeddings": 8192,
+      "model_type": "llama",
+      "num_attention_heads": 9,
+      "num_hidden_layers": 30,
+      "num_key_value_heads": 3,
+      "rms_norm_eps": 0.00001,
+      "rope_theta": 100000,
+      "tie_word_embeddings": true,
+      "vocab_size": 49152
+    },
+    "tensor_header_sha256": "8df07d8c3eecdbd18af25d05f43a6768a859d98afd2ae459228bd8f4d39a3c49",
+    "header_bytes": 30536,
+    "declared_weights_bytes": 269030016,
+    "total_tensors": 272,
+    "weight_payload_bytes_observed_during_header_scan": 0
+  },
+  "pretrained_operation": {
+    "actual_remote_weight_bytes_observed": 5760,
+    "fraction_of_weight_payload_observed": 0.0000214103,
+    "full_model_text_generated": false,
+    "independent_numeric_reference_passed": true,
+    "input_vector_sha256": "ab6515c8f92d127f4242e9deb60c859e4edb3a882cc4514f758d18cda8051b4d",
+    "manifest_evidence_sha256": "990c7a32f5098452f6fa578b0e2839682f3ba128e9a31cf5d23a09c8ab456602",
+    "model": "HuggingFaceTB/SmolLM2-135M",
+    "normalized_input_dimension": 576,
+    "numerical_tolerance_abs": 1e-7,
+    "operator": "layer0.q_proj[0:4](rms_norm(synthetic_hidden,layer0.input_layernorm.weight))",
+    "output_coordinates": [
+      -0.198187536,
+      -0.288741521,
+      -0.397372802,
+      0.612992252
+    ],
+    "portable_replay_receipt_digest": "b9351954bbf30c66e64b6a24e8f4903bad8ad6fe6d996445d53d3b6136f151a2",
+    "portable_slice_ground_digest": "36da1db26b256984abf73cfbeaf51fa7d67ed90ea7f473813e5376158bd37a74",
+    "portable_slice_ground_json_bytes": 9227,
+    "q_projection_output_rows": 4,
+    "receipt_digest": "445a2b85ef1fb25a05f92115c8c8d1bea5d9041e093ed5b770f19275f2977bfd",
+    "reference_max_abs_error_quantized_12dp": 0,
+    "remote_structure_ground_digest": "a435d1c090c3af3761c6678b08c9b8f87bcf86fe624344b15f39514bc46f2d63",
+    "revision": "4e53f736cbb20a9a0f56b4c4bf378d9f306ff915",
+    "schema": "vl64.real-pretrained-model-subgraph-execution.v1",
+    "scope": "real_BF16_pretrained_weight_slice_exact_operator_not_complete_LLM",
+    "status": "ACTUAL_REMOTE_PRETRAINED_WEIGHT_OPERATOR_EXECUTED",
+    "tensor_structure_ground_digest": "1d6b5a08c5c231a8580116c70e69063c7a9c3bb6171f0d19d3935d6abf53ca58",
+    "token_embedding_observed": false,
+    "total_remote_weight_payload_bytes": 269030016,
+    "weight_slice_witnesses": [
+      {
+        "byte_begin": 56653640,
+        "byte_end_exclusive": 56654792,
+        "bytes_observed": 1152,
+        "final_hostname": "us.aws.cdn.hf.co",
+        "http_content_range": "bytes 56653640-56654791/269060552",
+        "http_status": 206,
+        "sha256": "993f621dc12632e1e9ff4a2655b9582471ab38e259076839e29af5e5c97cd030",
+        "tensor": "model.layers.0.input_layernorm.weight"
+      },
+      {
+        "byte_begin": 62849096,
+        "byte_end_exclusive": 62853704,
+        "bytes_observed": 4608,
+        "final_hostname": "us.aws.cdn.hf.co",
+        "http_content_range": "bytes 62849096-62853703/269060552",
+        "http_status": 206,
+        "sha256": "b6024d364de21ca51792b3b8512721fbc4a7eed12d4fa71117be38e8dfeea8c8",
+        "tensor": "model.layers.0.self_attn.q_proj.weight"
+      }
+    ]
+  },
+  "cross_runtime": {
+    "trained_ground_digest_equal": true,
+    "seeded_attention_ground_digest_equal": true,
+    "remote_tensor_manifest_digest_equal": true,
+    "pretrained_numeric_receipt_digest_equal": true,
+    "offline_pretrained_slice_digest_equal": true
+  },
+  "independent_numeric_reference_verified": true,
+  "scope": "trained byte bigram, small untrained causal attention, and precisely bounded pretrained Llama RMSNorm/Q subgraph; no full SmolLM2 inference"
+}

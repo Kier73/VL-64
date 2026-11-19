@@ -1,0 +1,85 @@
+name: VL-64 monolithic pretrained-model seed
+
+on:
+  push:
+    branches:
+      - main
+      - feature/model-execution-ground-20261118
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  model-seed:
+    name: model seed (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11","3.13"]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install repository tests
+        run: python -m pip install -e ".[dev]"
+      - name: Verify all compact and model-seed tests
+        run: python -m pytest -q tests/
+      - name: Build reproducible executable pretrained model capsule
+        run: |
+          python -m experiments.model_fabric.model_seed \
+            --out artifacts/VL64-ModelSeed.pyz
+          python -I artifacts/VL64-ModelSeed.pyz model-verify \
+            > artifacts/model-seed-verified.json
+          python -I artifacts/VL64-ModelSeed.pyz model-run \
+            > artifacts/model-slice-offline-replay.json
+          python -I artifacts/VL64-ModelSeed.pyz verify
+          python -I artifacts/VL64-ModelSeed.pyz navigate \
+            --a 5 --b 1 --x0 3 --steps 1000000000000 --modulus 256
+      - name: Check exact offline pretrained numerical output and seed bounds
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          from experiments.model_fabric.model_seed import build_model_seed
+          from experiments.model_fabric.slice_ground import replay_slice_ground
+          p=Path("artifacts")
+          raw=(p/"VL64-ModelSeed.pyz").read_bytes()
+          again,report=build_model_seed()
+          capsule=json.loads(Path(
+              "experiments/model_fabric/datasets/2026-11-18-pretrained-bf16-slice-ground.json").read_text())
+          replay=json.loads((p/"model-slice-offline-replay.json").read_text())
+          verified=json.loads((p/"model-seed-verified.json").read_text())
+          assert raw==again
+          assert len(raw)<=65536
+          assert report["core_source_bytes"]==65093
+          assert replay==replay_slice_ground(capsule)
+          assert replay["actual_model_weight_bytes"]==5760
+          assert verified["model_execution_receipt"]==replay["receipt_digest"]
+          assert verified["seed_bytes"]==len(raw)
+          assert verified["no_network_required"]
+          print("VL64_PRETRAINED_SEED_VERIFIED",json.dumps({
+             "seed_sha256":hashlib.sha256(raw).hexdigest(),
+             "seed_bytes":len(raw),
+             "core_source_bytes":report["core_source_bytes"],
+             "pretrained_slice_ground":capsule["ground_digest"],
+             "numerical_output":replay["output_coordinates"],
+             "offline_replay_receipt":replay["receipt_digest"],
+          },sort_keys=True))
+          PY
+      - name: Publish portable sub-64 KiB executable pretrained model seed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-pretrained-model-seed-${{ matrix.os }}-${{ matrix.python-version }}
+          path: artifacts/*
+          retention-days: 30
+          if-no-files-found: warn

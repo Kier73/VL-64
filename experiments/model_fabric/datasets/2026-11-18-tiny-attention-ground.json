@@ -1,0 +1,23 @@
+{
+  "file_sha256": "0d32bc3742bed2f2a048ffe5511e0ce5de55dc31b27cf843a397146ed343f616",
+  "ground_digest": "7425e6136cc80c64fd2e451413b2646ba48f1d44364ea51042a7cf33df3bde4e",
+  "hidden_width": 4,
+  "max_context": 16,
+  "operator_path": [
+    "embedding_lookup",
+    "rms_norm",
+    "qkv_structural_matvec",
+    "scaled_causal_softmax_attention",
+    "output_structural_matvec",
+    "residual_add",
+    "rms_norm",
+    "lm_head_structural_matvec",
+    "argmax_token"
+  ],
+  "payload_admission": "full_local_f32_weight_bytes_observed",
+  "schema": "vl64.tiny-causal-attention-ground.v1",
+  "scope": "exact_small_causal_attention_forward_not_full_transformer",
+  "tensor_structure_ground_digest": "2ec30317e02a4d14f1d37ed702e4de528b0b893a6fda2d36347d960d616211ba",
+  "training_claim": "seeded_untrained_numeric_example",
+  "vocab_size": 8
+}
