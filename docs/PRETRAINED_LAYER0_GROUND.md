@@ -78,3 +78,31 @@ same tokenization and numerical semantics.
   identity and the typed result under the same numerical tolerance.
 * Only then integrate independent tokenizer and language-token generation
   tests. Keep the `src/vld/` 64 KiB core ceiling unchanged.
+
+
+## Observed result — first full pretrained layer
+
+The first network experiment completed successfully on GitHub Actions:
+[run #44451577911](https://github.com/Kier73/VL-64/actions/runs/44451577911).
+The real pinned model admitted **7,082,496 BF16 bytes** from **115**
+bounded HTTP range requests: 7,080,192 bytes for all nine layer-0
+tensors plus 1,152 bytes each for token IDs 42 and 75. Both tokens were
+passed through the same prepared transformer layer with causal KV state.
+
+The reference independently computed all 576 output coordinates, reporting
+max absolute error **0.0 when rounded to 12 decimal places**
+(tolerance 2e-5). The first eight actual layer outputs are
+`[-0.00034656, 1.22291947, 1.55508065, -4.18592866, -0.1411358,
+-0.18874785, -0.63662119, -0.67673943]`.
+
+The exact emitted report is preserved at
+[`datasets/2026-11-18-real-layer0-reference-receipt.json`](../experiments/model_fabric/datasets/2026-11-18-real-layer0-reference-receipt.json).
+Its SHA-256 is
+`97f7b3c63b9372cc5576e3f0cf03d68bee5d36c5f53de2d18994b9ee92483da9`,
+and `tests/test_saved_real_pretrained_layer.py` verifies the stored
+report's bytes and model/tensor-plan accounting without network access.
+
+This evidence supports exactly **one complete pretrained transformer layer**
+with real BF16 weights and independent scalar numerical agreement. It does
+not establish full-model generation, a cryptographic whole-checkpoint
+authenticity proof, or observer execution across independent physical hosts.
