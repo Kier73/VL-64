@@ -1,0 +1,90 @@
+name: Intention model Grounds, fleet and 64KiB core integrity
+
+on:
+  push:
+    paths:
+      - 'src/vld/micro_kernel.py'
+      - 'src/vld/micro_substrates.py'
+      - 'experiments/model_fabric/intention_*.py'
+      - 'experiments/model_fabric/native_chat_host.py'
+      - 'experiments/model_fabric/operational_ground.py'
+      - 'tests/test_intention_*.py'
+      - 'tests/test_core_integrity_bounds.py'
+      - '.github/workflows/intention-model-fleet.yml'
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      pretrained_instruction_model:
+        type: boolean
+        default: false
+        description: 'Opt in to downloading a pinned real instruction model'
+      model:
+        type: string
+        required: false
+        description: 'HF model name, if opted in'
+      revision:
+        type: string
+        required: false
+        description: 'Exact 40-character HF commit SHA'
+
+permissions:
+  contents: read
+
+jobs:
+  independent-model-and-core-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11','3.13']
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e '.[dev]'
+      - name: Run intent, tokenizer, agent, fleet, and core audit regressions
+        run: python -m pytest -q tests/test_intention_fabric.py tests/test_intention_trained_byte.py tests/test_intention_fleet_lab.py tests/test_core_integrity_bounds.py tests/test_operational_ground.py tests/test_operational_tensor_graph.py
+      - name: Enforce compact source budget
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          n=sum(p.stat().st_size for p in Path('src/vld').glob('*.py'))
+          assert n<=65536, f'Core exceeded 64KiB: {n}'
+          print('VL64_CORE_BYTES',n)
+          PY
+      - name: Execute two distinct trained model hosts through the VL
+        run: python -m experiments.model_fabric.intention_fleet_lab --steps 8 --out artifacts/intent-fleet.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intent-fleet-${{ matrix.python-version }}
+          path: artifacts/intent-fleet.json
+          if-no-files-found: warn
+
+  optional-real-instruction-model:
+    if: github.event_name == 'workflow_dispatch' && inputs.pretrained_instruction_model
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -e '.[dev]' torch transformers
+      - name: Host a real pinned instruction model, tokenize with its native chat template
+        env:
+          MODEL: ${{ inputs.model }}
+          REVISION: ${{ inputs.revision }}
+        run: |
+          python -m experiments.model_fabric.intention_fleet_lab --backend instruction \
+            --model "$MODEL" --revision "$REVISION" --kind paragraph --steps 32 \
+            --out artifacts/real-intention-model.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-intention-model
+          path: artifacts/real-intention-model.json
+          if-no-files-found: warn
