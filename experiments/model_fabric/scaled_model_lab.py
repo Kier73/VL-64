@@ -95,6 +95,9 @@ def observe_large_model(*,selection, numeric=False):
             'shards':ground['shard_count'],'mapped_tensors':ground['tensor_count'],
             'advertised_payload_bytes':ground['advertised_payload_bytes'],
             'metadata_bytes_read':len(config_raw)+len(index_raw),
+            'normalization_name_candidates':sorted(
+                (name for name in mapping if 'norm' in name.casefold() and
+                 name.endswith('.weight')),key=lambda x:('.layers.0.' not in x,x))[:8],
             'pretrained_weight_bytes_observed':0,'full_model_executed':False,
             'architecture_status':ground['architecture_status']}
     if numeric:
