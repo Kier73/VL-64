@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
+import itertools
 import json
 import time
 from pathlib import Path
@@ -81,6 +82,21 @@ def experiment():
     if (far["status"]!="OBSERVED_GROUND_NAVIGATION" or
             base64.b64decode(far["result"]["data_b64"])!=expected):
         raise RuntimeError("Long-horizon modeled byte snapshot disagrees")
+    # Held-out action programs: their individual observed edges were
+    # witnessed, but these 62 mixed multi-step compositions were not training
+    # sequences. Check them with the independent reference transition logic.
+    unseen_programs_checked=0
+    for depth in range(1,6):
+        for word in itertools.product(("tick","toggle"),repeat=depth):
+            outcome=nav.navigate_word(initial,word,"digest.sha256")
+            mode,count=0,0
+            for action in word:
+                mode,count=reference_transition(mode,count,action)
+            if (outcome["status"]!="OBSERVED_GROUND_NAVIGATION" or
+                    outcome["result"]["value"]!=hashlib.sha256(
+                        frame(template,mode,count)).hexdigest()):
+                raise RuntimeError("Mixed action program fails independent reference")
+            unseen_programs_checked+=1
     changed=bytearray(heldout[0][2])
     changed[20] ^= 1
     challenge=nav.challenge([(heldout[0][0],heldout[0][1],bytes(changed))])
@@ -104,6 +120,7 @@ def experiment():
         "state_count":learned["measurement"]["states"],
         "action_count":learned["measurement"]["actions"],
         "known_transition_edges":learned["measurement"]["observed_edges"],
+        "unseen_mixed_action_words_checked":unseen_programs_checked,
         "description_bytes":learned["measurement"]["description_bytes"],
         "raw_transition_frame_bytes":learned["measurement"]["raw_transition_frame_bytes"],
         "compression_ratio":learned["measurement"]["description_ratio"],
@@ -150,6 +167,14 @@ def main():
             "action":"tick","steps":10**12+3,
             "kind":"digest.sha256",
         }})
+    mixed=ObserverIntention(
+        "ground.multifield.navigate",
+        "workspace:"+groundpath.as_posix(),output="json",
+        options={"goal":{
+            "initial_state_hex":bytes([0,0,255]).hex(),
+            "actions":["tick","toggle","tick","tick","toggle"],
+            "kind":"digest.sha256",
+        }})
     partial=ObserverIntention(
         "ground.multifield.observe",
         "workspace:"+groundpath.as_posix(),output="json",
@@ -158,6 +183,7 @@ def main():
             "segments_b64":[base64.b64encode(bytes([1])).decode()],
         }})
     _write(output/"multifield-navigate-intention.json",navigate.to_dict())
+    _write(output/"multifield-mixed-word-intention.json",mixed.to_dict())
     _write(output/"multifield-partial-intention.json",partial.to_dict())
     print("VL64_MULTIFIELD_REPORT "+json.dumps(result["report"],sort_keys=True))
     print("VL64_MULTIFIELD_GROUND "+json.dumps(result["ground"],sort_keys=True,
