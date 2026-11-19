@@ -122,16 +122,16 @@ The first complete Linux/Windows Python 3.11/3.13 matrix reconstructed and ran t
 | Metric | First confirmed four-run result |
 | --- | ---: |
 | Original compact core source | **65,093 bytes** |
-| Initial monolithic seed (pre-module-graph enhancement) | **28,966 bytes** |
-| Module source files | **7** |
-| Source-to-seed size ratio | **2.247×** |
+| Final monolithic seed (including seven module Grounds) | **30,030 bytes** |
+| Module source files / module Grounds | **7 / 7** |
+| Source-to-seed size ratio | **2.168×** |
 | Independent operating systems | Linux and Windows |
 | Python versions | 3.11 and 3.13 |
 | Exact reconstruction | All seven modules |
 | Cross-platform SHA-256 | Equal across all four builds |
 | Required platform substrate | Python 3.11+ |
 
-The enhanced modular self-Ground adds individual module identities and typed source relations. The final generated `.pyz` size and digest are recorded by [the seed workflow](../.github/workflows/monolithic-seed.yml) and its downloadable job artifacts; the initial figure above is deliberately retained as a clearly labeled baseline.
+The final modular software Ground fingerprint is `43f36667ce8326ccb7f8927b55fa99c0a2b826f5e7a6d48c9369a4804393b1a1`. All four tested Linux/Windows/Python toolchains produced the **identical 30,030-byte artifact** with SHA-256 `dbe388c0d2fdc0b13e552e0a7dcf2a32233818cd3ec356e3feacd55ad7d6fd8e`. The preceding baseline without module-Ground graph was 28,966 bytes; the additional 1,064 bytes encodes explicit per-module structural descriptions and their reusable relations. These values refer to the version tested in [the cross-platform workflow](https://github.com/Kier73/VL-64/actions/runs/44426705581). A subsequent source edit changes the derived seed and its identity by design.
 
 Each matrix job verifies the seed, invokes its built-in software Ground inspection, executes the original VL-64 verification and navigation CLI, rebuilds the seed twice to check determinism, and reconstructs all original source bytes. No conventional package installation is required on the receiving path when running the seed itself.
 
