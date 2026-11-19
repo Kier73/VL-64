@@ -265,8 +265,12 @@ class QualifiedShardNavigator:
 
         This never infers weights from a config and is not full-model inference.
         """
-        names=sorted(k for k in self.weight_map if k.endswith('input_layernorm.weight'))
-        for name in names:
+        names=sorted((k for k in self.weight_map if 'norm' in k.casefold() and
+                      k.endswith('.weight')), key=lambda x:(
+                          '.layers.0.' not in x, x))
+        # A bounded candidate search avoids traversing every MoE shard on a
+        # failed probe. Selecting by name never supplies numerical evidence.
+        for name in names[:64]:
             desc=self.locate(name)
             if desc['dtype'] not in ('BF16','F32') or len(desc['shape'])!=1 or not 1<=desc['shape'][0]<=32768:
                 continue
