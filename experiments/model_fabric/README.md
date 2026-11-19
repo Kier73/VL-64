@@ -1,0 +1,63 @@
+# Model Fabric — execute and navigate language-model Grounds
+
+The model fabric is deliberately separate from VL-64's **65,093-byte compact runtime**. It reuses its current `StructuralLinearOperator`, `rms_norm`, `SafetensorsGlance`, `ObserverIntention`, and Ground fingerprint utilities. It does not expand `src/vld/`.
+
+## Executed capabilities
+
+1. **Trained byte language model:** `byte_lm.py` fits a 256-byte vocabulary bigram model to actual README text and performs generated-token inference using `StructuralLinearOperator.matvec`. Held-out predictive quality is measured and compared with a uniform-byte baseline.
+2. **Actual causal-attention F32 execution:** `tiny_attention.py` reads real admitted tensor bytes and calculates embeddings, Q/K/V, causal softmax attention, residuals, RMSNorm, and next-token logits. These are seeded demonstration weights, not a pretrained language model.
+3. **Hugging Face model Ground:** `hf_glance.py` reads the exact pinned `SmolLM2-135M` model configuration and Safetensors header through **bounded HTTP Range**. The manifest contains tensor names, types, offsets and dimensions but **zero weight-payload bytes**.
+4. **Pretrained BF16 subgraph:** `remote_operator_probe.py` fetches 5,760 actual BF16 weight bytes from an authentic pretrained model, executes RMSNorm and four Q-projection rows through VL-64's compact operators, and checks the result against an independent numerical reference.
+5. **Portable model-slice Ground:** `slice_ground.py` retains just those exact weight bytes, byte-range provenance and an executable operator description. It is replayable offline with no model server.
+6. **A second monolithic seed:** `model_seed.py` packages the complete original VL-64 source, source-derived software Ground and pretrained BF16 Ground into a reproducible **38,360-byte executable model seed**. It runs with only Python 3.11+ on Linux and Windows.
+
+## Run locally
+
+~~~bash
+python -m pip install -e ".[dev]"
+python -m pytest -q tests/
+
+# Train and execute local model computations.
+python -m experiments.model_fabric.model_lab --out artifacts
+python -m experiments.observer_intent.arbitrate \
+  --intent artifacts/language-intention.json \
+  --out artifacts/language-result.json
+python -m experiments.observer_intent.arbitrate \
+  --intent artifacts/neural-intention.json \
+  --out artifacts/neural-result.json
+
+# Observe actual pinned remote model structure with no weight download:
+python -m experiments.model_fabric.hf_glance
+
+# Optional network read: execute the REAL pretrained sub-operator with
+# two bounded tensor weight ranges, not the complete model:
+python -m experiments.model_fabric.remote_operator_probe
+
+# No network is required for the saved pretrained slice:
+python - <<'PY'
+import json
+from pathlib import Path
+from experiments.model_fabric.slice_ground import replay_slice_ground
+g=json.loads(Path(
+ 'experiments/model_fabric/datasets/2026-11-18-pretrained-bf16-slice-ground.json'
+).read_text())
+print(replay_slice_ground(g))
+PY
+
+# Generate one portable seed containing both the VL-64 runtime and that
+# exact slice of genuine pretrained model computation:
+python -m experiments.model_fabric.model_seed \
+  --out artifacts/VL64-ModelSeed.pyz
+python -I artifacts/VL64-ModelSeed.pyz model-verify
+python -I artifacts/VL64-ModelSeed.pyz model-run
+~~~
+
+The pinned model's header contains **272 tensors** and represents around **269 MB** of weight payload. VL-64 reads just **30,536 header bytes** to discover their layout; its selected runtime subgraph then reads **5,760 BF16 weight bytes**. It does **not** run the entire SmolLM2 model or generate SmolLM2 text.
+
+## Evidence and portability
+
+[Saved Grounds and measurements](datasets/) include the trained sparse byte LM, the 272-tensor structure Ground, the exact pretrained BF16 slices, and host-stable numerical receipts. The trained-language Ground and the remote tensor Ground are each under 64 KiB in compact JSON representation; the portable model seed is separately below 64 KiB.
+
+The [two-version inference workflow](../../.github/workflows/model-execution.yml) validates the numeric operators, and the [four-host model seed workflow](../../.github/workflows/model-seed.yml) checks Linux and Windows across Python 3.11 and 3.13. Both preserve downloadable experiment artifacts.
+
+For exact provenance, limitations, and the next steps toward complete LLM inference, see [Language Models and Pretrained Tensor Navigation](../../docs/MODEL_EXECUTION_GROUNDS.md).
