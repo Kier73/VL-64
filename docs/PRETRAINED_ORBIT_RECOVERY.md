@@ -59,3 +59,21 @@ Ground through an independently trusted source and publish a new v2 state,
 or continue evaluating the original v1 checkpoint using the pinned original
 implementation. Never substitute a changed v1 snapshot's supplied digest for
 an externally authorized high-water head.
+
+## Historical real pretrained v2 recovery evidence
+
+The complete pinned SmolLM2 BF16 experiment passed in
+[GitHub Actions run #44458408052](https://github.com/Kier73/VL-64/actions/runs/44458408052)
+with weight-snapshot content identity checks on both assignments. It read
+14,161,536 genuine BF16 bytes through 227 strict range messages **per
+logical assignment** (28,323,072 bytes and 454 requests total), restored after
+the first token without replay, and matched the separate scalar reference at
+all 576 hidden coordinates (max error rounded to 12 decimals: 0.0).
+The preserved [receipt](../experiments/model_fabric/datasets/2026-11-18-real-pretrained-orbit-v2-receipt.json)
+has SHA-256
+`29bcc7f9f35aced35da9ac40412bc5e3f6ce0b5a62640d29cb7ac1b140568fa9`,
+verified with the pinned tensor manifest in
+`tests/test_saved_real_pretrained_orbit.py`. The full checkpoint and
+content-addressed K/V pages are retained in the original Actions artifact.
+This remains a two-layer, single-interpreter live trial, not a cryptographic
+multi-host compute attestation or complete model generation.

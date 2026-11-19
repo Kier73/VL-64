@@ -8,6 +8,7 @@ on:
     paths:
       - "experiments/model_fabric/**"
       - "tests/test_pretrained_orbit.py"
+      - "tests/test_saved_real_pretrained_orbit.py"
       - "tests/test_pretrained_chain.py"
       - "tests/test_pretrained_layer.py"
       - "tests/test_execution_dag.py"
@@ -37,7 +38,7 @@ jobs:
         run: |
           python -m pytest -q tests/test_execution_dag.py \
             tests/test_pretrained_layer.py tests/test_pretrained_chain.py \
-            tests/test_pretrained_orbit.py tests/test_saved_real_pretrained_chain.py
+            tests/test_pretrained_orbit.py tests/test_saved_real_pretrained_chain.py tests/test_saved_real_pretrained_orbit.py
       - name: Preserve compact core under 64 KiB
         run: |
           python - <<'PY'
