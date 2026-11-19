@@ -61,3 +61,14 @@ The pinned model's header contains **272 tensors** and represents around **269 M
 The [two-version inference workflow](../../.github/workflows/model-execution.yml) validates the numeric operators, and the [four-host model seed workflow](../../.github/workflows/model-seed.yml) checks Linux and Windows across Python 3.11 and 3.13. Both preserve downloadable experiment artifacts.
 
 For exact provenance, limitations, and the next steps toward complete LLM inference, see [Language Models and Pretrained Tensor Navigation](../../docs/MODEL_EXECUTION_GROUNDS.md).
+
+## Typed pretrained execution DAG (after 6389481)
+
+The independent [typed decoder DAG module](execution_dag.py) compiles the pinned, observed SmolLM2-135M manifest into typed embedding, RoPE, causal grouped-query attention, SwiGLU feed-forward and vocabulary projection nodes without acquiring any weights at compilation. It refuses unknown architectures or divergent Ground/tensor extents. `QualifiedTensorReader` can then acquire each exact BF16/F32 range from an explicitly approved observer-host, reject incomplete/altered data, and record a chained range witness. The original 65,093-byte VL-64 core is unchanged.
+
+```bash
+python -m experiments.model_fabric.model_dag_lab
+python -m pytest -q tests/test_execution_dag.py
+```
+
+Full opt-in ranged execution of provided token IDs is available with `--tokens 42 --allow-remote-weights`. It has not been established as real pretrained full-model generation: obtaining all weight bytes, authenticating them against an external checkpoint digest, and comparing end-to-end logits to an independent pretrained reference remain separate validation steps. Read [the typed DAG contract](../../docs/TYPED_PRETRAINED_EXECUTION_DAG.md).
