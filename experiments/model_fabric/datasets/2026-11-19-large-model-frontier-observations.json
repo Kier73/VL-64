@@ -1,0 +1,104 @@
+{
+  "schema": "vl64.architecture-scale-observations.v1",
+  "source": "github_actions_exact_successful_live_report",
+  "models": {
+    "qwen": {
+      "run_id": 44541524537,
+      "job_id": 135620823306,
+      "report": {
+        "advertised_payload_bytes": 55562855904,
+        "architecture_status": "STRUCTURE_ONLY_SPECIALIZED_ATTENTION_AND_VISION_ADAPTERS_REQUIRED",
+        "config_sha256": "191e0af232104ed8b65258cf3fb2b842e288008baca7633c11b82a1ac7203aab",
+        "exact_http_ranges": 3,
+        "full_model_executed": false,
+        "ground_digest": "bddf7a104025219fc28a7a364e61dd2452a0d3820f0a2f834b2f09bf8e9d480e",
+        "index_digest": "059c388b0818e297d54b9ce322312cb93eab30920f0ba250bcbe46839b6f36f3",
+        "index_sha256": "77042094076611b69791a610065f28b7013b8c621795fa86ddccc8bac7d1b9df",
+        "layer_families": {
+          "full_attention": 16,
+          "linear_attention": 48
+        },
+        "layers": 64,
+        "mapped_tensors": 1199,
+        "metadata_bytes_read": 116528,
+        "model": "Qwen/Qwen3.8-27B",
+        "model_type": "qwen3_5",
+        "normalization_name_candidates": [
+          "model.language_model.layers.0.input_layernorm.weight",
+          "model.language_model.layers.0.linear_attn.norm.weight",
+          "model.language_model.layers.0.post_attention_layernorm.weight",
+          "mtp.layers.0.input_layernorm.weight",
+          "mtp.layers.0.post_attention_layernorm.weight",
+          "mtp.layers.0.self_attn.k_norm.weight",
+          "mtp.layers.0.self_attn.q_norm.weight",
+          "model.language_model.layers.1.input_layernorm.weight"
+        ],
+        "numeric_probe": {
+          "actual_weight_bytes": 10240,
+          "dimension": 5120,
+          "max_abs_error": 0,
+          "model": "Qwen/Qwen3.8-27B",
+          "range_witness_chain_digest": "8e37d0d502953f3f408318ec89d445b6985abeae9636d324721e8b65786537be",
+          "revision": "37561816e66b5b9153b1b64c10968c18c1e6f4a0",
+          "scope": "one pretrained normalization tensor, not full-model inference",
+          "status": "WEIGHT_BACKED_NORMALIZATION_SLICE_VERIFIED",
+          "tensor": "model.language_model.layers.0.input_layernorm.weight"
+        },
+        "pretrained_weight_bytes_observed": 10240,
+        "range_witness_chain_digest": "8e37d0d502953f3f408318ec89d445b6985abeae9636d324721e8b65786537be",
+        "revision": "37561816e66b5b9153b1b64c10968c18c1e6f4a0",
+        "shards": 18,
+        "status": "STRUCTURAL_MODEL_GROUND_ADMITTED"
+      }
+    },
+    "deepseek": {
+      "run_id": 44541524537,
+      "job_id": 135620822960,
+      "report": {
+        "advertised_payload_bytes": 510286023000,
+        "architecture_status": "STRUCTURE_ONLY_MOE_SPARSE_ATTENTION_AND_QUANTIZED_ADAPTERS_REQUIRED",
+        "config_sha256": "8be45ce0476004a3f529fd896115a4a2e800a129ad2d3ec05b16050f52e21879",
+        "exact_http_ranges": 6,
+        "full_model_executed": false,
+        "ground_digest": "b56d8247b665316dd9fae5e7d779f7c34d10bb501e9eaa52cb61412230f40937",
+        "index_digest": "a449b268199162da03bd2d5b8d8471297d630e7f9446864fc8df86257cb5b9ac",
+        "index_sha256": "74b0686a3d2891980d5e303251b075a3bccae2c2ff650747db2620a649b98fa8",
+        "layer_families": {
+          "compressed_sparse_attention_moe": 40
+        },
+        "layers": 40,
+        "mapped_tensors": 96085,
+        "metadata_bytes_read": 7473605,
+        "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "model_type": "deepseek_v41",
+        "normalization_name_candidates": [
+          "layers.0.attn.kv_norm.weight",
+          "layers.0.attn.q_norm.weight",
+          "layers.0.attn_norm.weight",
+          "layers.0.ffn_norm.weight",
+          "layers.1.attn.kv_norm.weight",
+          "layers.1.attn.q_norm.weight",
+          "layers.1.attn_norm.weight",
+          "layers.1.ffn_norm.weight"
+        ],
+        "numeric_probe": {
+          "actual_weight_bytes": 1024,
+          "dimension": 512,
+          "max_abs_error": 0,
+          "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+          "range_witness_chain_digest": "11262843cd42cbffddfa29c1467c3fc49e7d7d0a53c384ff7eb18c1a18a9cb76",
+          "revision": "1bae0e1088993b9b82de08f59de5be5a34e42170",
+          "scope": "one pretrained normalization tensor, not full-model inference",
+          "status": "WEIGHT_BACKED_NORMALIZATION_SLICE_VERIFIED",
+          "tensor": "layers.0.attn.kv_norm.weight"
+        },
+        "pretrained_weight_bytes_observed": 1024,
+        "range_witness_chain_digest": "11262843cd42cbffddfa29c1467c3fc49e7d7d0a53c384ff7eb18c1a18a9cb76",
+        "revision": "1bae0e1088993b9b82de08f59de5be5a34e42170",
+        "shards": 48,
+        "status": "STRUCTURAL_MODEL_GROUND_ADMITTED"
+      }
+    }
+  },
+  "scope": "pinned_sharded_structure_and_one_real_BF16_normalization_slice_each_not_full_model_inference"
+}
