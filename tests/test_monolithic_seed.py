@@ -74,6 +74,12 @@ def test_source_ground_declares_actual_modules_imports_and_public_api():
     assert any(r["module"]=="micro_kernel" for r in
                byname["vld.__init__"]["relative_imports"])
     assert "ObservedGround" in byname["vld.__init__"]["public_exports"]
+    assert len(ground["module_grounds"])==7
+    assert len({g["ground_digest"] for g in ground["module_grounds"]})==7
+    assert ground["ground_role"]=="source-derived-ground-of-module-grounds"
+    assert any(edge["source_module"]=="vld.__init__" and
+               edge["target_module"]=="vld.micro_kernel"
+               for edge in ground["module_relations"])
     assert ground["entrypoints"]["python_module"]=="vld.__main__"
 
 
@@ -151,3 +157,24 @@ def test_no_implicit_extraction_or_execution_authority_in_ground(tmp_path):
     assert list(root.iterdir())==[root/"VL64.pyz"]
     assert ground["qualified_reconstruction"][
         "remote_actions_authorized_by_digest"] is False
+
+
+
+def test_monolithic_seed_exposes_individual_grounds_and_import_relations(tmp_path):
+    binary,ground,report=build(ROOT)
+    modules=invoke(binary,tmp_path,"seed-modules")
+    assert modules.returncode==0,modules.stderr
+    objects=json.loads(modules.stdout)
+    assert objects==ground["module_grounds"]
+    assert len(objects)==7
+    relations=invoke(binary,tmp_path,"seed-relations")
+    assert relations.returncode==0,relations.stderr
+    assert json.loads(relations.stdout)==ground["module_relations"]
+    symbols=invoke(binary,tmp_path,"seed-symbols","vld.micro_translation")
+    assert symbols.returncode==0,symbols.stderr
+    info=json.loads(symbols.stdout)
+    assert info["module"]=="vld.micro_translation"
+    assert "ObservedGround" in info["top_level_classes"]
+    unresolved=invoke(binary,tmp_path,"seed-symbols","vld.unknown")
+    assert unresolved.returncode!=0
+    assert "VL64_SEED_UNRESOLVED" in unresolved.stderr
