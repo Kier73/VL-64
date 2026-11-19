@@ -85,6 +85,10 @@ jobs:
         continue-on-error: true
         run: |
           python -m experiments.model_fabric.hf_glance | tee artifacts/hf-header-observation.jsonl
+      - name: Execute one real pretrained model sub-operator using only bounded BF16 HTTP ranges
+        continue-on-error: true
+        run: |
+          python -m experiments.model_fabric.remote_operator_probe | tee artifacts/real-pretrained-operator.jsonl
       - name: Preserve executable model weights, tensor Grounds, evidence and outputs
         if: always()
         uses: actions/upload-artifact@v4
