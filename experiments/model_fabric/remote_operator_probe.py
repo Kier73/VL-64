@@ -105,7 +105,7 @@ def execute_remote_q_slice(*,observed=None,model=MODEL,revision=REVISION):
         sparse_delta={
             (r,c):qweights[r*hidden+c]
             for r in range(row_count) for c in range(hidden)
-            if qweights[r*hidden+c]!=0,
+            if qweights[r*hidden+c]!=0
         })
     computed=operator.matvec(normalized)
 
