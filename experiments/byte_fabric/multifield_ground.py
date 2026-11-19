@@ -444,6 +444,63 @@ class MultiFieldNavigator:
             "vl64.multifield-navigation.v1",receipt)
         return receipt
 
+    def navigate_word(self,initial_state_hex,actions,
+                      result_type="digest.sha256"):
+        """Compose a bounded mixed-action word over witnessed relations only."""
+        if (not isinstance(initial_state_hex,str) or
+                not isinstance(actions,(tuple,list)) or
+                not 1<=len(actions)<=1024 or
+                any(not isinstance(action,str) for action in actions)):
+            return {"status":"REFUSED","reason":"INVALID_ACTION_WORD"}
+        if result_type not in ("digest.sha256","bytes.snapshot","state.token"):
+            return {"status":"UNRESOLVED","reason":"UNSUPPORTED_RESULT_TYPE"}
+        try:
+            token=bytes.fromhex(initial_state_hex)
+        except ValueError:
+            return {"status":"REFUSED","reason":"INVALID_STATE_HEX"}
+        state=self.ids.get(token)
+        if state is None:
+            return {"status":"UNRESOLVED","reason":"UNKNOWN_INITIAL_STATE"}
+        edge_receipts=[]
+        for index,action in enumerate(actions):
+            transition=self.transitions.get((state,action))
+            if transition is None:
+                return {
+                    "status":"UNRESOLVED",
+                    "reason":"UNOBSERVED_STATE_ACTION",
+                    "completed_steps":index,
+                    "missing":{"state_id":state,"action":action},
+                    "ground_digest":self.ground["ground_digest"],
+                }
+            edge_receipts.append({
+                "action":action,
+                "source_state_id":state,
+                "target_state_id":transition,
+            })
+            state=transition
+        content=self.materialize(state)
+        result=({"type":result_type,"hex":self.states[state].hex()}
+                if result_type=="state.token" else
+                {"type":result_type,"value":_sha(content)}
+                if result_type=="digest.sha256" else
+                {"type":result_type,"sha256":_sha(content),
+                 "length":len(content)})
+        receipt={
+            "schema":"vl64.multifield-action-word.v1",
+            "status":"OBSERVED_GROUND_NAVIGATION",
+            "ground_digest":self.ground["ground_digest"],
+            "word":list(actions),
+            "completed_steps":len(actions),
+            "terminal_state_id":state,
+            "witnessed_edge_receipts":edge_receipts,
+            "result":result,
+            "interpretation_scope":
+                "composition_of_registered_observed_edges_not_new_remote_actions",
+        }
+        receipt["receipt_digest"]=domain_digest(
+            "vl64.multifield-action-word.v1",receipt)
+        return receipt
+
     def challenge(self,observations):
         if not isinstance(observations,(list,tuple)) or not 1<=len(observations)<=512:
             raise ValueError("Need bounded new independent transition observations")
