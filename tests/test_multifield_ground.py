@@ -208,3 +208,32 @@ def test_invalid_partial_intervals_and_bad_state_selection_are_refused():
         nav.observe_partial(sample,[])
     assert nav.navigate("ffff","tick",1)["status"]=="UNRESOLVED"
     assert nav.navigate("nothex","tick",1)["status"]=="REFUSED"
+
+
+
+def test_mixed_action_programs_reconstruct_independent_reference_states():
+    import itertools
+    nav=MultiFieldNavigator(fitted()[0]["ground"])
+    initial=bytes([0,0,255]).hex()
+    tested=0
+    for size in range(1,6):
+        for word in itertools.product(("tick","toggle"),repeat=size):
+            model=nav.navigate_word(initial,word,"digest.sha256")
+            assert model["status"]=="OBSERVED_GROUND_NAVIGATION"
+            assert len(model["witnessed_edge_receipts"])==len(word)
+            mode,count=0,0
+            for action in word:
+                mode,count=independent_step(mode,count,action)
+            assert model["result"]["value"]==hashlib.sha256(
+                frame(mode,count)).hexdigest()
+            tested+=1
+    assert tested==62
+
+
+def test_mixed_action_program_does_not_complete_missing_edge():
+    nav=MultiFieldNavigator(fitted(((1,3,"tick"),))[0]["ground"])
+    blocked=nav.navigate_word(bytes([1,3,252]).hex(),["tick","toggle"])
+    assert blocked["status"]=="UNRESOLVED"
+    assert blocked["completed_steps"]==0
+    assert blocked["missing"]["action"]=="tick"
+    assert nav.navigate_word("00ff",[])["status"]=="REFUSED"
