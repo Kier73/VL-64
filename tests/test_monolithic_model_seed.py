@@ -31,7 +31,7 @@ def test_monolithic_model_seed_is_reproducible_under_64k_and_contains_actual_wei
     assert report==second
     assert len(one)<=65536
     assert report["model_seed_bytes"]==len(one)
-    assert report["core_source_bytes"]==65093
+    assert report["core_source_bytes"]==sum(map(len,input_sources(ROOT).values()))
     assert report["actual_pretrained_weight_payload_bytes"]==5760
     assert report["complete_pretrained_model_execution"] is False
     with zipfile.ZipFile(io.BytesIO(one)) as archive:

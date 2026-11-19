@@ -161,7 +161,33 @@ class HostedTransformersLanguage(OperationalHostBase):
     def decode(self,tokens):
         return self.tokenizer.decode(tokens,skip_special_tokens=True)
     def calculate_logits(self,tokens):
-        with self.torch.inference_mode():
-            ids=self.torch.tensor([tokens],dtype=self.torch.long)
-            values=self.model(input_ids=ids,use_cache=False).logits[0,-1].float().cpu().tolist()
+        """Reuse host-owned KV only for the exact next causal prefix.
+
+        Branches, restored sessions and modified prefixes force a fresh prefill.
+        Never place KV/weight data in the Virtual Layer or its Ground receipt.
+        """
+        previous=getattr(self,'_cached_prefix',None)
+        past=getattr(self,'_cached_kv',None)
+        incremental=past is not None and previous==tuple(tokens[:-1])
+        payload=tokens[-1:] if incremental else tokens
+        kwargs={'input_ids':self.torch.tensor([payload],dtype=self.torch.long),
+                'use_cache':True}
+        if incremental:kwargs['past_key_values']=past
+        try:
+            with self.torch.inference_mode():
+                result=self.model(**kwargs)
+                values=result.logits[0,-1].float().cpu().tolist()
+            if (len(values)!=self.description['vocab_size'] or
+                    not all(math.isfinite(x) for x in values)):
+                raise ValueError('Incomplete/nonfinite cached model output')
+        except Exception:
+            # Failed decoder steps cannot leave an apparently valid causal head.
+            self._cached_prefix=None;self._cached_kv=None
+            raise
+        self._cached_prefix=tuple(tokens)
+        self._cached_kv=getattr(result,'past_key_values',None)
+        if incremental:
+            self.host_kv_reuses=getattr(self,'host_kv_reuses',0)+1
+        else:
+            self.host_kv_prefills=getattr(self,'host_kv_prefills',0)+1
         return values

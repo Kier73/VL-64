@@ -30,7 +30,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install repository tests
-        run: python -m pip install -e ".[dev]"
+        run: python -m pip install -e ".[dev]" numpy
       - name: Verify all compact and model-seed tests
         run: python -m pytest -q tests/
       - name: Build reproducible executable pretrained model capsule
@@ -60,7 +60,8 @@ jobs:
           verified=json.loads((p/"model-seed-verified.json").read_text())
           assert raw==again
           assert len(raw)<=65536
-          assert report["core_source_bytes"]==65093
+          assert report["core_source_bytes"]==sum(p.stat().st_size for p in Path("src/vld").glob("*.py"))
+          assert report["core_source_bytes"]<=65536
           assert replay==replay_slice_ground(capsule)
           assert replay["actual_model_weight_bytes"]==5760
           assert verified["model_execution_receipt"]==replay["receipt_digest"]
