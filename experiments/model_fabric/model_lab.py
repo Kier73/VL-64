@@ -83,8 +83,8 @@ def experiment():
             neural_token["causal_attention_probabilities"],
         "neural_generated_tokens":neural_generation["generated_tokens"],
         "neural_training_claim":"seeded_untrained_numeric_example",
-        "weight_payload_bytes_for_neural_execution":len(weights)-
-            neural.weight_entries["embed"]["shape"][0]*0,  # full local artifact held
+        "weight_payload_bytes_for_neural_execution":sum(
+            4*len(item["values"]) for item in neural.weight_entries.values()),
         "hf_weight_payload_bytes_used":0,
         "core_source_modified":False,
         "scope":"actual_trained_bigram_and_seeded_attention_model_not_pretrained_HF_inference",
