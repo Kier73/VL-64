@@ -302,3 +302,17 @@ def test_weight_identity_survives_rehome_but_host_evidence_changes(tmp_path):
     later,_=restore(snap,snap["checkpoint_digest"])
     assert later.static_weight_identities == snap["static_weight_identities"]
     assert later.readers[0].receipt_chain != snap["weight_witness_chains"]["0"]
+
+
+def test_v1_checkpoint_cannot_implicitly_claim_v2_weight_continuity(tmp_path):
+    _,_,_,_,a,b,store,create,restore=fixture(tmp_path)
+    s=create(a,"host-a-compute",0,"origin")
+    s.advance(4)
+    snap=s.checkpoint()
+    downgraded=dict(snap)
+    downgraded["schema"]="vl64.model-orbit-checkpoint.v1"
+    del downgraded["static_weight_identities"]
+    downgraded["checkpoint_digest"]=domain_digest(downgraded["schema"],
+        {k:v for k,v in downgraded.items() if k!="checkpoint_digest"})
+    with pytest.raises(ValueError,match="identity"):
+        restore(downgraded,downgraded["checkpoint_digest"])

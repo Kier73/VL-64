@@ -47,3 +47,15 @@ The independent fixture suite compares **restored** BF16/F32 decoder results aga
 - Separate the currently local layer compute into distinct **receiver processes** using E-CPU's authenticated path/reliable channel and exact typed output receipts. Rehome a *compute* host, not just the weights' provider.
 - Retain admitted weight-cache identities as durable Grounds to avoid re-fetching complete layer matrices after each process restart; continue retaining independently verified model values.
 - Compose the same verified state snapshots through additional pretrained layers toward all 30, then final normalization, vocabulary logits and tokenizer verification. This experiment remains **two-layer partial model computation**, not full language generation.
+
+### Checkpoint schema upgrade after initial recovery evidence
+
+The first restart prototype (PR #22) used `vl64.model-orbit-checkpoint.v1` without
+a persistent static-weight content identity. The strengthened format is
+`vl64.model-orbit-checkpoint.v2`. It **does not silently import v1 checkpoints**
+into the stronger trust contract: doing so would equate self-hashed range
+receipts with a trusted pre-restart weight snapshot. Re-admit the prior weight
+Ground through an independently trusted source and publish a new v2 state,
+or continue evaluating the original v1 checkpoint using the pinned original
+implementation. Never substitute a changed v1 snapshot's supplied digest for
+an externally authorized high-water head.

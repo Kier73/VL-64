@@ -24,7 +24,7 @@ from .execution_dag import MAX_RANGE, QualifiedTensorReader
 from .pretrained_chain import GENESIS, admit_handoff, make_handoff
 from .pretrained_layer import MAX_POSITIONS, PreparedLayer, LAYER_TENSORS, _fingerprint
 
-SCHEMA = "vl64.model-orbit-checkpoint.v1"
+SCHEMA = "vl64.model-orbit-checkpoint.v2"
 LAYER_SCHEMA = "vl64.model-orbit-layer-pages.v1"
 STEP_SCHEMA = "vl64.model-orbit-step.v1"
 _HEX = re.compile(r"[0-9a-f]{64}\Z")

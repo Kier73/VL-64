@@ -78,7 +78,7 @@ def run(*, directory=None, tokens=TOKENS):
         if checkpoint["static_weight_identities"]!=new_checkpoint["static_weight_identities"]:
             raise ValueError("Rehomed pinned model changed pretrained layer weights")
         report={
-            "schema":"vl64.real-pretrained-recovered-orbit.v1",
+            "schema":"vl64.real-pretrained-recovered-orbit.v2",
             "status":"REAL_BF16_TWO_LAYER_RESTART_CONTINUITY_VERIFIED",
             "model":plan["model"],"revision":plan["revision"],
             "dag_digest":plan["dag_digest"],"tokens":list(tokens),
