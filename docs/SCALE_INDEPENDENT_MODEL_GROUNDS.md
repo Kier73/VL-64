@@ -104,3 +104,33 @@ exact evidence scope remains visible at every step.
 - Qwen index: https://huggingface.co/Qwen/Qwen3.8-27B/blob/main/model.safetensors.index.json
 - DeepSeek config: https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/blob/main/config.json
 - DeepSeek index: https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/blob/main/model.safetensors.index.json
+
+## First real large-model observations (GitHub Actions)
+
+[Actions run #44541524537](https://github.com/Kier73/VL-64/actions/runs/44541524537)
+completed both pinned real-weight slice experiments successfully.
+The exact machine-emitted reports were preserved in
+[`2026-11-19-large-model-frontier-observations.json`](../experiments/model_fabric/datasets/2026-11-19-large-model-frontier-observations.json).
+`tests/test_saved_scaled_model_frontier.py` guards against scope escalation.
+
+- **Qwen3.8-27B**: 64 text layers (48 linear/16 full attention),
+  18 shards, 1,199 mapped tensor names, 55,562,855,904 advertised
+  payload bytes. A 5,120-element *real BF16* layer-0
+  `input_layernorm.weight` was acquired via three bounded ranges
+  (header prefix + header + 10,240 weight bytes), and checked against an
+  independent scalar reference with reported max error 0 at 12 decimals.
+- **DeepSeek-V4.1-Flash-1017**: 40 text layers, 48 shards, 96,085
+  mapped tensor names, 510,286,023,000 advertised payload bytes. A
+  512-element *real BF16* `layers.0.attn.kv_norm.weight` was acquired
+  via six bounded ranges including its shard header, with 1,024
+  weight bytes, and similarly checked at 12-decimal reported precision.
+  The pinned source is release revision
+  `1bae0e1088993b9b82de08f59de5be5a34e42170`, not the earlier
+  pre-release `dfbc4a7...` commit that lacks the final config.
+
+The navigator additionally admits packed `F4` and `F6` tensor
+extents in the Safetensors header, with byte-aligned range controls.
+**It does not decode or execute quantized FP4/FP6 expert matrices yet.**
+These results are a scale-independent **weight-location plus single
+numeric-operator milestone**, not an executed 27B or 510GB decoder.
+
