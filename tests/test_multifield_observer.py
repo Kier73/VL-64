@@ -90,3 +90,21 @@ def test_external_observer_refuses_missing_state_action_without_fabricating(tmp_
     assert outcome["status"]=="UNRESOLVED"
     assert outcome["result"]["reason"]=="UNOBSERVED_STATE_ACTION"
     assert outcome["result"]["completed_steps"]==0
+
+
+
+def test_external_observer_composes_mixed_action_program_from_typed_intention(tmp_path):
+    sample=experiment()
+    save_ground(tmp_path,sample["ground"])
+    word=["tick","toggle","tick","tick","toggle"]
+    req=ObserverIntention(
+        "ground.multifield.navigate","workspace:ground.json",output="json",
+        options={"goal":{"initial_state_hex":"0000ff",
+                         "actions":word,"kind":"state.token"}})
+    response=arbitrate(req,byte_root=tmp_path)
+    assert response["status"]=="OBSERVED_GROUND_NAVIGATION"
+    assert response["result"]["completed_steps"]==5
+    assert [edge["action"] for edge in response[
+        "result"]["witnessed_edge_receipts"]]==word
+    assert response["plan"]["authority"]==(
+        "no_external_actions_or_unobserved_byte_claims")
