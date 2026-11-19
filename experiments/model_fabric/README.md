@@ -118,3 +118,14 @@ See [the verified chain receipt](datasets/2026-11-18-real-two-layer-pretrained-r
 and [the evidence contract](../../docs/PRETRAINED_LAYER_CHAIN.md).
 The math ran in one Python interpreter; byte providers may be different
 approved observer-hosts. Full-model text generation remains a separate goal.
+
+## Recoverable causal model orbit
+
+`pretrained_orbit.py` applies E-CPU's externally pinned model-handoff recovery and Virtual Layer Dynamics' paged causal KV Grounds to the already verified pretrained layer chain. The checkpoint keeps exact F64 intermediate K/V values in <=64-KiB SHA-256-addressed pages and requires a trusted expected checkpoint digest and new monotonic owner epoch before a different approved observer can resume.
+
+```bash
+python -m pytest -q tests/test_pretrained_orbit.py
+python -m experiments.model_fabric.real_orbit_lab --out artifacts/pretrained-orbit-report.json
+```
+
+The network experiment fetches pinned genuine SmolLM2 BF16 layer ranges, executes token 42, checkpoints, restores to a different *logical* observer assignment and continues token 75, checking against independent scalar math. It returns `UNRESOLVED` on unavailable/incomplete ranges. See [Recovery and host rehoming](../../docs/PRETRAINED_ORBIT_RECOVERY.md).
