@@ -37,6 +37,9 @@ jobs:
           python -m experiments.observer_intent.arbitrate \
             --intent artifacts/multifield-partial-intention.json \
             --out artifacts/recommended-byte-probe.json
+          python -m experiments.observer_intent.arbitrate \
+            --intent artifacts/multifield-mixed-word-intention.json \
+            --out artifacts/mixed-action-result.json
       - name: Verify Ground, observed dependencies, typed probe and no fabricated transitions
         run: |
           python - <<'PY'
@@ -54,6 +57,7 @@ jobs:
               {"offset":73,"width":1},{"offset":311,"width":2}]
           assert report["known_transition_edges"]==16
           assert report["verified_heldout_count"]==16
+          assert report["unseen_mixed_action_words_checked"]==62
           assert report["witnessed_cross_field_dependency"] is True
           assert report["compression_ratio"]>2
           assert report["missing_edge_status"]=="UNRESOLVED"
@@ -64,6 +68,10 @@ jobs:
           assert distant["status"]=="OBSERVED_GROUND_NAVIGATION"
           assert distant["result"]["result"]["value"]==report["modeled_result_sha256"]
           assert distant["result"]["cycle_skipped_steps"]>10**12-20
+          mixed=read("mixed-action-result.json")
+          assert mixed["status"]=="OBSERVED_GROUND_NAVIGATION"
+          assert mixed["result"]["completed_steps"]==5
+          assert len(mixed["result"]["witnessed_edge_receipts"])==5
           assert MultiFieldNavigator(ground).navigate(
               "0000ff","tick",10**12+3,"digest.sha256")[
                   "result"]["value"]==report["modeled_result_sha256"]
