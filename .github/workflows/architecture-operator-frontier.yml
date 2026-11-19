@@ -1,0 +1,67 @@
+name: VL64 native architecture operators and pinned weight slices
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'experiments/model_fabric/architecture_*.py'
+      - 'tests/test_architecture_*.py'
+      - 'tests/test_saved_native_architecture_operator.py'
+      - 'experiments/model_fabric/datasets/2026-11-19-native-architecture-operator-observations.json'
+      - '.github/workflows/architecture-operator-frontier.yml'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  independent-reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dev dependencies
+        run: python -m pip install -e '.[dev]'
+      - name: Independent numerics and Ground regressions
+        run: python -m pytest -q tests/test_architecture_ops.py tests/test_architecture_probe.py tests/test_saved_native_architecture_operator.py tests/test_scaled_model_fabric.py tests/test_scaled_model_lab.py
+      - name: Retain 64 KiB interpreter ceiling
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          total=sum(f.stat().st_size for f in Path('src/vld').glob('*.py'))
+          assert total <= 65536, total
+          print('VL64_CORE_BYTES',total)
+          PY
+
+  pinned-native-weight-probes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [qwen, deepseek]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -e '.[dev]'
+      - name: Exact pinned pretrained operator acquisition
+        run: python -m experiments.model_fabric.architecture_probe --model '${{ matrix.model }}' --out 'artifacts/${{ matrix.model }}-architecture-operator.json'
+      - name: Retain success or explicit UNRESOLVED evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vl64-${{ matrix.model }}-native-operator-evidence
+          path: artifacts/${{ matrix.model }}-architecture-operator.json
+          retention-days: 30
+          if-no-files-found: warn

@@ -1,0 +1,65 @@
+{
+  "schema": "vl64.native-architecture-operator-observations.v1",
+  "observed_run_id": 44547709486,
+  "source_workflow_url": "https://github.com/Kier73/VL-64/actions/runs/44547709486",
+  "source_jobs": {
+    "deepseek": 135642672290,
+    "qwen": 135642673121
+  },
+  "observations": {
+    "deepseek": {
+      "actual_weight_bytes_acquired": 5280,
+      "index_ground_digest": "a449b268199162da03bd2d5b8d8471297d630e7f9446864fc8df86257cb5b9ac",
+      "index_sha256": "74b0686a3d2891980d5e303251b075a3bccae2c2ff650747db2620a649b98fa8",
+      "input_scope": "synthetic_hidden_vector_not_model_activation",
+      "max_abs_reference_error": 0,
+      "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "numeric_operator": "mxfp8_scaled_matrix_vector_row0",
+      "projection_value": -0.0336196511,
+      "range_count": 7,
+      "range_witness_chain_digest": "ba6c26c16561af8efd6ee7e9cfb9aa740f7bf9fc46935da6afee57719caf4edf",
+      "revision": "1bae0e1088993b9b82de08f59de5be5a34e42170",
+      "schema": "vl64.real-large-model-operator.v1",
+      "scope": "one real-weight DeepSeek scaled projection row only; no MoE layer",
+      "status": "REAL_DEEPSEEK_MXFP8_PROJECTION_ROW_VERIFIED",
+      "tensor_names": [
+        "layers.0.attn.wq_a.weight",
+        "layers.0.attn.wq_a.scale"
+      ],
+      "tensor_slice_sha256": {
+        "layers.0.attn.wq_a.scale": "f9df96ff2c02071613efe68df0348076e3cc6c96ab4e4be951bbcf397cee7cf1",
+        "layers.0.attn.wq_a.weight": "90dd912819b32d02ab36beaf77e60204609fe9a655ed3f3cc35e238290af7b4e"
+      }
+    },
+    "qwen": {
+      "actual_weight_bytes_acquired": 20484,
+      "beta": 0.491373616,
+      "index_ground_digest": "059c388b0818e297d54b9ce322312cb93eab30920f0ba250bcbe46839b6f36f3",
+      "index_sha256": "77042094076611b69791a610065f28b7013b8c621795fa86ddccc8bac7d1b9df",
+      "input_scope": "synthetic_hidden_vector_not_model_activation",
+      "log_decay": -0.0009444529,
+      "max_abs_reference_error": 0,
+      "model": "Qwen/Qwen3.8-27B",
+      "numeric_operator": "gated_delta_log_decay_and_beta_head0",
+      "range_count": 6,
+      "range_witness_chain_digest": "e81cca9d4aa874e27c48d7067580b48dbbaf689790fde719efbbc0b2bff33548",
+      "revision": "37561816e66b5b9153b1b64c10968c18c1e6f4a0",
+      "schema": "vl64.real-large-model-operator.v1",
+      "scope": "one real-weight Qwen linear attention gate only; no full layer",
+      "status": "REAL_QWEN_GATED_DELTA_PARAMETERS_VERIFIED",
+      "tensor_names": [
+        "model.language_model.layers.0.linear_attn.A_log",
+        "model.language_model.layers.0.linear_attn.dt_bias",
+        "model.language_model.layers.0.linear_attn.in_proj_a.weight",
+        "model.language_model.layers.0.linear_attn.in_proj_b.weight"
+      ],
+      "tensor_slice_sha256": {
+        "model.language_model.layers.0.linear_attn.A_log": "fbfd99501448c79fbd523403e01844a2b78622409daf0784c891acd279a5741b",
+        "model.language_model.layers.0.linear_attn.dt_bias": "27bd753894ee908109a7097b6f5eaf30d5392c8ec9285d4e7c079a449fc5a56f",
+        "model.language_model.layers.0.linear_attn.in_proj_a.weight": "fcbd2cb9d9718fca8c7fbee54bc0fe6583f4430db29e794a5dc20053bf628a10",
+        "model.language_model.layers.0.linear_attn.in_proj_b.weight": "24ef0ba32296a88cc00be8f1992753106cc3e7f9d37b9a216d8ad27478a25405"
+      }
+    }
+  },
+  "scope": "pinned pretrained numeric sub-operations on synthetic stimuli, not full model layers"
+}
