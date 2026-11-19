@@ -23,7 +23,7 @@ PINNED = {
     'qwen': ('Qwen/Qwen3.8-27B',
              '37561816e66b5b9153b1b64c10968c18c1e6f4a0'),
     'deepseek': ('deepseek-ai/DeepSeek-V4.1-Flash-1017',
-                 'dfbc4a7d7fbe69a83a0d945aba10052dd6c9ea2e'),
+                 '1bae0e1088993b9b82de08f59de5be5a34e42170'),
 }
 
 
