@@ -46,11 +46,14 @@ def arbitrate_multifield(request,*,root=None,approved_hosts=None):
     if not isinstance(goal,dict):
         return {**response,"status":"REFUSED","reason":"INVALID_GROUND_GOAL"}
     if op.endswith("navigate"):
-        if (set(goal)!={"initial_state_hex","action","steps","kind"} or
-                type(goal["steps"]) is not int or
-                not isinstance(goal["initial_state_hex"],str) or
-                not isinstance(goal["action"],str) or
-                not isinstance(goal["kind"],str)):
+        repeated=(set(goal)=={"initial_state_hex","action","steps","kind"} and
+                  type(goal.get("steps")) is int and
+                  isinstance(goal.get("action"),str))
+        composed=(set(goal)=={"initial_state_hex","actions","kind"} and
+                  isinstance(goal.get("actions"),list))
+        if (not (repeated or composed) or
+                not isinstance(goal.get("initial_state_hex"),str) or
+                not isinstance(goal.get("kind"),str)):
             return {**response,"status":"REFUSED","reason":"INVALID_NAVIGATION_GOAL"}
     else:
         if (set(goal)!={"known_intervals","segments_b64"} or
@@ -68,9 +71,14 @@ def arbitrate_multifield(request,*,root=None,approved_hosts=None):
         parsed=_json_no_duplicates(observed["data"].decode("utf-8"))
         ground=MultiFieldNavigator(parsed)
         if op.endswith("navigate"):
-            result=ground.navigate(
-                goal["initial_state_hex"],goal["action"],goal["steps"],
-                result_type=goal["kind"])
+            if "actions" in goal:
+                result=ground.navigate_word(
+                    goal["initial_state_hex"],goal["actions"],
+                    result_type=goal["kind"])
+            else:
+                result=ground.navigate(
+                    goal["initial_state_hex"],goal["action"],goal["steps"],
+                    result_type=goal["kind"])
         else:
             if not 1<=len(goal["known_intervals"])<=16:
                 return {**response,"status":"REFUSED",
