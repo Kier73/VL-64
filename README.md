@@ -8,6 +8,8 @@ Use the `vld` command for built-in checks and modular affine navigation, or impo
 
 The [standalone model seed](docs/STANDALONE_MODEL_SEED.md) inspects local or hosted Safetensors checkpoints and executes supported Llama decoders from token IDs. The measured 24,109-byte program generated two successive tokens on the original SmolLM-135M weights and matched an independent PyTorch calculation at both positions.
 
+[How a worker addresses a hosted model](docs/HOSTED_MODEL_ADDRESSES.md) follows a real Qwen embedding from its tensor name to a reproducible 10,240-byte read.
+
 ## Install
 
 ```bash
