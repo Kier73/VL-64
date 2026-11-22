@@ -1,0 +1,269 @@
+{
+  "schema": "vl64.isolated-model-seed-reference.v1",
+  "model": "HuggingFaceTB/SmolLM-135M",
+  "revision": "1d461723eec654e65efdc40cf49301c89c0c92f4",
+  "source_sha256": {
+    "model.safetensors": "c7a387d6fe81ca6dd304aeb809bda3932ff1bbef3ca41c9484502f2f448dc093",
+    "config.json": "a1fe6f43e20f7a6c6dbc6380222af9526b5cef262446391a281c038249e3e3b7"
+  },
+  "source_model_file_bytes": 538090408,
+  "seed_sha256": "d7aa8086348d0fefa461a3229896903bd8316ab99d0c6ba827ffd64494b0bd0b",
+  "seed_bytes": 24109,
+  "seed_python_flags": [
+    "-I",
+    "-S"
+  ],
+  "reference_runtime": {
+    "python": "3.13.3",
+    "torch": "2.7.0+cpu",
+    "transformers": "4.51.3",
+    "numpy": "2.2.5",
+    "device": "cpu",
+    "dtype": "float32",
+    "attention": "eager",
+    "torch_threads": 1
+  },
+  "input_token_ids": [
+    42,
+    75
+  ],
+  "ordered_pair_token_ids": [
+    9805,
+    787
+  ],
+  "full_vocabulary_size": 49152,
+  "max_absolute_error_tolerance": 0.0002,
+  "seed_process_timing": "Two concurrent isolated workers, wall time per complete CLI call",
+  "full": {
+    "reference_checks": [
+      {
+        "reference_context": [
+          42,
+          75
+        ],
+        "same_context": true,
+        "reference_id": 32,
+        "seed_id": 32,
+        "reference_yes_minus_no": -1.8583576679229736,
+        "reference_pair_sign": -1,
+        "passed": true,
+        "logits_compared": 49152,
+        "max_absolute_logit_error": 2.1863728608018107e-05,
+        "max_error_token_id": 13397,
+        "rms_logit_error": 6.350411384056569e-06,
+        "reference_top1_minus_runner_up": 0.13084125518798828,
+        "reference_logits_f32le_sha256": "3af50309bfc884b7e9c4cafecdd4a405b0b6d2b0ad69918a6ae4efac974abe36",
+        "seed_logits_f64le_sha256": "0ca3ddf3e130cc1824364865b7bc6c652a2f85995d98cfdf717aa7da04db5ffe"
+      },
+      {
+        "reference_context": [
+          42,
+          75,
+          32
+        ],
+        "same_context": true,
+        "reference_id": 28,
+        "seed_id": 28,
+        "reference_yes_minus_no": -0.37885284423828125,
+        "reference_pair_sign": -1,
+        "passed": true,
+        "logits_compared": 49152,
+        "max_absolute_logit_error": 1.746444280747994e-05,
+        "max_error_token_id": 14911,
+        "rms_logit_error": 3.462879056694942e-06,
+        "reference_top1_minus_runner_up": 0.13925933837890625,
+        "reference_logits_f32le_sha256": "97c2fdfcdda5726dbe7dcd22a0cd3756015a431f18d74fee9c3bfbf124125ea3",
+        "seed_logits_f64le_sha256": "a3e3edf1a18925855ca22a17234af395dcdc4a82988568527d3b97e58e4e3013"
+      }
+    ],
+    "seed_subprocess_wall_seconds": 264.7020665000018,
+    "seed_receipt": {
+      "model": "1d461723eec654e65efdc40cf49301c89c0c92f4",
+      "source_revision": null,
+      "model_type": "llama",
+      "structure_digest": "6ad2d8076cece4d0390569d53039fa7df7a8bd2b7da0779083f0be8fc386ec41",
+      "shard_header_sha256": {
+        "model.safetensors": "ac18e7a185182fd342c9d761e553aee3c1fe317974130d90a0a2719eecb0f93f"
+      },
+      "tensor_count": 272,
+      "declared_payload_bytes": 538060032,
+      "metadata_bytes_observed": 31100,
+      "weight_bytes_at_inspection": 0,
+      "dag_digest": "395673acb17309834172c77013b45914aca0412b9b82db08907de869b708731f",
+      "input_ids": [
+        42,
+        75
+      ],
+      "generated_ids": [
+        32,
+        28
+      ],
+      "steps": [
+        {
+          "schema": "vl64.weight-backed-token-dag-receipt.v1",
+          "status": "WEIGHT_BACKED_DECODER_FORWARD_EXECUTED",
+          "model": "1d461723eec654e65efdc40cf49301c89c0c92f4",
+          "revision": "local-structure-b095be011dcde24bcad5ce56c9ad3206640fc823cbae000c6b3a5840a59a2edd",
+          "dag_digest": "395673acb17309834172c77013b45914aca0412b9b82db08907de869b708731f",
+          "tensor_ground_digest": "b095be011dcde24bcad5ce56c9ad3206640fc823cbae000c6b3a5840a59a2edd",
+          "tokens": [
+            42,
+            75
+          ],
+          "selected_next_token": 32,
+          "weight_bytes_acquired": 962876160,
+          "exact_range_count": 15319,
+          "range_witness_chain_digest": "93935f2b40d7d6e098254ebee35853f2065bf31489ee71eedc89d5e99052fa02",
+          "claims": "provided_token_ids_forward_only_no_tokenizer_or_full_artifact_digest_proof",
+          "receipt_digest": "218de35b1e9cba28906be64adf184013f83e876e957739b57f2294deb48f22f0"
+        },
+        {
+          "schema": "vl64.weight-backed-token-dag-receipt.v1",
+          "status": "WEIGHT_BACKED_DECODER_FORWARD_EXECUTED",
+          "model": "1d461723eec654e65efdc40cf49301c89c0c92f4",
+          "revision": "local-structure-b095be011dcde24bcad5ce56c9ad3206640fc823cbae000c6b3a5840a59a2edd",
+          "dag_digest": "395673acb17309834172c77013b45914aca0412b9b82db08907de869b708731f",
+          "tensor_ground_digest": "b095be011dcde24bcad5ce56c9ad3206640fc823cbae000c6b3a5840a59a2edd",
+          "tokens": [
+            42,
+            75,
+            32
+          ],
+          "selected_next_token": 28,
+          "weight_bytes_acquired": 1387689984,
+          "exact_range_count": 22100,
+          "range_witness_chain_digest": "fd89277b7c3eaad24dbcdf10ad85c408ec6d2e444d24b9f7ed056c9e11a04cfc",
+          "claims": "provided_token_ids_forward_only_no_tokenizer_or_full_artifact_digest_proof",
+          "receipt_digest": "e9e595496c2ce05f17ee253b91f4ca8308425120821195327e9e253be47d7ab5"
+        }
+      ],
+      "prefix_policy": "recompute supplied and generated prefix for each step",
+      "numeric_contract": "VL-64 binary64 arithmetic"
+    }
+  },
+  "pair": {
+    "reference_checks": [
+      {
+        "reference_context": [
+          42,
+          75
+        ],
+        "same_context": true,
+        "reference_id": 787,
+        "seed_id": 787,
+        "reference_yes_minus_no": -1.8583576679229736,
+        "reference_pair_sign": -1,
+        "passed": true,
+        "seed_pair_sign_from_id": -1
+      },
+      {
+        "reference_context": [
+          42,
+          75,
+          787
+        ],
+        "same_context": true,
+        "reference_id": 787,
+        "seed_id": 787,
+        "reference_yes_minus_no": -3.5564308166503906,
+        "reference_pair_sign": -1,
+        "passed": true,
+        "seed_pair_sign_from_id": -1
+      }
+    ],
+    "seed_subprocess_wall_seconds": 224.41729580001265,
+    "seed_receipt": {
+      "model": "1d461723eec654e65efdc40cf49301c89c0c92f4",
+      "source_revision": null,
+      "model_type": "llama",
+      "structure_digest": "6ad2d8076cece4d0390569d53039fa7df7a8bd2b7da0779083f0be8fc386ec41",
+      "shard_header_sha256": {
+        "model.safetensors": "ac18e7a185182fd342c9d761e553aee3c1fe317974130d90a0a2719eecb0f93f"
+      },
+      "tensor_count": 272,
+      "declared_payload_bytes": 538060032,
+      "metadata_bytes_observed": 31100,
+      "weight_bytes_at_inspection": 0,
+      "dag_digest": "395673acb17309834172c77013b45914aca0412b9b82db08907de869b708731f",
+      "input_ids": [
+        42,
+        75
+      ],
+      "generated_ids": [
+        787,
+        787
+      ],
+      "steps": [
+        {
+          "dag_digest": "395673acb17309834172c77013b45914aca0412b9b82db08907de869b708731f",
+          "tensor_ground_digest": "b095be011dcde24bcad5ce56c9ad3206640fc823cbae000c6b3a5840a59a2edd",
+          "readout_digest": "b38f2975519025a301138af71241e28fd535d8002ca207ef119ddb5d986136b4",
+          "cold_weight_bytes_acquired": 3545856,
+          "cold_exact_range_count": 61,
+          "cold_range_witness_chain_digest": "18ceef2123df3f777715c4a875cd3b370ca6a3d36b40d8a964a9465f5278efef",
+          "schema": "vl64.weight-backed-pair-readout-receipt.v1",
+          "status": "WEIGHT_BACKED_PAIR_READOUT_EXECUTED",
+          "model": "1d461723eec654e65efdc40cf49301c89c0c92f4",
+          "revision": "local-structure-b095be011dcde24bcad5ce56c9ad3206640fc823cbae000c6b3a5840a59a2edd",
+          "ordered_pair": [
+            9805,
+            787
+          ],
+          "tokens": [
+            42,
+            75
+          ],
+          "score": -125.75196467171293,
+          "tie": false,
+          "selected_token": 787,
+          "weight_bytes_acquired": 846088704,
+          "exact_range_count": 13504,
+          "range_witness_chain_digest": "6f3cc2a17c1ad75c91536c78fce528f41c5da49ba569f9d21538cfcf74ed5cae",
+          "scope": "ordered_pair_only_binary64_unnormalized_real_law_approximation",
+          "receipt_digest": "77445599847e7cb22d0127a1c9752565eab2c0fab3d0393ac015f9daf860b210"
+        },
+        {
+          "dag_digest": "395673acb17309834172c77013b45914aca0412b9b82db08907de869b708731f",
+          "tensor_ground_digest": "b095be011dcde24bcad5ce56c9ad3206640fc823cbae000c6b3a5840a59a2edd",
+          "readout_digest": "b38f2975519025a301138af71241e28fd535d8002ca207ef119ddb5d986136b4",
+          "cold_weight_bytes_acquired": 3545856,
+          "cold_exact_range_count": 61,
+          "cold_range_witness_chain_digest": "18ceef2123df3f777715c4a875cd3b370ca6a3d36b40d8a964a9465f5278efef",
+          "schema": "vl64.weight-backed-pair-readout-receipt.v1",
+          "status": "WEIGHT_BACKED_PAIR_READOUT_EXECUTED",
+          "model": "1d461723eec654e65efdc40cf49301c89c0c92f4",
+          "revision": "local-structure-b095be011dcde24bcad5ce56c9ad3206640fc823cbae000c6b3a5840a59a2edd",
+          "ordered_pair": [
+            9805,
+            787
+          ],
+          "tokens": [
+            42,
+            75,
+            787
+          ],
+          "score": -209.99772614231318,
+          "tie": false,
+          "selected_token": 787,
+          "weight_bytes_acquired": 1270902528,
+          "exact_range_count": 20285,
+          "range_witness_chain_digest": "f8af4ac76b9ec52f3c6faae164da02ae47374292a7fd69657b3d94184dcf035a",
+          "scope": "ordered_pair_only_binary64_unnormalized_real_law_approximation",
+          "receipt_digest": "ed009cd2d240f3eb2770feb911da38d148a813b09a2c80a2b90982429e299a6a"
+        }
+      ],
+      "prefix_policy": "recompute supplied and generated prefix for each step",
+      "numeric_contract": "VL-64 binary64 arithmetic",
+      "pair_compile": {
+        "ordered_pair": [
+          9805,
+          787
+        ],
+        "readout_digest": "b38f2975519025a301138af71241e28fd535d8002ca207ef119ddb5d986136b4",
+        "cold_weight_bytes_acquired": 3545856,
+        "cold_exact_range_count": 61
+      }
+    }
+  },
+  "passed": true
+}

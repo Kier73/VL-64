@@ -6,6 +6,8 @@ VL-64 translates captured bytes into candidate virtual state representations, me
 
 Use the `vld` command for built-in checks and modular affine navigation, or import `vld` to compose the available operations in your own code.
 
+The [standalone model seed](docs/STANDALONE_MODEL_SEED.md) inspects local or hosted Safetensors checkpoints and executes supported Llama decoders from token IDs. The measured 24,109-byte program generated two successive tokens on the original SmolLM-135M weights and matched an independent PyTorch calculation at both positions.
+
 ## Install
 
 ```bash

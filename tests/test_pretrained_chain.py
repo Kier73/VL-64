@@ -140,7 +140,7 @@ def test_multi_layer_contract_refuses_unqualified_host_and_missing_route():
 def test_pretrained_tensor_manifest_compiles_layer1_without_weight_claim():
     from pathlib import Path
     import json
-    path = Path(__file__).resolve().parent / "experiments/model_fabric/datasets/2026-11-18-pinned-smollm2-tensor-ground.json"
+    path = Path(__file__).resolve().parents[1] / "experiments/model_fabric/datasets/2026-11-18-pinned-smollm2-tensor-ground.json"
     if not path.exists():
         pytest.skip("repository manifest not installed in local reduced fixture")
     ground = json.loads(path.read_text())

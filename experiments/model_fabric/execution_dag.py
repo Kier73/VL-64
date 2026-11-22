@@ -303,7 +303,104 @@ class QualifiedTensorReader:
         return self.values(name, token*hidden, hidden)
 
 
-def execute_tokens(plan, tokens, observer_host, *, approved_hosts):
+PAIR_SCHEMA = "vl64.compiled-pair-readout.v1"
+
+
+class _CompiledPairReadout(dict):
+    """In-process pin H(record) is retained independently of the JSON fields."""
+
+
+def _check_pair(pair, vocab):
+    """An ordered contrast (i,j) requires 0 ≤ i,j < |V| and i ≠ j."""
+    if (not isinstance(pair, (list, tuple)) or len(pair) != 2 or pair[0] == pair[1]
+            or any(type(t) is not int or not 0 <= t < vocab for t in pair)):
+        raise ValueError("Expected two distinct in-vocabulary token IDs")
+
+
+def compile_pair_readout(plan, observer_host, *, approved_hosts, pair):
+    """For h=u+Dv, sign(L_i−L_j)=sign(a·u+b·v), a=(w_i−w_j)⊙g, b=Dᵀa.
+
+    The RMS divisor sqrt(mean(h²)+eps) is positive. A binary64 coefficient
+    approximation binds to this plan and the qualified compilation ranges.
+    """
+    reader = QualifiedTensorReader(plan, observer_host, approved_hosts=approved_hosts)
+    arch = plan["architecture"]
+    _check_pair(pair, arch["vocab"])
+    hidden, width = arch["hidden"], arch["intermediate"]
+    head = plan["nodes"][-1]["weight"]
+    left, right = (reader.values(head, token * hidden, hidden) for token in pair)
+    gain = reader.values("model.norm.weight")
+    a = [(x-y)*g for x,y,g in zip(left, right, gain)]
+    down = f"model.layers.{arch['layers']-1}.mlp.down_proj.weight"
+    b, compensation = [0.0]*width, [0.0]*width
+    rows_per_batch = max(1, MAX_RANGE//(width*DTYPE_SIZE[plan["tensors"][down]["dtype"]]))
+    for first in range(0, hidden, rows_per_batch):
+        count = min(rows_per_batch, hidden-first)
+        weights = reader.values(down, first*width, count*width)
+        # Kahan summation for b_j=Σ_r D_rj a_r over successive blocks of rows.
+        for r in range(count):
+            for j, weight in enumerate(weights[r*width:(r+1)*width]):
+                term = a[first+r]*weight - compensation[j]
+                updated = b[j] + term
+                compensation[j] = (updated-b[j]) - term
+                b[j] = updated
+    if not all(map(math.isfinite, a+b)):
+        raise ValueError("Nonfinite compiled pair readout")
+    result = _CompiledPairReadout(schema=PAIR_SCHEMA, ordered_pair=list(pair), a=a, b=b,
+        dag_digest=plan["dag_digest"], tensor_ground_digest=plan["tensor_ground_digest"],
+        cold_weight_bytes_acquired=reader.bytes_read, cold_exact_range_count=reader.ranges,
+        cold_range_witness_chain_digest=reader.receipt_chain)
+    result.pin = result["readout_digest"] = domain_digest(PAIR_SCHEMA, result)
+    return result
+
+
+def _verify_pair_readout(plan, record, pin):
+    """Admit a reusable coefficient Ground only when H(record)=trusted pin for this DAG."""
+    if pin is None and isinstance(record, _CompiledPairReadout):
+        pin = getattr(record, "pin", None)
+    if (not isinstance(record, dict) or record.get("schema") != PAIR_SCHEMA
+            or record.get("dag_digest") != plan["dag_digest"]
+            or record.get("tensor_ground_digest") != plan["tensor_ground_digest"]
+            or not pin or record.get("readout_digest") != pin):
+        raise ValueError("Unpinned pair readout or wrong execution plan")
+    record = dict(record)
+    arch = plan["architecture"]
+    _check_pair(record.get("ordered_pair"), arch["vocab"])
+    record["ordered_pair"] = tuple(record["ordered_pair"])
+    for name, width in (("a", arch["hidden"]), ("b", arch["intermediate"])):
+        vector = record.get(name)
+        if (not isinstance(vector, list) or len(vector) != width
+                or any(type(x) is not float or not math.isfinite(x) for x in vector)):
+            raise ValueError("Invalid pair coefficient vector")
+        record[name] = tuple(vector)
+    if domain_digest(PAIR_SCHEMA, {k:v for k,v in record.items() if k!="readout_digest"}) != pin:
+        raise ValueError("Altered pair readout")
+    return record
+
+
+def _pair_receipt(plan, tokens, reader, compiled, residual, activated):
+    """s≈a·u+b·v selects i if s>0, j if s<0 and abstains at s=0."""
+    score = math.fsum(c*x for row, vector in ((compiled["a"], residual),
+                                               (compiled["b"], activated))
+                      for c,x in zip(row, vector))
+    if not math.isfinite(score):
+        raise ValueError("Nonfinite pair readout score")
+    pair = compiled["ordered_pair"]
+    receipt = {k:compiled[k] for k in ("dag_digest", "tensor_ground_digest", "readout_digest",
+        "cold_weight_bytes_acquired", "cold_exact_range_count", "cold_range_witness_chain_digest")}
+    receipt.update(schema="vl64.weight-backed-pair-readout-receipt.v1",
+        status="WEIGHT_BACKED_PAIR_READOUT_EXECUTED", model=plan["model"], revision=plan["revision"],
+        ordered_pair=list(pair), tokens=list(tokens), score=score, tie=score==0,
+        selected_token=pair[0] if score>0 else pair[1] if score<0 else None,
+        weight_bytes_acquired=reader.bytes_read, exact_range_count=reader.ranges,
+        range_witness_chain_digest=reader.receipt_chain,
+        scope="ordered_pair_only_binary64_unnormalized_real_law_approximation")
+    receipt["receipt_digest"] = domain_digest(receipt["schema"], receipt)
+    return receipt
+
+
+def execute_tokens(plan, tokens, observer_host, *, approved_hosts, pair_readout=None,
+                   expected_pair_readout_digest=None):
     """Actual, fully weight-backed causal forward execution of provided IDs.
 
     Tokenization/sampling policy remains external; this does NOT claim text
@@ -314,6 +411,10 @@ def execute_tokens(plan, tokens, observer_host, *, approved_hosts):
             any(type(t) is not int or not 0 <= t < a["vocab"] for t in tokens)):
         raise ValueError("Unqualified token sequence")
     reader = QualifiedTensorReader(plan, observer_host, approved_hosts=approved_hosts)
+    if pair_readout is not None:
+        pair_readout = _verify_pair_readout(plan, pair_readout, expected_pair_readout_digest)
+    elif expected_pair_readout_digest is not None:
+        raise ValueError("Pinned pair readout is missing")
     kv_cache = [([], []) for _ in range(a["layers"])]
     hidden, head_dim = a["hidden"], a["head_dim"]
     for position, token in enumerate(tokens):
@@ -339,7 +440,11 @@ def execute_tokens(plan, tokens, observer_host, *, approved_hosts):
             x = rms_norm(residual,reader.values(p+"post_attention_layernorm.weight"),eps=a["eps"])
             gate = reader.matrix_vec(p+"mlp.gate_proj.weight",x)
             up = reader.matrix_vec(p+"mlp.up_proj.weight",x)
-            down = reader.matrix_vec(p+"mlp.down_proj.weight",swiglu(gate,up))
+            activated = swiglu(gate,up)
+            # On the terminal position sign((w_i−w_j)·RMSNorm(u+Dv))=sign(a·u+b·v).
+            if pair_readout is not None and position == len(tokens)-1 and i == a["layers"]-1:
+                return _pair_receipt(plan, tokens, reader, pair_readout, residual, activated)
+            down = reader.matrix_vec(p+"mlp.down_proj.weight",activated)
             state = [left+right for left,right in zip(residual,down)]
     final = rms_norm(state,reader.values("model.norm.weight"),eps=a["eps"])
     projection = "model.embed_tokens.weight" if a["tied_embedding"] else "lm_head.weight"

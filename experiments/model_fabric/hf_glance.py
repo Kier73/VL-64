@@ -29,11 +29,15 @@ def _sha(value):
 
 
 def _url(model,revision,name):
+    """Address (repository, commit, single filename) as an immutable Hub coordinate."""
     if (not isinstance(model,str) or
             not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+",model) or
+            any(part in (".", "..") for part in model.split("/")) or
             not isinstance(revision,str) or
             not re.fullmatch("[0-9a-f]{40}",revision) or
-            name not in ("config.json","model.safetensors")):
+            not isinstance(name,str) or
+            (name not in ("config.json","model.safetensors.index.json") and
+             not re.fullmatch(r"[A-Za-z0-9_-][A-Za-z0-9_.-]*\.safetensors",name))):
         raise ValueError("Only pinned, qualified Hugging Face paths admitted")
     return "https://huggingface.co/"+model+"/resolve/"+revision+"/"+name
 

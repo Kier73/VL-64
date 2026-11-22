@@ -1,0 +1,29 @@
+{
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "source_revision": "d7449ff7241c863f3e8accc475155f0f97afa011",
+  "model_type": "llama",
+  "structure_digest": "7960e3db8f58226027a963e1af76c8d36d0b885f1c2b489963f35fdbba11aae2",
+  "shard_header_sha256": {
+    "model-00001-of-00002.safetensors": "f954d44275e451d6ed00a7d9be3479d2d8d5c591fe3fd41604bc901fafa32363",
+    "model-00002-of-00002.safetensors": "c894a1dc1966e06089208e7edb8971c68066aa2ec0d1df2cbbd11d2184f3816c"
+  },
+  "tensor_count": 218,
+  "declared_payload_bytes": 6845505536,
+  "metadata_bytes_observed": 43637,
+  "weight_bytes_at_inspection": 0,
+  "executable": true,
+  "architecture": {
+    "hidden": 2048,
+    "layers": 24,
+    "heads": 32,
+    "kv_heads": 32,
+    "head_dim": 64,
+    "intermediate": 8192,
+    "vocab": 49152,
+    "context": 2048,
+    "eps": 1E-05,
+    "theta": 10000.0,
+    "tied_embedding": true
+  },
+  "dag_digest": "50342c22c411de446e2a096500d23ae87fabe615e2c6250f5c8f142297cbdb91"
+}

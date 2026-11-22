@@ -21,6 +21,7 @@ BOOTSTRAP=Path("experiments/seed_fabric/bootstrap.py")
 MANIFEST="vl64/manifest.json"
 GROUND="vl64/system_ground.json"
 SEED_CEILING=65536
+MODEL_PROFILE="vl64.standalone-model-readout.v1"
 ZIP_DATE=(1980,1,1,0,0,0)
 DOMAIN=b"vl64.software-ground.v1\x00"
 
@@ -166,10 +167,13 @@ def synthesize_ground(source_files):
     return ground
 
 
-def make_members(root):
-    sources=input_sources(root)
+def make_members(root, *, sources=None, bootstrap=None):
+    """A seed inventory commits to each pair (length(s_i), SHA256(s_i))."""
+    if sources is None:
+        sources=input_sources(root)
     ground=synthesize_ground(sources)
-    bootstrap=(root/BOOTSTRAP).read_bytes()
+    if bootstrap is None:
+        bootstrap=(root/BOOTSTRAP).read_bytes()
     if not bootstrap or len(bootstrap)>SEED_CEILING:
         raise ValueError("Invalid bootstrap loader")
     inventory=ground["source_files"]
@@ -208,6 +212,14 @@ def make_archive(members):
     if len(binary)>SEED_CEILING:
         raise ValueError("Monolithic executable seed exceeds 65,536 bytes")
     return binary
+
+
+def verify_model_budget(manifest, expanded):
+    """For the model profile, B = sum |p| over every .py, including __main__, and B <= 2**16."""
+    declared = manifest.get("expanded_python_bytes")
+    if (manifest.get("profile") != MODEL_PROFILE or type(declared) is not int
+            or declared != expanded or not 0 < expanded <= SEED_CEILING):
+        raise ValueError("Invalid model profile or expanded Python byte budget")
 
 
 def verify_seed_bytes(binary):
@@ -263,7 +275,7 @@ def verify_seed_bytes(binary):
             raise ValueError("Self Ground is not reproducible from source")
         if sum(x["length"] for x in files)!=manifest["core_source_bytes"]:
             raise ValueError("Expanded module budget mismatch")
-        return {
+        report = {
             "status":"VERIFIED_MONOLITHIC_SEED",
             "seed_bytes":len(binary),
             "source_bytes":manifest["core_source_bytes"],
@@ -272,6 +284,11 @@ def verify_seed_bytes(binary):
             "compressed_vs_source_ratio":round(
                 manifest["core_source_bytes"]/len(binary),4),
         }
+        if "vld/local_seed.py" in names or "profile" in manifest:
+            expanded = sum(item.file_size for item in entries if item.filename.endswith(".py"))
+            verify_model_budget(manifest, expanded)
+            report.update(profile=MODEL_PROFILE, expanded_python_bytes=expanded)
+        return report
 
 
 def build(root=ROOT):

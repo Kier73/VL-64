@@ -37,6 +37,11 @@ jobs:
         run: |
           python -m experiments.seed_fabric.build build --out artifacts/VL64.pyz
           python -m experiments.seed_fabric.build inspect --out artifacts/VL64.pyz
+      - name: Build and exercise the standalone model seed
+        run: |
+          python -m experiments.seed_fabric.build_model --out artifacts/VL64-model.pyz
+          python -I -S artifacts/VL64-model.pyz seed-verify
+          python -m pytest -q tests/test_standalone_model_seed.py tests/test_seed_pair_readout.py
       - name: Bootstrap from zip alone, no package installation on target path
         run: |
           python -I artifacts/VL64.pyz seed-verify
