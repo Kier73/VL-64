@@ -266,6 +266,34 @@ class VirtualModelPageFleet:
             self._observer_locks[observer_id] = threading.RLock()
             return head
 
+    def open_across_models(self, observer_id: str,
+                           aliases: Sequence[str] | None = None,
+                           *, host_id: str = "local") -> dict[str, str]:
+        """One observer's independent causal loci across multiple model sources.
+
+        This is an M:N relation, not sharing mutable state across unrelated
+        pretrained models. Every (observer, model) pair receives its own
+        source-pinned interpretation timeline and native VL64 intention.
+        """
+        _name(observer_id, "cross-model observer")
+        _name(host_id, "host")
+        with self._lock:
+            selected = tuple(sorted(self._models)) if aliases is None else tuple(aliases)
+            if (not 1 <= len(selected) <= _MAX_MODELS
+                or len(set(selected)) != len(selected)
+                or any(alias not in self._models for alias in selected)):
+                raise ModelPageRefused("cross-model observer source set invalid")
+            names = tuple(f"{observer_id}:{alias}" for alias in selected)
+            for name in names:
+                _name(name, "cross-model observer session")
+            if (any(name in self._sessions for name in names)
+                or len(self._sessions) + len(names) > _MAX_OBSERVERS):
+                raise ModelPageRefused("cross-model observer session cannot be admitted")
+            return {
+                alias: self.open(name, alias, host_id=host_id)
+                for alias, name in zip(selected, names)
+            }
+
     def state(self, observer_id: str) -> dict:
         with self._lock:
             try:
@@ -371,6 +399,31 @@ class VirtualModelPageFleet:
             receipts = executor.map(lambda t: self.observe(
                 t[0], t[1], t[2], request_id=t[3]), tasks)
             return tuple(receipts)
+
+    def observe_across_models(self, observer_id: str, operation: str,
+                              arguments: Mapping[str, Any], *,
+                              request_id: str, workers: int = 16,
+                              aliases: Sequence[str] | None = None) -> dict[str, dict]:
+        """Run one logical intention against multiple separately pinned sources.
+
+        Results are keyed by model identity. Each result retains an
+        independent observer-model lineage; no model receives another's
+        source Ground, trained weight, or opaque host state.
+        """
+        _name(observer_id, "cross-model observer")
+        with self._lock:
+            selected = tuple(sorted(self._models)) if aliases is None else tuple(aliases)
+            if (not 1 <= len(selected) <= _MAX_MODELS
+                or len(set(selected)) != len(selected)
+                or any(f"{observer_id}:{alias}" not in self._sessions
+                       for alias in selected)):
+                raise ModelPageRefused("cross-model observer source state absent")
+        tasks = [
+            (f"{observer_id}:{alias}", operation, arguments, request_id)
+            for alias in selected
+        ]
+        replies = self.observe_many(tasks, workers=workers)
+        return dict(zip(selected, replies))
 
     def snapshot(self) -> dict:
         """Only descriptions, intentions and receipts; no model data or handlers."""
