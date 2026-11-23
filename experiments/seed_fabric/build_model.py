@@ -15,23 +15,33 @@ from .build import (
 from .bootstrap import verify_seed
 
 
-def source_declarations(path, names, *, include_imports=True):
+def source_declarations(path, names, *, include_imports=True, used_imports_only=False):
     """Project an ordered syntax tree onto declarations N, preserving their exact source bytes."""
     source = path.read_bytes()
     lines = source.splitlines(keepends=True)
     required = set(names)
     found = set()
     pieces = []
-    for node in ast.parse(source, filename=str(path)).body:
-        symbol = getattr(node, "name", None)
+    nodes = ast.parse(source, filename=str(path)).body
+    def symbol_of(node):
+        """π(node) is the bound declaration name for a function, class or single assignment."""
         if isinstance(node, ast.Assign) and len(node.targets) == 1:
-            symbol = getattr(node.targets[0], "id", None)
+            return getattr(node.targets[0], "id", None)
+        return getattr(node, "name", None)
+
+    referenced = {child.id for node in nodes if symbol_of(node) in required
+                  for child in ast.walk(node) if isinstance(child, ast.Name)}
+    for node in nodes:
+        symbol = symbol_of(node)
         if symbol in required:
             if symbol in found:
                 raise ValueError(f"Ambiguous source declaration {symbol} in {path}")
             found.add(symbol)
         elif not (include_imports and isinstance(node, (ast.Import, ast.ImportFrom))):
             continue
+        elif used_imports_only and getattr(node, "module", None) != "__future__":
+            if not any((item.asname or item.name.split(".")[0]) in referenced for item in node.names):
+                continue
         start = min([node.lineno] + [item.lineno for item in getattr(node, "decorator_list", ())])
         pieces.append(b"".join(lines[start - 1:node.end_lineno]).rstrip(b"\r\n"))
     if found != required:
@@ -87,13 +97,20 @@ def model_sources(root):
             b"from .micro_substrates import SafetensorsGlance\n"
         ),
         "vld/__main__.py": b'from .local_seed import cli_main\n\nif __name__ == "__main__":\n    cli_main()\n',
-        "vld/execution_dag.py": (model / "execution_dag.py").read_bytes(),
+        "vld/execution_dag.py": source_declarations(model / "execution_dag.py", (
+            "MAX_RANGE", "DTYPE_SIZE", "_sha", "_check_digest", "compile_decoder_dag",
+            "apply_rope", "grouped_query_attention", "swiglu", "QualifiedTensorReader",
+            "PAIR_SCHEMA", "_CompiledPairReadout", "_check_pair", "compile_pair_readout",
+            "_verify_pair_readout", "_pair_receipt", "execute_tokens",
+        ), used_imports_only=True),
         "vld/local_seed.py": (model / "local_seed.py").read_bytes(),
+        "vld/page_files.py": (model / "page_files.py").read_bytes(),
         "vld/hf_glance.py": source_declarations(
-            model / "hf_glance.py", ("TIMEOUT", "_sha", "_read", "_url")),
+            model / "hf_glance.py", ("TIMEOUT", "_sha", "_read", "_url", "range_bytes"), used_imports_only=True),
         "vld/tensor_ground.py": source_declarations(
             model / "tensor_ground.py", ("HEADER_LIMIT", "MAX_TENSORS", "MAX_ELEMENTS",
-                                         "DTYPE_BYTES", "_sha", "_distinct_pairs", "observe_safetensors_header")),
+                                         "DTYPE_BYTES", "_sha", "_distinct_pairs", "observe_safetensors_header"),
+            used_imports_only=True),
     }
     selections = {
         "micro_kernel": ("canonical_bytes", "domain_digest"),
@@ -101,7 +118,7 @@ def model_sources(root):
         "micro_substrates": ("SafetensorsGlance",),
     }
     for module, names in selections.items():
-        sources[f"vld/{module}.py"] = source_declarations(core / f"{module}.py", names)
+        sources[f"vld/{module}.py"] = source_declarations(core / f"{module}.py", names, used_imports_only=True)
     return sources
 
 

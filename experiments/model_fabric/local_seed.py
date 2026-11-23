@@ -1,8 +1,4 @@
-"""Lift a local or pinned Hub snapshot into VL-64's typed DAG, then evaluate token IDs.
-
-For shard j with payload length p_j, a tensor coordinate x maps to
-sum_{k<j} p_k+x in a single virtual payload. Only acquired ranges carry values.
-"""
+"""Evaluate token IDs on a typed DAG. Shard coordinate x maps to x+Σ_{k<j}p_k."""
 from __future__ import annotations
 
 import argparse
@@ -19,7 +15,8 @@ from urllib.error import HTTPError
 
 from vld import domain_digest
 from .execution_dag import MAX_RANGE, compile_decoder_dag, compile_pair_readout, execute_tokens
-from .hf_glance import _read, _url
+from .hf_glance import _read, _url, range_bytes
+from .page_files import PageFiles
 from .tensor_ground import HEADER_LIMIT, _distinct_pairs, observe_safetensors_header
 
 INDEX = "model.safetensors.index.json"
@@ -93,12 +90,7 @@ class HubFiles:
 
     def read_range(self, name, start, length):
         """Require Content-Range = [start,start+length−1]/N for N≥start+length."""
-        data, receipt = _read(_url(self.model, self.revision, name), start=start,
-                              stop=start + length - 1, limit=length)
-        total = receipt["content_range"].rsplit("/", 1)[-1]
-        if not total.isdigit() or int(total) < start + length:
-            raise ValueError("Missing or invalid Hub shard length")
-        return data, int(total)
+        return range_bytes(_url(self.model, self.revision, name), start, length)
 
     def close(self):
         """Every ranged request closes its response, hence retained connections = 0."""
@@ -263,8 +255,11 @@ def cli_main():
         files = sub.add_mutually_exclusive_group(required=True)
         files.add_argument("--snapshot", type=Path, help="Local config and Safetensors directory")
         files.add_argument("--hub", help="Public Hugging Face repository at --revision")
+        files.add_argument("--page", help="Public model card or root tree URL")
+        files.add_argument("--search", help="Find an exact model ID on the Hub search webpage")
         sub.add_argument("--revision", help="Immutable 40-character Hub commit")
         if name == "run":
+            sub.add_argument("--stage-bytes", type=int, default=0, help="Allow a verified temporary shard cache")
             sub.add_argument("--tokens", type=int, nargs="+", required=True)
             sub.add_argument("--steps", type=int, default=1)
             sub.add_argument("--pair", nargs=2, type=int)
@@ -273,7 +268,13 @@ def cli_main():
     if bool(args.hub) != bool(args.revision):
         parser.error("--hub and --revision must be supplied together")
     try:
-        with closing(HubFiles(args.hub, args.revision) if args.hub else LocalFiles(args.snapshot)) as files:
+        if args.page or args.search:
+            source = PageFiles(args.page or args.search, bool(args.search))
+        elif args.hub:
+            source = HubFiles(args.hub, args.revision)
+        else:
+            source = LocalFiles(args.snapshot)
+        with closing(source) as files:
             snapshot = Snapshot(files)
             report = snapshot.describe()
             if args.command == "inspect":
@@ -283,7 +284,15 @@ def cli_main():
                 except (KeyError, TypeError, ValueError) as reason:
                     report.update(executable=False, reason=str(reason))
             else:
-                report = generate(snapshot, snapshot.plan(), args)
+                plan = snapshot.plan()
+                if args.stage_bytes:
+                    if not isinstance(files, PageFiles):
+                        raise ValueError("Staging requires a page source")
+                    files.stage(snapshot.headers, args.stage_bytes)
+                report = generate(snapshot, plan, args)
+            if isinstance(files, PageFiles):
+                report.update(pages=files.visits, shard_http_bytes=files.transferred,
+                              staged_sha256={n: files.entries[n][1]["lfs"]["oid"] for n in files.staged})
             print(json.dumps(report, allow_nan=False, separators=(",", ":")))
     except (ValueError, KeyError, OSError, TypeError) as error:
         sys.exit("VL64 model: " + str(error))

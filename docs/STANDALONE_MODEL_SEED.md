@@ -2,11 +2,20 @@
 
 The model profile packages the VL-64 operations needed to read a Safetensors header, construct a typed Llama execution graph, acquire bounded weight ranges and evaluate token IDs. The same executable accepts a local directory or a public Hugging Face repository at an immutable revision. A host with Python 3.11 or later can run the archive using its standard library.
 
-The measured build occupies **24,109 bytes**. Counting every expanded Python source file in the archive, including its verifier, gives **58,740 bytes**. The builder enforces a 65,536-byte limit on each measure. The checkpoint, working memory and host Python installation have separate costs. The general-purpose VL-64 seed and the model profile use the same source definitions for their shared operators.
+The page-enabled build occupies **26,723 bytes** with **65,492 bytes** of expanded Python, including its verifier. The builder enforces a 65,536-byte limit on each measure. The checkpoint, working memory and host Python installation have separate costs.
 
 ## Try the executable
 
-The distributed archive was built with CPython 3.14.0 and reproduced byte-for-byte with that builder. A CPython 3.13.3 build produced identical expanded archive members in a 24,081-byte ZIP. The original checkpoint comparison used Python 3.13.3 to run the distributed archive.
+The earlier two-step checkpoint comparison below used the 24,109-byte archive with 58,740 bytes of expanded Python. The page-enabled build adds two entry points.
+
+```sh
+python -I -S artifacts/VL64-model.pyz inspect --page https://huggingface.co/Qwen/Qwen3.8-27B/tree/main
+python -I -S artifacts/VL64-model.pyz run --search HuggingFaceTB/SmolLM-135M --tokens 42 75 --stage-bytes 540000000
+```
+
+`--search` requires the exact repository link on the Hub search webpage. `--page` accepts a model card or a root tree at main or a commit. The reader resolves the displayed branch tip, reopens the immutable directory, and checks the config and index contents against the file identities in that directory. A long directory can advertise a JSON continuation used by the webpage. Reports record each visited URL, byte length and digest. Hub HTML can vary between visits even at a pinned model revision.
+
+By default each required shard range travels over HTTPS. For a dense run, `--stage-bytes` allows the selected shards to occupy temporary disk up to the supplied budget. Staging fetches 8 MiB ranges, verifies each full shard against its directory SHA-256, and serves the decoder's smaller requests locally. The report separates shard HTTP bytes (including headers) from logical weight bytes read during evaluation. The seed evaluates its existing bias-free Llama graph on the host CPU. New families need their own numerical operator coverage. [Page reader and staging implementation](../experiments/model_fabric/page_files.py)
 
 ```sh
 python -m experiments.seed_fabric.build_model --out artifacts/VL64-model.pyz

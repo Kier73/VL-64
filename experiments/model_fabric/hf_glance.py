@@ -76,11 +76,21 @@ def _read(url,*,start=None,stop=None,limit):
             "final_hostname":final.hostname,
             "http_status":status,
             "content_range":response.headers.get("Content-Range"),
+            **({"link": response.headers["Link"]} if "Link" in response.headers else {}),
             "content_length":int(length) if length and length.isdigit() else None,
             "sha256":_sha(content),
             "bytes_read":len(content),
             "transport_scope":"public_https_read_only",
         }
+
+
+def range_bytes(url, start, length):
+    """Require Content-Range = [a,a+n−1]/N with N≥a+n."""
+    data, receipt = _read(url, start=start, stop=start+length-1, limit=length)
+    total = receipt["content_range"].rsplit("/", 1)[1]
+    if not total.isdigit() or int(total) < start + length:
+        raise ValueError("Invalid shard extent")
+    return data, int(total)
 
 
 def observe_model(*,model=MODEL,revision=REVISION):
