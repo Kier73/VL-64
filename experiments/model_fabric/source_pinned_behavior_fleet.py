@@ -17,6 +17,7 @@ from vld import ObserverIntention, domain_digest
 from .virtual_page_fleet import VirtualModelPageFleet, ModelPageRefused, _name
 from .operational_ground import (
     _check_ground, canonical, digest, observe_operational_ground,
+    OperationalModelNavigator, prefix_digest,
     CHECKPOINT_SCHEMA as MODEL_CHECKPOINT_SCHEMA,
 )
 from .intention_fabric import (
@@ -97,9 +98,34 @@ class SourcePinnedBehaviorFleet:
                 self._bindings[alias] = {"ground": _copy(ground),
                                          "host": None, "approved_hosts": set(),
                                          "host_lock": threading.RLock()}
+            # A restored or replaced resident host must reproduce the exact
+            # last causal logits for every affected observer. Mere re-advertising
+            # the original artifact/revision string is insufficient.
+            seen = set()
+            challenges = []
+            for ev in reversed(self._events):
+                if (ev["kind"] == "turn" and ev["model"] == alias
+                        and ev["observer"] not in seen):
+                    seen.add(ev["observer"])
+                    challenges.append(ev["checkpoint"]["model_checkpoint"])
+            host_lock = self._host_locks.setdefault(id(host), threading.RLock())
+            with host_lock:
+                for checkpoint in challenges:
+                    nav = OperationalModelNavigator(ground, host,
+                                                    approved_hosts=approved_hosts)
+                    try:
+                        nav.open_tokens(checkpoint["tokens"],
+                                        prompt_length=checkpoint["prompt_length"])
+                    except (ValueError, TypeError, KeyError) as exc:
+                        raise ModelPageRefused(
+                            "replacement trained host refused causal prefix challenge"
+                        ) from exc
+                    if (nav.logits_digest != checkpoint["logits_sha256"]
+                            or prefix_digest(nav.tokens) != checkpoint["prefix_digest"]):
+                        raise ModelPageRefused(
+                            "replacement trained host failed exact causal-logits challenge")
             self._bindings[alias]["host"] = host
-            self._bindings[alias]["host_lock"] = self._host_locks.setdefault(
-                id(host), threading.RLock())
+            self._bindings[alias]["host_lock"] = host_lock
             self._bindings[alias]["approved_hosts"] = set(approved_hosts)
         return ground["ground_digest"]
 
