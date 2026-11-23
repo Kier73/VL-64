@@ -98,6 +98,8 @@ mathematically prove that an untrusted remote host used its advertised
 original weights. The execution trust and original artifact checks belong
 to the host's authenticated admission layer.
 
+On replacing or reattaching a trained host, `bind()` challenges the latest committed token prefix of each affected observer and requires **byte-identical F32 full-logit commitments** from the candidate host. A host merely reusing the source revision and artifact identifiers but producing altered logits is refused. This is a per-observed-prefix numerical identity check, not an all-input proof or cryptographic remote attestation.
+
 After a verified `pages.rehome()`, the behavior observer must
 `reanchor(observer, expected_tip=old_behavior_tip)` before it can
 publish another turn. A recovered bridge must call `bind` with the
@@ -123,6 +125,20 @@ HSS-002-compatible model source identity. It exercises real numerical
 execution, complete logit audit, observer isolation, replay, host-call
 accounting and zero weight copies. It is **not** a claim of executing
 the actual DeepSeek/Qwen/SmolLM2 public pretrained weights.
+
+### First verified trained-behavior benchmark (GitHub Actions Linux 3.11)
+
+[Successful measured job](https://github.com/Kier73/VL-64/actions/runs/45104139643). One trained byte-LM host, one synthetic source Ground, bounded three-token causal conversations, eight scheduling workers:
+
+| Observers | Independent causal receipts | Computed tokens | Host protocol calls | Total execution wall time | Payload bytes |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 1 | 3 | 9 | 2.71 ms | 0 |
+| 8 | 8 | 24 | 72 | 17.74 ms | 0 |
+| 16 | 16 | 48 | 144 | 34.17 ms | 0 |
+
+The 16-observer checkpoint reconstructed in approximately 7.29 ms on the
+same CI worker. Results describe the local, serialized trained host fixture,
+not GPU inference throughput of a public model or its remote serving latency.
 
 The cross-platform workflow
 `.github/workflows/source-pinned-behavior-fleet.yml` also runs the
