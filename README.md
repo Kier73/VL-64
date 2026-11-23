@@ -263,6 +263,20 @@ The observer may supply **one known byte**, not a whole frame. A requested missi
 
 ## Run language models and pretrained tensor operations through VL-64
 
+The [Virtual Model-Page Observer Fleet](docs/VIRTUAL_MODEL_PAGE_FLEET.md)
+now points VL-64 directly at externally hosted model pages using E-CPU's
+metadata-only source observer. A source Ground can be shared by many
+independent VL-64 observers, and many distinct pinned model Grounds
+can be navigated in tandem, each with a portable causal receipt chain.
+The first live test simultaneously hosted **384 structural observers**
+across DeepSeek V4.1 Flash, Qwen3.8-27B and SmolLM2-135M:
+**566.17 GB** of external declared model space, **73,585 bytes**
+of source metadata observed, and **zero model weight bytes acquired**.
+The original E-CPU Virtual Layer structural positions are independently
+reconstructed exactly by VL-64. This is structural computation;
+a genuine model's neural inference requires separately qualified
+source-local model operators, not a model download.
+
 The [Model Fabric](experiments/model_fabric/README.md) now executes two actual local model families **using the existing 64 KiB runtime operators**: a byte-level statistical language model trained on repository text, and a small weight-backed causal-attention decoder. Both have independent numerical/predictive tests and typed observer-intention requests.
 
 It can also inspect a real pinned Hugging Face model through bounded Safetensors header requests, identify its tensor structure **without downloading weights**, and then **execute a genuine pretrained model sub-operation** by fetching only the required 5,760 BF16 weight bytes.
