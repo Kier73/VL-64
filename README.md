@@ -277,6 +277,15 @@ reconstructed exactly by VL-64. This is structural computation;
 a genuine model's neural inference requires separately qualified
 source-local model operators, not a model download.
 
+The [Source-Pinned Behavioral Observer Fleet](docs/SOURCE_PINNED_BEHAVIOR_FLEET.md)
+now connects those independent source-page sessions to the existing
+`OperationalModelNavigator` and `IntentionSession` numerical execution
+protocol. Multiple observers retain their own causal conversations and
+receipts against a single shared trained host; a recovered host must reproduce
+the prior prefix's exact F32 logit commitment. The first 16-observer
+count-trained host benchmark executed 48 causal tokens with no model copies.
+An actual public pretrained host remains a separate provider-binding experiment.
+
 The [Model Fabric](experiments/model_fabric/README.md) now executes two actual local model families **using the existing 64 KiB runtime operators**: a byte-level statistical language model trained on repository text, and a small weight-backed causal-attention decoder. Both have independent numerical/predictive tests and typed observer-intention requests.
 
 It can also inspect a real pinned Hugging Face model through bounded Safetensors header requests, identify its tensor structure **without downloading weights**, and then **execute a genuine pretrained model sub-operation** by fetching only the required 5,760 BF16 weight bytes.
