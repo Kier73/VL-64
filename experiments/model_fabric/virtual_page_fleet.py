@@ -230,6 +230,7 @@ class VirtualModelPageFleet:
         self._events: list[dict] = []
         self._request_receipts: dict[tuple[str, str], dict] = {}
         self._lock = threading.RLock()
+        self._observer_locks: dict[str, threading.RLock] = {}
 
     @property
     def models(self) -> tuple[str, ...]:
@@ -262,6 +263,7 @@ class VirtualModelPageFleet:
                 "observer": observer_id, "model": alias, "host": host_id,
                 "epoch": 0, "sequence": 0, "tip": head,
             }
+            self._observer_locks[observer_id] = threading.RLock()
             return head
 
     def state(self, observer_id: str) -> dict:
@@ -270,6 +272,13 @@ class VirtualModelPageFleet:
                 return dict(self._sessions[observer_id])
             except KeyError as exc:
                 raise ModelPageRefused("unknown observer session") from exc
+
+    def _observer_lock(self, observer_id: str) -> threading.RLock:
+        with self._lock:
+            try:
+                return self._observer_locks[observer_id]
+            except KeyError as exc:
+                raise ModelPageRefused("unknown observer identity") from exc
 
     def observe(self, observer_id: str, operation: str, arguments: Mapping[str, Any] | None,
                 *, request_id: str, expected_tip: str | None = None) -> dict:
@@ -282,7 +291,7 @@ class VirtualModelPageFleet:
         if not isinstance(arguments, Mapping):
             raise ModelPageRefused("observer arguments must be explicit JSON mapping")
         args = json.loads(_canon(dict(arguments)))
-        with self._lock:
+        with self._observer_lock(observer_id):
             s = self.state(observer_id)
             source = self._models[s["model"]]
             target = f"hf://{source.repository}@{source.revision}"
@@ -298,8 +307,6 @@ class VirtualModelPageFleet:
                 return json.loads(_canon(prior))
             if expected_tip is not None and expected_tip != s["tip"]:
                 raise ModelPageRefused("stale observer tip cannot publish a new observation")
-            if len(self._events) >= _MAX_EVENTS:
-                raise ModelPageRefused("observer receipt history capacity exhausted")
             position = source.position(operation, args)
             receipt = {
                 "schema": SCHEMA + ".observation",
@@ -313,11 +320,14 @@ class VirtualModelPageFleet:
                 "predecessor": s["tip"], "model_payload_bytes": 0,
             }
             receipt["head"] = domain_digest(RECEIPT_DOMAIN, receipt)
-            s["sequence"] += 1
-            s["tip"] = receipt["head"]
-            self._sessions[observer_id] = s
-            self._events.append(receipt)
-            self._request_receipts[(observer_id, request_id)] = receipt
+            with self._lock:
+                if len(self._events) >= _MAX_EVENTS:
+                    raise ModelPageRefused("observer receipt history capacity exhausted")
+                s["sequence"] += 1
+                s["tip"] = receipt["head"]
+                self._sessions[observer_id] = s
+                self._events.append(receipt)
+                self._request_receipts[(observer_id, request_id)] = receipt
             return json.loads(_canon(receipt))
 
     def rehome(self, observer_id: str, new_host: str, *, expected_tip: str) -> dict:
@@ -327,12 +337,10 @@ class VirtualModelPageFleet:
         coordinator would require native E-CPU M3/quorum for global fencing.
         """
         _name(new_host, "replacement host")
-        with self._lock:
+        with self._observer_lock(observer_id):
             s = self.state(observer_id)
             if expected_tip != s["tip"] or new_host == s["host"]:
                 raise ModelPageRefused("rehome lacks current observer tip or new host")
-            if len(self._events) >= _MAX_EVENTS:
-                raise ModelPageRefused("observer receipt history capacity exhausted")
             receipt = {
                 "schema": SCHEMA + ".handoff", "kind": "handoff",
                 "observer": observer_id, "model": s["model"],
@@ -342,12 +350,15 @@ class VirtualModelPageFleet:
                 "predecessor": s["tip"], "model_payload_bytes": 0,
             }
             receipt["head"] = domain_digest(RECEIPT_DOMAIN, receipt)
-            s["host"] = new_host
-            s["epoch"] += 1
-            s["sequence"] += 1
-            s["tip"] = receipt["head"]
-            self._sessions[observer_id] = s
-            self._events.append(receipt)
+            with self._lock:
+                if len(self._events) >= _MAX_EVENTS:
+                    raise ModelPageRefused("observer receipt history capacity exhausted")
+                s["host"] = new_host
+                s["epoch"] += 1
+                s["sequence"] += 1
+                s["tip"] = receipt["head"]
+                self._sessions[observer_id] = s
+                self._events.append(receipt)
             return json.loads(_canon(receipt))
 
     def observe_many(self, tasks: Sequence[tuple[str, str, Mapping[str, Any], str]],
