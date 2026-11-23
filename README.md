@@ -286,6 +286,17 @@ the prior prefix's exact F32 logit commitment. The first 16-observer
 count-trained host benchmark executed 48 causal tokens with no model copies.
 An actual public pretrained host remains a separate provider-binding experiment.
 
+The [Authenticated Resident Pretrained Host](docs/AUTHENTICATED_RESIDENT_PRETRAINED_HOST.md)
+experiment now admits **already-loaded original-host transformer objects**
+directly, with no new checkpoint loader or model-byte acquisition.
+Its HTTPS/HMAC source-host adapter pins the original model source Ground,
+operational Ground and independently held artifact identity, and serializes
+numerical calls under authenticated causal leases. A cross-process trained
+host fixture and exact-logit observer replay are covered by the Linux/Windows
+test matrix. The opt-in two-turn benchmark accepts a pre-existing authenticated
+remote pretrained host; no model page or serving alias is treated as evidence
+that an original checkpoint is running there.
+
 The [Model Fabric](experiments/model_fabric/README.md) now executes two actual local model families **using the existing 64 KiB runtime operators**: a byte-level statistical language model trained on repository text, and a small weight-backed causal-attention decoder. Both have independent numerical/predictive tests and typed observer-intention requests.
 
 It can also inspect a real pinned Hugging Face model through bounded Safetensors header requests, identify its tensor structure **without downloading weights**, and then **execute a genuine pretrained model sub-operation** by fetching only the required 5,760 BF16 weight bytes.

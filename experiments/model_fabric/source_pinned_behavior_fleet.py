@@ -8,6 +8,7 @@ This bridge never fetches a checkpoint, tokenizer, tensor extent or model page.
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
 import json
 import re
 import threading
@@ -109,7 +110,9 @@ class SourcePinnedBehaviorFleet:
                     seen.add(ev["observer"])
                     challenges.append(ev["checkpoint"]["model_checkpoint"])
             host_lock = self._host_locks.setdefault(id(host), threading.RLock())
-            with host_lock:
+            lease = getattr(host, "execution_lease", None)
+            lease_context = lease() if challenges and callable(lease) else nullcontext()
+            with host_lock, lease_context:
                 for checkpoint in challenges:
                     nav = OperationalModelNavigator(ground, host,
                                                     approved_hosts=approved_hosts)
@@ -222,7 +225,9 @@ class SourcePinnedBehaviorFleet:
                 max_new_tokens=max_new_tokens, max_output_bytes=max_output_bytes,
                 tokenizer_mode=tokenizer_mode, stop_tokens=stop_tokens,
             )
-            with binding["host_lock"]:
+            lease = getattr(binding["host"], "execution_lease", None)
+            lease_context = lease() if callable(lease) else nullcontext()
+            with binding["host_lock"], lease_context:
                 run = IntentionSession(model_intent, binding["ground"], binding["host"],
                                        approved_hosts=binding["approved_hosts"])
                 observation = run.run(tile_size=tile_size)

@@ -1,0 +1,48 @@
+name: VL-64 authenticated original-resident model host
+
+on:
+  push:
+    paths:
+      - "experiments/model_fabric/attached_resident_pretrained.py"
+      - "experiments/model_fabric/authenticated_resident_host.py"
+      - "experiments/model_fabric/authenticated_pretrained_lab.py"
+      - "experiments/model_fabric/source_pinned_behavior_fleet.py"
+      - "tests/test_authenticated_resident_pretrained.py"
+      - "docs/AUTHENTICATED_RESIDENT_PRETRAINED_HOST.md"
+      - ".github/workflows/authenticated-resident-pretrained.yml"
+  pull_request:
+    paths:
+      - "experiments/model_fabric/attached_resident_pretrained.py"
+      - "experiments/model_fabric/authenticated_resident_host.py"
+      - "experiments/model_fabric/authenticated_pretrained_lab.py"
+      - "experiments/model_fabric/source_pinned_behavior_fleet.py"
+      - "tests/test_authenticated_resident_pretrained.py"
+      - "docs/AUTHENTICATED_RESIDENT_PRETRAINED_HOST.md"
+      - ".github/workflows/authenticated-resident-pretrained.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authenticated-resident-host:
+    name: Authenticated source host ( ${{ matrix.os }}, Python ${{ matrix.python }} )
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-latest, python: "3.11"}
+          - {os: ubuntu-latest, python: "3.14"}
+          - {os: windows-latest, python: "3.11"}
+          - {os: windows-latest, python: "3.14"}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install original VL-64 test environment
+        run: python -m pip install -e ".[dev]"
+      - name: Test authenticated original-host protocol and existing causal numerics
+        run: python -m pytest -q tests/test_authenticated_resident_pretrained.py tests/test_source_pinned_behavior_fleet.py tests/test_operational_ground.py tests/test_intention_fabric.py tests/test_host_resident_kv.py
