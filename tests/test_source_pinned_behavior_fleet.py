@@ -235,3 +235,29 @@ def test_two_different_host_models_concurrent_and_source_isolated():
         bridge.snapshot(), expected_digest=bridge.snapshot()["checkpoint_digest"])
     assert recovered.state("observer-A")["model"] == "A"
     assert recovered.state("observer-B")["model"] == "B"
+
+
+def test_replacement_claiming_same_artifact_but_wrong_logits_is_refused():
+    fleet, original, artifact = make_fleet(1)
+    fleet.turn("reader-0", "Commit a causal numerical prefix.",
+               request_id="one", max_new_tokens=2)
+    snap = fleet.snapshot()
+    restored = SourcePinnedBehaviorFleet.restore(
+        snap, expected_digest=snap["checkpoint_digest"])
+    wrong, _ = resident(fleet.sources._models["trained"])
+    wrong.description = copy.deepcopy(original.description)
+    wrong.bound_ground = digest(GROUND_SCHEMA, wrong.description)
+    wrong.calculate_logits = lambda tokens: [0.0]*256
+    with pytest.raises(ModelPageRefused, match="causal-logits"):
+        restored.bind("trained", wrong,
+                      approved_hosts={"numerical-host"},
+                      expected_artifact=artifact)
+    with pytest.raises(ModelPageRefused, match="reattached"):
+        restored.turn("reader-0", "No replacement was admitted.",
+                      request_id="not-admitted", max_new_tokens=2)
+    restored.bind("trained", original,
+                  approved_hosts={"numerical-host"},
+                  expected_artifact=artifact)
+    resumed = restored.turn("reader-0", "Correct host continues.",
+                            request_id="continued", max_new_tokens=2)
+    assert resumed["predecessor"] == snap["sessions"]["reader-0"]["tip"]
