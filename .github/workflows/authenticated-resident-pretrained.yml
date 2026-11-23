@@ -5,6 +5,7 @@ on:
     paths:
       - "experiments/model_fabric/attached_resident_pretrained.py"
       - "experiments/model_fabric/authenticated_resident_host.py"
+      - "experiments/model_fabric/authenticated_pretrained_lab.py"
       - "experiments/model_fabric/source_pinned_behavior_fleet.py"
       - "tests/test_authenticated_resident_pretrained.py"
       - "docs/AUTHENTICATED_RESIDENT_PRETRAINED_HOST.md"
@@ -13,6 +14,7 @@ on:
     paths:
       - "experiments/model_fabric/attached_resident_pretrained.py"
       - "experiments/model_fabric/authenticated_resident_host.py"
+      - "experiments/model_fabric/authenticated_pretrained_lab.py"
       - "experiments/model_fabric/source_pinned_behavior_fleet.py"
       - "tests/test_authenticated_resident_pretrained.py"
       - "docs/AUTHENTICATED_RESIDENT_PRETRAINED_HOST.md"
