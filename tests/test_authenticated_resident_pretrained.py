@@ -386,3 +386,24 @@ for line in sys.stdin:
         child.stdin.flush()
         child.communicate(timeout=15)
         assert child.returncode == 0
+
+def test_live_benchmark_entrypoint_on_separate_resident_protocol(monkeypatch):
+    """Exercise the actual two-turn measurement path using an authenticated fixture."""
+    from experiments.model_fabric import authenticated_pretrained_lab as live
+    src, _, artifact, gateway, client = attached_transport()
+    monkeypatch.setattr(live, "AuthenticatedResidentHostClient",
+                        lambda **kwargs: client)
+    report = live.run(
+        source_record=src.record, source_head=src.head,
+        operator_ground=gateway.ground["ground_digest"],
+        artifact_head=artifact,
+        endpoint=client.endpoint,
+        approved_host="existing-original-host", secret=SECRET,
+        observers=3, workers=3, tokens=2, tile_size=37)
+    assert [r["computed_tokens"] for r in report["behavioral_rounds"]] == [6, 6]
+    assert [r["independent_causal_receipts"] for r in report["behavioral_rounds"]] == [3, 3]
+    assert all(r["host_protocol_calls"] >= 6 for r in report["behavioral_rounds"])
+    assert report["model_payload_bytes_downloaded"] == 0
+    assert report["model_payload_bytes_copied_to_vl64"] == 0
+    assert report["final_checkpoint"]["checkpoint_digest"]
+    assert report["checkpoint_reconstruction_ns"] >= 0
