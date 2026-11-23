@@ -20,12 +20,12 @@ from .operational_ground import (
     CHECKPOINT_SCHEMA as MODEL_CHECKPOINT_SCHEMA,
 )
 from .intention_fabric import (
-    IntentionSession, compile_intention, _check_intention,
+    IntentionSession, compile_intention,
     OUTPUT_SCHEMA,
 )
 
 SCHEMA = "vl64.source-pinned-behavior-fleet.v1"
-_HEX = re.compile(r"[0-9a-f]{64}\\Z")
+_HEX = re.compile(r"[0-9a-f]{64}\Z")
 _MAX_OBSERVERS = 2048
 _MAX_EVENTS = 8192
 
@@ -65,6 +65,7 @@ class SourcePinnedBehaviorFleet:
             raise ModelPageRefused("requires an MPF-001 source-pinned observer fleet")
         self.sources = sources
         self._bindings: dict[str, dict] = {}
+        self._host_locks: dict[int, threading.RLock] = {}
         self._initials: dict[str, dict] = {}
         self._sessions: dict[str, dict] = {}
         self._events: list[dict] = []
@@ -97,6 +98,8 @@ class SourcePinnedBehaviorFleet:
                                          "host": None, "approved_hosts": set(),
                                          "host_lock": threading.RLock()}
             self._bindings[alias]["host"] = host
+            self._bindings[alias]["host_lock"] = self._host_locks.setdefault(
+                id(host), threading.RLock())
             self._bindings[alias]["approved_hosts"] = set(approved_hosts)
         return ground["ground_digest"]
 
@@ -168,7 +171,7 @@ class SourcePinnedBehaviorFleet:
             lock = self._observer_locks.get(observer_id)
         if lock is None:
             raise ModelPageRefused("unknown behavioral observer")
-        with lock:
+        with lock, self.sources._observer_lock(observer_id):
             s = self.state(observer_id)
             source = self.sources._models[s["model"]]
             self._assert_source(s)
@@ -242,7 +245,7 @@ class SourcePinnedBehaviorFleet:
             lock = self._observer_locks.get(observer_id)
         if lock is None:
             raise ModelPageRefused("unknown behavioral observer")
-        with lock:
+        with lock, self.sources._observer_lock(observer_id):
             s = self.state(observer_id)
             now = self.sources.state(observer_id)
             if (s["tip"] != expected_tip or now["model"] != s["model"]
