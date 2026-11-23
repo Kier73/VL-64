@@ -85,6 +85,41 @@ def _decode(raw: bytes) -> dict:
     return doc
 
 
+_HOST_DESCRIPTION_KEYS = {
+    "schema", "model", "revision", "observer_host", "model_artifact_identity",
+    "tokenizer_id", "vocab_size", "max_context", "operations", "trust_scope",
+}
+_HOST_RESULT_KEYS = {
+    "encode": {"tokens"},
+    "decode": {"text"},
+    "open": {"session_id", "prefix_digest", "logits_sha256", "token_count"},
+    "logits_tile": {"session_id", "prefix_digest", "start", "count",
+                   "f32le_hex", "sha256", "full_logits_sha256"},
+    "advance": {"session_id", "prefix_digest", "logits_sha256", "token_count"},
+}
+_HOST_ENVELOPE_KEYS = {
+    "schema", "operation", "ground_digest", "model", "revision",
+    "observer_host", "status", "result", "result_digest",
+}
+
+
+def _admit_host_reply(operation: str, reply: dict) -> dict:
+    """Forbid arbitrary tensors, checkpoint material or invented result fields."""
+    if type(reply) is not dict:
+        raise AuthenticatedHostRefused("resident host sent an untyped result")
+    if operation == "describe":
+        if set(reply) != _HOST_DESCRIPTION_KEYS:
+            raise AuthenticatedHostRefused("resident description exposes unadmitted fields")
+    else:
+        if (operation not in _HOST_RESULT_KEYS
+                or set(reply) != _HOST_ENVELOPE_KEYS
+                or reply.get("operation") != operation
+                or type(reply.get("result")) is not dict
+                or set(reply["result"]) != _HOST_RESULT_KEYS[operation]):
+            raise AuthenticatedHostRefused("host result exposes unadmitted tensor fields")
+    return reply
+
+
 class SignedResidentHostGateway:
     """Host-side authenticated lease and actual resident numerical executor.
 
@@ -168,7 +203,8 @@ class SignedResidentHostGateway:
                     raise AuthenticatedHostRefused("noncurrent numerical execution lease")
                 if payload["operation"] != "describe":
                     self._lease_until = now + _LEASE_TTL
-                result = {"host_result": self.host(payload)}
+                result = {"host_result": _admit_host_reply(
+                    payload["operation"], self.host(payload))}
             response = {
                 "schema": SCHEMA + ".response",
                 "source_head": self.source_head,
