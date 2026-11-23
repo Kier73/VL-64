@@ -407,3 +407,55 @@ def test_live_benchmark_entrypoint_on_separate_resident_protocol(monkeypatch):
     assert report["model_payload_bytes_copied_to_vl64"] == 0
     assert report["final_checkpoint"]["checkpoint_digest"]
     assert report["checkpoint_reconstruction_ns"] >= 0
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Ephemeral OpenSSL TLS test on Linux")
+def test_actual_https_certificate_validation_and_signed_trained_execution(tmp_path, monkeypatch):
+    """Execute genuine signed HTTPS over loopback, not only injected pipe frames."""
+    import shutil
+    import ssl
+    import threading
+    from http.server import ThreadingHTTPServer
+    from experiments.model_fabric.authenticated_resident_host import make_https_handler
+    openssl = shutil.which("openssl")
+    if not openssl:
+        pytest.skip("OpenSSL executable unavailable for ephemeral TLS fixture")
+    cert, key = tmp_path/"localhost.crt", tmp_path/"localhost.key"
+    subprocess.run([
+        openssl, "req", "-x509", "-nodes", "-newkey", "rsa:2048",
+        "-sha256", "-keyout", str(key), "-out", str(cert),
+        "-subj", "/CN=localhost", "-addext", "subjectAltName=DNS:localhost",
+        "-days", "1",
+    ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
+    src, host, artifact, gateway, _ = attached_transport()
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(str(cert), str(key))
+    server = ThreadingHTTPServer(("127.0.0.1", 0), make_https_handler(gateway))
+    server.socket = context.wrap_socket(server.socket, server_side=True)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        endpoint = f"https://localhost:{server.server_address[1]}/v1/operational"
+        client = AuthenticatedResidentHostClient(
+            endpoint=endpoint, secret=SECRET, source_head=src.head,
+            ground_digest=gateway.ground["ground_digest"])
+        monkeypatch.setenv("NO_PROXY", "localhost,127.0.0.1")
+        monkeypatch.delenv("SSL_CERT_FILE", raising=False)
+        with pytest.raises(AuthenticatedHostRefused, match="unavailable"):
+            client({"schema": CALL_SCHEMA, "operation": "describe"})
+        monkeypatch.setenv("SSL_CERT_FILE", str(cert))
+        pages = VirtualModelPageFleet()
+        pages.register("source", src)
+        pages.open("https-reader", "source")
+        bridge = SourcePinnedBehaviorFleet(pages)
+        bridge.bind("source", client, approved_hosts={"existing-original-host"},
+                    expected_artifact=artifact)
+        bridge.open("https-reader")
+        receipt = bridge.turn("https-reader", "Real HTTPS original-host transport.",
+                              request_id="verified", max_new_tokens=2)
+        assert receipt["model_payload_bytes"] == 0
+        assert receipt["observation"]["host_calls"] >= 6
+        assert bridge.state("https-reader")["sequence"] == 1
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
