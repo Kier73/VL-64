@@ -200,6 +200,57 @@ model at \`1, 8, 64, 128\` (up to user-configured count) and records:
 The benchmark's checkpoint preserves every description and observer
 receipt, allowing an independent auditor to recompute all results.
 
+## First live results: three distinct model pages
+
+Reproduced with E-CPU HSS-002 pinned at
+\`ed7ea4ed448a898ea5461ff8d31b6ef802b31edf\`, VL-64
+\`virtual_page_fleet_lab\`, and the original public Hugging Face source
+metadata. Successful [five-job cross-platform and live CI run](https://github.com/Kier73/VL-64/actions/runs/45102343672).
+
+| Source model | Declared hosted bytes | Source revision |
+| --- | ---: | --- |
+| DeepSeek V4.1 Flash | 510,311,062,017 | \`08c8657f02291e11b6f6b63e0e16014f8e748518\` |
+| Qwen3.8-27B | 55,586,107,015 | \`37561816e66b5b9153b1b64c10968c18c1e6f4a0\` |
+| SmolLM2-135M | 272,445,324 | \`93efa2f097d58c2a74874c7e644dbc9b0cee75a2\` |
+| **Combined** | **566,169,614,356** | Three separately pinned model source Grounds |
+
+The live experiment made exactly **six metadata observations** totaling
+**73,585 bytes**. Source model payload transferred: **0 bytes**;
+source model shards acquired: **0**; source-local neural inference
+calls: **0**.
+
+One source Ground was shared among all observers of its model.
+The same source-relative catalogue intention produced three
+distinct structural positions across the three models, regardless
+of how many observers occupied those positions.
+
+| Observers/model | Total independent observers | Distinct structural positions | Mean warm wall time per observer |
+| ---: | ---: | ---: | ---: |
+| 1 | 3 | 3 | 404.6 μs |
+| 8 | 24 | 3 | 187.8 μs |
+| 64 | 192 | 3 | 147.0 μs |
+| 128 | 384 | 3 | 132.7 μs |
+
+Each observer had an independent accepted causal receipt despite
+sharing its model's position, and one observer completed an
+epoch-incrementing host handoff without re-reading its source.
+
+The fixed-source structure was also independently tested with
+**512 observers sharing one model** and with **64 distinct model
+Grounds**. On Linux/Windows and Python 3.11/3.14, the targeted test
+matrix passed **30 tests per environment (120 passing executions)**.
+Its E-CPU parity tests compare complete original position records
+against the independently implemented VL-64 interpreter.
+
+These wall times include Python thread-pool scheduling, native VL-64
+intention normalization, source structural interpretation, hashes
+and short ledger writes. The decreasing mean primarily reflects
+amortized scheduling overhead; it is not evidence that physical
+pretrained neural inference becomes faster with more observers.
+The parallel scheduling remains bounded by local Python/runtime
+resources even though model weight size is irrelevant to
+this particular structural query.
+
 ## What "running" means at this stage
 
 There are now **two different modes of activity** in the model fabric:
