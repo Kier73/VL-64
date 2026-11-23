@@ -144,6 +144,45 @@ def run(page_urls: tuple[str, ...] = DEFAULT_PAGES, *,
             "handoff_accepted": True,
         })
         last_checkpoint = checkpoint
+
+    # Orthogonal M:N test: one logical observer compares multiple sources,
+    # rather than creating one independent observer per model.
+    cross = VirtualModelPageFleet()
+    for alias, source, _, _ in sources:
+        cross.register(alias, source)
+    cross.open_across_models("model-comparator", host_id="vl64-comparator")
+    start_cross = perf_counter_ns()
+    compared = cross.observe_across_models(
+        "model-comparator", "source.architecture", {},
+        request_id="compare-architectures", workers=workers,
+    )
+    cross_ns = perf_counter_ns() - start_cross
+    if (len(compared) != len(sources)
+        or len({receipt["source_head"] for receipt in compared.values()})
+            != len(sources)
+        or any(receipt["model_payload_bytes"] for receipt in compared.values())):
+        raise AssertionError("cross-model observer lost source isolation")
+    restored_cross = VirtualModelPageFleet.restore(
+        cross.snapshot(), expected_digest=cross.snapshot()["checkpoint_digest"],
+    )
+    if restored_cross.snapshot() != cross.snapshot():
+        raise AssertionError("multi-model observer causal state did not reconstruct")
+    cross_model_summary = {
+        "logical_observer": "model-comparator",
+        "models_read": len(compared),
+        "distinct_model_ground_heads": len({
+            receipt["source_head"] for receipt in compared.values()
+        }),
+        "distinct_causal_heads": len({
+            receipt["head"] for receipt in compared.values()
+        }),
+        "source_declared_model_types": {
+            alias: receipt["position"]["result"]["observed_configuration"].get("model_type")
+            for alias, receipt in sorted(compared.items())
+        },
+        "interpretation_wall_ns": cross_ns,
+        "model_payload_bytes": 0,
+    }
     return {
         "schema": "vl64.virtual-model-page-fleet-benchmark.v1",
         "source_role": "external_host_retains_model_data",
@@ -171,6 +210,7 @@ def run(page_urls: tuple[str, ...] = DEFAULT_PAGES, *,
         "source_local_trained_inference_calls": 0,
         "virtual_observer_interpreters_started": summaries[-1]["total_observers"],
         "source_interpretation_benchmarks": summaries,
+        "single_observer_multiple_models": cross_model_summary,
         "final_checkpoint": last_checkpoint,
         "scope": "concurrent_virtual_source_structure_not_full_pretrained_neural_inference",
     }
