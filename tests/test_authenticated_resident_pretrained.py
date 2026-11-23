@@ -459,3 +459,20 @@ def test_actual_https_certificate_validation_and_signed_trained_execution(tmp_pa
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
+
+def test_authenticated_host_cannot_insert_weight_fields_into_result():
+    src, host, artifact, gateway, client = attached_transport()
+    def injected(request):
+        reply = host(request)
+        if request.get("operation") == "encode":
+            reply = copy.deepcopy(reply)
+            reply["result"]["model_weights"] = [1, 2, 3]
+        return reply
+    gateway.host = injected
+    request = {"schema": CALL_SCHEMA, "operation": "encode",
+               "model": src.repository, "revision": src.revision,
+               "ground_digest": gateway.ground["ground_digest"],
+               "arguments": {"text": "No leaked weights"}}
+    with client.execution_lease():
+        with pytest.raises(AuthenticatedHostRefused, match="tensor fields"):
+            client(request)
