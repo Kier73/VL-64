@@ -139,6 +139,31 @@ range request. Its interpretation cost depends on the source
 description and operation contract, not on the number of external
 model bytes.
 
+### One observer can also navigate many models
+
+The reciprocal mode is an M:N relation, not just one model per
+observer. \`open_across_models("observer", aliases)\` creates one
+source-pinned causal locus for each (observer, model) pair,
+all under the same logical observer identity. For example:
+
+~~~python
+# Assume three different external model descriptions are registered.
+fleet.open_across_models("researcher", ["deepseek", "qwen", "smollm"])
+comparison = fleet.observe_across_models(
+    "researcher", "source.architecture", {},
+    request_id="compare-three-models", workers=3
+)
+assert len({v["source_head"] for v in comparison.values()}) == 3
+assert all(v["model_payload_bytes"] == 0 for v in comparison.values())
+~~~
+
+Each result has a separate original source head, position and causal
+receipt. Any individual source or observer can be rehomed without
+mixing another model's original identity or transferring its model
+data. The live benchmark exercises this mode on all three real pages,
+in addition to the one-model/many-observers and many-models/many-
+observers profiles.
+
 ### Multiple observers executing concurrently
 
 \`VirtualModelPageFleet.observe_many\` dispatches independently
