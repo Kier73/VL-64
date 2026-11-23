@@ -1,0 +1,80 @@
+name: VL-64 virtual model-page observer fleet
+
+on:
+  push:
+    paths:
+      - "experiments/model_fabric/virtual_page_fleet.py"
+      - "experiments/model_fabric/virtual_page_fleet_lab.py"
+      - "tests/test_virtual_page_fleet.py"
+      - "docs/VIRTUAL_MODEL_PAGE_FLEET.md"
+      - ".github/workflows/virtual-model-page-fleet.yml"
+  pull_request:
+    paths:
+      - "experiments/model_fabric/virtual_page_fleet.py"
+      - "experiments/model_fabric/virtual_page_fleet_lab.py"
+      - "tests/test_virtual_page_fleet.py"
+      - "docs/VIRTUAL_MODEL_PAGE_FLEET.md"
+      - ".github/workflows/virtual-model-page-fleet.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  virtual-page-fleet:
+    name: Model Ground / observer proofs (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-latest, python: "3.11"}
+          - {os: ubuntu-latest, python: "3.14"}
+          - {os: windows-latest, python: "3.11"}
+          - {os: windows-latest, python: "3.14"}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin original E-CPU source-observation implementation
+        uses: actions/checkout@v4
+        with:
+          repository: Kier73/E-CPU
+          ref: ed7ea4ed448a898ea5461ff8d31b6ef802b31edf
+          path: original-ecpu
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install original VL-64 environment
+        run: python -m pip install -e ".[dev]"
+      - name: Check source Ground equivalence, 512 observers, 64 models, independent rehome and legacy model tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/original-ecpu
+        run: python -m pytest -q tests/test_virtual_page_fleet.py tests/test_scaled_model_fabric.py tests/test_model_observer_intentions.py
+
+  live-three-model-pages:
+    name: Three genuine public model pages, 128 observers each (metadata only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Kier73/E-CPU
+          ref: ed7ea4ed448a898ea5461ff8d31b6ef802b31edf
+          path: original-ecpu
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install VL-64 experiment-layer package
+        run: python -m pip install -e ".[dev]"
+      - name: Observe remote model-page structures and benchmark shared-model observers
+        env:
+          PYTHONPATH: ${{ github.workspace }}/original-ecpu
+        run: python -m experiments.model_fabric.virtual_page_fleet_lab --observers 128 --workers 16 --out artifacts/vl64-virtual-model-page-fleet.json
+      - name: Retain source-pinned multi-model observer receipts and measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mpf001-three-model-pages-128-observers
+          path: artifacts/vl64-virtual-model-page-fleet.json
+          if-no-files-found: warn

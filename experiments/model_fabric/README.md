@@ -2,6 +2,49 @@
 
 The model fabric is deliberately separate from VL-64's **65,093-byte compact runtime**. It reuses its current `StructuralLinearOperator`, `rms_norm`, `SafetensorsGlance`, `ObserverIntention`, and Ground fingerprint utilities. It does not expand `src/vld/`.
 
+## Source-hosted virtual model-page observer fleet (MPF-001)
+
+[The virtual model-page fleet](../../docs/VIRTUAL_MODEL_PAGE_FLEET.md)
+points the existing VL-64 \`ObserverIntention\` directly at externally
+hosted Hugging Face model **pages**, through E-CPU's immutable
+metadata-only SourceStructure. No tensor payload, shard, checkpoint or
+weight range is acquired. Model data stays at its original host.
+
+This separates **one model / many observers** (a shared structural
+source with independent causal interpreter contexts) from **many
+models / many observers** (distinct pinned source identities).
+A 512-observer single-model fixture, 64-model multi-source fixture and
+cross-process reconstruction are independently verified.
+
+The first actual live experiment used **three external model pages**:
+DeepSeek V4.1 Flash, Qwen3.8-27B and SmolLM2-135M. Their source
+hosts declared **566.17 GB** of model data, but the experiment
+observed only **73,585 metadata bytes** across six API reads. It
+then ran **384 independent structural observer interpretations**,
+zero weight payload bytes transferred, no source-local neural
+forward calls. Each model's identical catalogue intention shared
+one structural position across its many observers, while every
+observer retained its own causal receipt.
+
+~~~bash
+# With the original E-CPU repository available on PYTHONPATH:
+PYTHONPATH=/path/to/E-CPU \
+python -m experiments.model_fabric.virtual_page_fleet_lab \
+  --observers 128 --workers 16 \
+  --out artifacts/vl64-virtual-model-page-fleet.json
+~~~
+
+The \`virtual_page_fleet.py\` module and tests run under standard
+VL-64 even without E-CPU installed, using independently qualified
+HSS-002 source descriptions. The dedicated GitHub Actions workflow
+checks out pinned E-CPU to compare the independently implemented
+source-position interpreter and to run live model-page observation.
+
+The original \`operational_ground.py\` and \`intention_fabric.py\`
+remain the distinct tools for *actual trained model inference at a
+source host*. Model-page structural observations do not automatically
+grant neural execution authority.
+
 ## Executed capabilities
 
 1. **Trained byte language model:** `byte_lm.py` fits a 256-byte vocabulary bigram model to actual README text and performs generated-token inference using `StructuralLinearOperator.matvec`. Held-out predictive quality is measured and compared with a uniform-byte baseline.
