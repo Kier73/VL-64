@@ -308,3 +308,45 @@ def test_ecpu_hss_original_implementation_agrees_independently_when_available():
         found=src.position(op,args)
         assert found==expected
         assert src.head==native.ground_digest
+
+
+def test_one_logical_observer_navigates_three_unrelated_model_pages_in_tandem():
+    """One observer creates an M:N relation with source-local causal isolation."""
+    fleet=VirtualModelPageFleet()
+    for alias,owner,family in [
+        ("deepseek","deepseek-ai/example","deepseek_v41"),
+        ("qwen","Qwen/example","qwen3_8"),
+        ("embed","google/example","embeddinggemma2"),
+    ]:
+        source=described_source(model=owner,revision={
+            "deepseek":"a"*40,"qwen":"b"*40,"embed":"c"*40,
+        }[alias], family=family)
+        fleet.register(alias,source)
+    opened=fleet.open_across_models("scientist",host_id="observer-locus")
+    assert set(opened)=={"deepseek","qwen","embed"}
+    assert len(set(opened.values()))==3
+    results=fleet.observe_across_models(
+        "scientist","source.architecture",{},request_id="compare-family",
+        workers=3,
+    )
+    assert set(results)==set(opened)
+    assert {r["position"]["result"]["observed_configuration"]["model_type"]
+            for r in results.values()}=={"deepseek_v41","qwen3_8","embeddinggemma2"}
+    assert len({r["source_head"] for r in results.values()})==3
+    assert len({r["head"] for r in results.values()})==3
+    assert len({r["position_head"] for r in results.values()})==3
+    assert {r["model_payload_bytes"] for r in results.values()}=={0}
+    replay=fleet.observe_across_models(
+        "scientist","source.architecture",{},request_id="compare-family",
+    )
+    assert replay==results
+    with pytest.raises(ModelPageRefused):
+        fleet.open_across_models("scientist")
+    with pytest.raises(ModelPageRefused):
+        fleet.observe_across_models(
+            "unknown","source.architecture",{},request_id="unknown",
+        )
+    snapshot=fleet.snapshot()
+    again=VirtualModelPageFleet.restore(
+        snapshot,expected_digest=snapshot["checkpoint_digest"])
+    assert again.snapshot()==snapshot
