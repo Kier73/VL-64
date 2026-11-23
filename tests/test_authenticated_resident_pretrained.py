@@ -303,7 +303,8 @@ def test_preloaded_transformer_attachment_invokes_existing_host_object_no_loader
     one = nav.advance(tile_size=53)
     two = nav.advance(tile_size=53)
     assert len(decoder.calls) == 3
-    assert decoder.calls[-1][0] == (one,)
+    assert decoder.calls[-2][0] == (one,)
+    assert decoder.calls[-1][0] == (two,)
     assert nav.remote_weight_bytes_received == 0
     assert host.host_kv_reuses == 2
     chat = AttachedResidentPretrainedLanguage(
