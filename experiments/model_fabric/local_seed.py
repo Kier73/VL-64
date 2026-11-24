@@ -104,7 +104,7 @@ def metadata_object(data):
     return obj
 
 
-class Snapshot:
+class TensorDirectory:
     """A versioned header Ground and the bijection between virtual and shard byte ranges."""
 
     def __init__(self, files):
@@ -169,6 +169,10 @@ class Snapshot:
                        "architecture_fields": self.config, "tensor_header_status": "OBSERVED_COMPLETE_TENSOR_HEADER",
                        "tensors": header}
         self.ground["ground_digest"] = domain_digest(self.ground["schema"], self.ground)
+
+
+class Snapshot(TensorDirectory):
+    """Map the directory's tensors to a Llama execution plan D(W)."""
 
     def read(self, request):
         """Translate virtual [A,B) to [prefix+A−H−base,prefix+B−H−base) and witness H(bytes)."""

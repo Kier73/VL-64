@@ -122,11 +122,27 @@ def model_sources(root):
     return sources
 
 
-def build_model(root=ROOT):
+def external_sources(root):
+    """Project the model seed onto the source adapters and the BERT/GPT-2 operator set."""
+    sources = model_sources(root)
+    model = root / "experiments/model_fabric"
+    del sources["vld/execution_dag.py"], sources["vld/micro_operators.py"]
+    sources["vld/__init__.py"] = (b"from .micro_kernel import domain_digest\n"
+                                  b"from .micro_substrates import SafetensorsGlance\n")
+    sources["vld/local_seed.py"] = source_declarations(model / "local_seed.py", (
+        "INDEX","INDEX_LIMIT","SHARD_NAME","LocalFiles","metadata_object","TensorDirectory",
+    ),used_imports_only=True) + b'\ndef cli_main():\n    """Evaluate F_W(ids) from external source ranges."""\n    from .external_transformer import main\n    main()\n'
+    for module in ("external_transformer","http_directory"):
+        sources[f"vld/{module}.py"] = (model / f"{module}.py").read_bytes()
+    return sources
+
+
+def build_model(root=ROOT, *, external=False):
     """Enforce both |ZIP(P)| <= 2**16 and sum_{p in P, p ends in .py} |p| <= 2**16."""
     root = Path(root).resolve()
     bootstrap = model_bootstrap(root)
-    members, manifest, ground = make_members(root, sources=model_sources(root), bootstrap=bootstrap)
+    sources = external_sources(root) if external else model_sources(root)
+    members, manifest, ground = make_members(root, sources=sources, bootstrap=bootstrap)
     expanded = sum(len(raw) for path, raw in members.items() if path.endswith(".py"))
     manifest.update(profile=MODEL_PROFILE, expanded_python_bytes=expanded)
     verify_model_budget(manifest, expanded)
@@ -139,8 +155,9 @@ def main():
     """Persist the verified archive A, with |A| equal to the byte count in its receipt."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=Path("artifacts/VL64-model.pyz"))
+    parser.add_argument("--external", action="store_true", help="Build the streaming GPT-2/BERT interpreter")
     args = parser.parse_args()
-    binary, _, report = build_model()
+    binary, _, report = build_model(external=args.external)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_bytes(binary)
     print(json.dumps(report, sort_keys=True))
