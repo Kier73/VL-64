@@ -1,7 +1,7 @@
 import io
 import pytest
 
-from experiments.model_fabric.external_transformer import attention
+from experiments.model_fabric.external_transformer import attention, patches
 from experiments.model_fabric.http_directory import HTTPDirectory
 from experiments.seed_fabric.build_model import build_model
 
@@ -12,6 +12,20 @@ def test_attention_masks_change_future_dependence():
     v = [[2.],[8.]]
     assert attention(q,q,v,1,True)==[[2.],[5.]]
     assert attention(q,q,v,1,False)==[[5.],[5.]]
+
+
+def test_convolution_patch_order_and_stride():
+    """A patch at (2,2) spans (1:4,1:4) per channel with zero padding at coordinate 3."""
+    planes = [list(range(9)), list(range(10,19))]
+    windows = list(patches(planes,3,3,2,0))
+    assert len(windows) == 4
+    assert windows[-1] == (4,5,0,7,8,0,0,0,0,14,15,0,17,18,0,0,0,0)
+    assert list(patches(planes,3,1,2,0)) == [(0,10),(2,12),(6,16),(8,18)]
+
+
+def test_max_pool_border_keeps_negative_maximum():
+    """max(X∪{−∞})=max(X), including when every visible activation is negative."""
+    assert max(next(patches([[-3.]],1,3,2,float("-inf")))) == -3.
 
 
 def test_http_directory_binds_ranges_and_version(monkeypatch):

@@ -107,7 +107,9 @@ def model_sources(root):
             "INDEX", "INDEX_LIMIT", "SHARD_NAME", "LocalFiles", "HubFiles", "metadata_object",
             "TensorDirectory", "Snapshot", "generate", "cli_main",
         ), used_imports_only=True),
-        "vld/page_files.py": (model / "page_files.py").read_bytes(),
+        "vld/page_files.py": source_declarations(model / "page_files.py", (
+            "SITE", "PIN", "visit", "Page", "PageFiles",
+        ), used_imports_only=True),
         "vld/hf_glance.py": source_declarations(
             model / "hf_glance.py", ("TIMEOUT", "_sha", "_read", "_url", "range_bytes"), used_imports_only=True),
         "vld/tensor_ground.py": source_declarations(

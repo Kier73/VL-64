@@ -29,7 +29,7 @@ class Operands:
 
     def rows(self, key, shape, begin=0, end=None):
         """Yield F32 rows i∈[begin,end), from file intervals [base+4ic,base+4(i+1)c)."""
-        rows, cols = (1, shape[0]) if len(shape) == 1 else shape
+        rows, cols = (1, shape[0]) if len(shape) == 1 else (shape[0], math.prod(shape[1:]))
         stop = rows if end is None else end
         if (self.table[key]["shape"] != list(shape) or self.table[key]["dtype"] != "F32"
                 or not 0 <= begin <= stop <= rows or not 0 < cols <= (1 << 20)):
@@ -162,20 +162,90 @@ def bert(w,c,ids):
     return result
 
 
-def run(files, ids):
+def patches(planes, side, kernel, stride, fill):
+    """P[y,x,c,i,j]=X[c,stride*y+i−pad,stride*x+j−pad], using fill outside the image."""
+    pad = kernel//2
+    pitch = side + 2*pad
+    padded = []
+    for plane in planes:
+        frame = [fill]*(pitch*pad)
+        for y in range(side):
+            frame.extend([fill]*pad + plane[y*side:(y+1)*side] + [fill]*pad)
+        frame.extend([fill]*(pitch*pad))
+        padded.append(frame)
+    for y in range(0,side,stride):
+        for x in range(0,side,stride):
+            yield tuple(pixel for frame in padded for i in range(kernel)
+                        for pixel in frame[(y+i)*pitch+x:(y+i)*pitch+x+kernel])
+
+
+def conv_bn(w, name, planes, side, width, kernel, stride=1, relu=False):
+    """Y_o=γ_o(crosscorrelate(W_o,X)−μ_o)/√(var_o+10⁻⁵)+β_o, optionally ReLU."""
+    windows = list(patches(planes,side,kernel,stride,0.))
+    norm = name+".normalization."
+    mean,var,gain,bias = [w.vector(norm+k,width) for k in ("running_mean","running_var","weight","bias")]
+    shape = (width,len(planes),kernel,kernel)
+    output = []
+    for o,weights in enumerate(w.rows(name+".convolution.weight",shape)):
+        scale = gain[o]/math.sqrt(var[o]+1e-5)
+        channel = [(dot(weights,window)-mean[o])*scale+bias[o] for window in windows]
+        output.append([max(0.,v) for v in channel] if relu else channel)
+    return output
+
+
+def resnet18(w,c,rgb,processor):
+    """Basic post-activation block Y=ReLU(BN₂ W₂ ReLU(BN₁ W₁ X)+shortcut(X))."""
+    if (c.get("depths") != [2,2,2,2] or c.get("hidden_sizes") != [64,128,256,512]
+            or c.get("embedding_size") != 64 or c.get("num_channels") != 3
+            or c.get("layer_type") != "basic" or c.get("hidden_act") != "relu"
+            or c.get("downsample_in_first_stage") or c.get("downsample_in_bottleneck")
+            or len(rgb) != 224*224*3 or processor.get("do_normalize") is not True
+            or processor.get("do_rescale",True) is not True or processor.get("rescale_factor",1/255) != 1/255):
+        raise ValueError("Unsupported ResNet-18 or RGB preprocessing contract")
+    means,stds = processor["image_mean"],processor["image_std"]
+    if len(means)!=3 or len(stds)!=3 or not all(math.isfinite(m) for m in means) or not all(
+            math.isfinite(s) and s>0 for s in stds):
+        raise ValueError("Expected three finite RGB normalization scales and offsets")
+    x = [[(v/255.-mean)/std for v in rgb[j::3]] for j,(mean,std) in enumerate(zip(means,stds))]
+    x = conv_bn(w,"resnet.embedder.embedder",x,224,64,7,2,True)
+    x = [[max(window) for window in patches([plane],112,3,2,-math.inf)] for plane in x]
+    side = 56
+    for stage,width in enumerate(c["hidden_sizes"]):
+        for block in range(c["depths"][stage]):
+            name = f"resnet.encoder.stages.{stage}.layers.{block}"
+            stride = 2 if stage and block==0 else 1
+            shortcut = x if stride==1 else conv_bn(w,name+".shortcut",x,side,width,1,stride)
+            y = conv_bn(w,name+".layer.0",x,side,width,3,stride,True)
+            side = (side+stride-1)//stride
+            y = conv_bn(w,name+".layer.1",y,side,width,3)
+            x = [[max(0.,v+s) for v,s in zip(a,b,strict=True)] for a,b in zip(y,shortcut,strict=True)]
+    pooled = [math.fsum(plane)/(side*side) for plane in x]
+    logits = w.affine("classifier.1",[pooled],len(c["id2label"]))[0]
+    return {"logits":logits}
+
+
+def run(files, ids=None, *, rgb=None):
     """Map a source's typed model graph and token IDs to named observations F_W(ids)."""
     snapshot = TensorDirectory(files)
     c = snapshot.config
     key = (c["model_type"],tuple(c.get("architectures",())))
     adapters = {("gpt2",("GPT2LMHeadModel",)):gpt2, ("bert",("BertModel",)):bert}
-    if key not in adapters or c.get("quantization_config") or c.get("pruned_heads"):
+    if c.get("quantization_config") or c.get("pruned_heads"):
         raise ValueError(f"Unimplemented model semantics {key}")
-    limit = c.get("n_positions",c.get("max_position_embeddings"))
-    if not ids or len(ids)>limit or any(type(i) is not int or not 0<=i<c["vocab_size"] for i in ids):
-        raise ValueError("Token sequence outside admitted context")
     weights = Operands(snapshot)
-    result = adapters[key](weights,c,ids)
-    receipt = dict(architecture=key[1][0],tokens=ids,source=files.authority,revision=files.revision,
+    if key == ("resnet",("ResNetForImageClassification",)) and rgb is not None and ids is None:
+        raw = files.metadata("preprocessor_config.json",1<<20)
+        result = resnet18(weights,c,rgb,json.loads(raw))
+        inputs = dict(rgb224_sha256=hashlib.sha256(rgb).hexdigest(),processor_sha256=hashlib.sha256(raw).hexdigest())
+    elif key in adapters and rgb is None:
+        limit = c.get("n_positions",c.get("max_position_embeddings"))
+        if not ids or len(ids)>limit or any(type(i) is not int or not 0<=i<c["vocab_size"] for i in ids):
+            raise ValueError("Token sequence outside admitted context")
+        result = adapters[key](weights,c,ids)
+        inputs = dict(tokens=ids)
+    else:
+        raise ValueError(f"Unimplemented model or input semantics {key}")
+    receipt = dict(architecture=key[1][0],**inputs,source=files.authority,revision=files.revision,
                    config_sha256=snapshot.ground["config_sha256"],headers=snapshot.headers,
                    weight_bytes=weights.bytes,weight_requests=weights.requests,max_weight_range=weights.peak_range,
                    observation_sha256=hashlib.sha256(json.dumps(result,allow_nan=False).encode()).hexdigest())
@@ -189,12 +259,14 @@ def main():
     source.add_argument("--snapshot",type=Path)
     source.add_argument("--page")
     source.add_argument("--url", help="Versioned HTTP directory with strong shard ETags and byte ranges")
-    p.add_argument("--tokens",type=int,nargs="+",required=True)
+    inputs = p.add_mutually_exclusive_group(required=True)
+    inputs.add_argument("--tokens",type=int,nargs="+")
+    inputs.add_argument("--rgb224",type=Path,help="224×224 cropped pixels, row-major interleaved RGB8")
     p.add_argument("--out",type=Path,required=True)
     a = p.parse_args()
     files = LocalFiles(a.snapshot) if a.snapshot else (HTTPDirectory(a.url) if a.url else PageFiles(a.page))
     with closing(files):
-        result,receipt = run(files,a.tokens)
+        result,receipt = run(files,a.tokens,rgb=a.rgb224.read_bytes() if a.rgb224 else None)
     a.out.write_text(json.dumps(result,allow_nan=False),encoding="utf-8")
     print(json.dumps(receipt))
 

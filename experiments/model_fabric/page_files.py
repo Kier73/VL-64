@@ -99,7 +99,7 @@ class PageFiles(ExitStack):
             cursor = match[1] if match else None
         for i, item in enumerate(items):
             name = item["path"]
-            if item["type"] == "file" and (name in ("config.json", "model.safetensors.index.json")
+            if item["type"] == "file" and (name in ("config.json", "preprocessor_config.json", "model.safetensors.index.json")
                                            or name.endswith(".safetensors")):
                 path = _url(self.model, rev, name)[len(SITE):] + "?download=true"
                 if name in self.entries:

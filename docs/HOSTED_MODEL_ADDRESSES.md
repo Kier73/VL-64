@@ -1,5 +1,7 @@
 # How a VL-64 worker addresses a hosted model
 
+For ResNet-18, pass `--rgb224 CROP.rgb` instead of token IDs. The file contains exactly 224 × 224 × 3 bytes in interleaved RGB order. The seed reads the normalization parameters and learned convolution, normalization and classifier operands from the selected model source. The caller supplies the resized, cropped pixels. [Image experiment and source identities](https://github.com/Kier73/VL-I/blob/main/docs/EXTERNAL_VISION.md)
+
 The [external architecture interpreter](../artifacts/VL64-external.pyz) reads DistilGPT2 or MiniLM BERT directly from a filesystem, a Hugging Face model page, or a versioned HTTP directory. For example, run `python -I -S artifacts/VL64-external.pyz --snapshot MODEL_DIRECTORY --tokens 101 7592 2088 102 --out output.json` for MiniLM. Rebuild with `python -m experiments.seed_fabric.build_model --external --out artifacts/VL64-external.pyz`. [Execution scope and numerical checks in VL-I](https://github.com/Kier73/VL-I/blob/main/docs/EXTERNAL_ARCHITECTURE_INTERPRETER.md)
 
 For the next step from addressing weights to executing a trained transition, see the [model lift contract and Qwen residual experiment in VL-I](https://github.com/Kier73/VL-I/blob/29ce29b59b3ee9194be3702a653b23d7fabca73d/docs/MODEL_LIFT_CONTRACT.md). Each VL-64 head worker returns its gated coordinates for a fresh prefix. VL-I joins the 48 outputs in model order and applies the hosted projection and embedding residual. The contract specifies what a consumer of that vector must preserve to continue execution.
