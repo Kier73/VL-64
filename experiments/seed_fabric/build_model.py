@@ -103,7 +103,10 @@ def model_sources(root):
             "PAIR_SCHEMA", "_CompiledPairReadout", "_check_pair", "compile_pair_readout",
             "_verify_pair_readout", "_pair_receipt", "execute_tokens",
         ), used_imports_only=True),
-        "vld/local_seed.py": (model / "local_seed.py").read_bytes(),
+        "vld/local_seed.py": source_declarations(model / "local_seed.py", (
+            "INDEX", "INDEX_LIMIT", "SHARD_NAME", "LocalFiles", "HubFiles", "metadata_object",
+            "TensorDirectory", "Snapshot", "generate", "cli_main",
+        ), used_imports_only=True),
         "vld/page_files.py": (model / "page_files.py").read_bytes(),
         "vld/hf_glance.py": source_declarations(
             model / "hf_glance.py", ("TIMEOUT", "_sha", "_read", "_url", "range_bytes"), used_imports_only=True),

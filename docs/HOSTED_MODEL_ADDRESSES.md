@@ -1,5 +1,7 @@
 # How a VL-64 worker addresses a hosted model
 
+The [external architecture interpreter](../artifacts/VL64-external.pyz) reads DistilGPT2 or MiniLM BERT directly from a filesystem, a Hugging Face model page, or a versioned HTTP directory. For example, run `python -I -S artifacts/VL64-external.pyz --snapshot MODEL_DIRECTORY --tokens 101 7592 2088 102 --out output.json` for MiniLM. Rebuild with `python -m experiments.seed_fabric.build_model --external --out artifacts/VL64-external.pyz`. [Execution scope and numerical checks in VL-I](https://github.com/Kier73/VL-I/blob/main/docs/EXTERNAL_ARCHITECTURE_INTERPRETER.md)
+
 For the next step from addressing weights to executing a trained transition, see the [model lift contract and Qwen residual experiment in VL-I](https://github.com/Kier73/VL-I/blob/29ce29b59b3ee9194be3702a653b23d7fabca73d/docs/MODEL_LIFT_CONTRACT.md). Each VL-64 head worker returns its gated coordinates for a fresh prefix. VL-I joins the 48 outputs in model order and applies the hosted projection and embedding residual. The contract specifies what a consumer of that vector must preserve to continue execution.
 
 An address lets the worker ask for one trained quantity while the rest of the checkpoint stays on its host. The worker needs an immutable source, a rule mapping tensor coordinates to bytes, and an operation that gives the decoded values meaning. Below is one such address, followed from the public file listing to the actual response bytes.
